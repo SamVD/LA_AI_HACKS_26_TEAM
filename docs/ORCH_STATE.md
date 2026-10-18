@@ -2,7 +2,7 @@
 
 The orchestrator's single snapshot of where Nudge stands. **ORCH updates this after every gate (G1, G2, G3, final) and after any merge that changes a gate's readiness.** Detailed task cards live in `TASKS.md`, decisions in `PLAN.md` §13, contracts in `docs/CONTRACTS.md`.
 
-_Last updated: **Sat Oct 17, 2026, 11:30 PM PT (hackathon hour ~H11:30 of 24)** by ORCH (aaravj9). **G1 PASSED. `integration` `82e487d` is ready for the G2 pack.**_
+_Last updated: **Sat Oct 17, 2026, 11:40 PM PT (hackathon hour ~H11:40 of 24)** by ORCH (aaravj9). **G1 PASSED. G2 running on 0.4.2 (batch rolling STT).**_
 
 ## Snapshot
 
@@ -11,7 +11,7 @@ _Last updated: **Sat Oct 17, 2026, 11:30 PM PT (hackathon hour ~H11:30 of 24)** 
 | `integration` | **`82e487d`** after #76, #69, #71, #75 (+ this update). Audited as one scratch merge: typecheck, **701 tests**, build; none touch Step 2 or shared runtime code. **Sarah packs G2 from here** |
 | `main` | **`4b13180`** (fast-forwarded at G1; the build Sarah tested) |
 | Tags | **`v0.1-step1` → `4b13180`** (G1). Next: `v0.2-step2` at G2, `v0.3-step3` at G3 |
-| `app.json` version | **0.4.0** for the G2 build (0.3.0 was the G1 upload). Bump again for any re-upload (D10) |
+| `app.json` version | **0.4.2** = the G2 build on the device (`a0052a5`, `VITE_STEP2=1 VITE_ROLLING_STT=batch`). The portal rejected re-uploading 0.4.0. **Next upload must be 0.4.3 or higher** (D10) |
 | Contracts | `CONTRACT_VERSION 2` |
 | Production `api/` | `https://nudge-seven-psi.vercel.app`, redeployed by Sam with the WebView origin. At 10:54 PM: `127.0.0.1:<any port>` preflight 204, **but `null` and `file://` also 204, so it's looser than intended**; tighten after #61 (see blockers) |
 | Open PRs | #78 (T-302 Step 3, Sam): **draft**, CI red until Sam pushes the one-line test change the new `ai/step3-mode` grant allows. Not in the G2 build |
@@ -22,7 +22,7 @@ _Last updated: **Sat Oct 17, 2026, 11:30 PM PT (hackathon hour ~H11:30 of 24)** 
 | Gate | What it proves | Status | Blocker / next action |
 |---|---|---|---|
 | **G1: Step 1 on the real G2** | Practice: 10 prompts, cue ladder, √/× feedback, lock/resume, mic denial, exit | ✅ **PASSED (H11:15, #68)**: real speech graded on the G2; lock, exit, B5, B6 pass; A4 accepted via unit tests (D16). Tagged `v0.1-step1` | Done. A3/A5/A7 carried to G2 |
-| **G2: Step 2 in a live conversation** | Help tap → good suggestion in ≤ ~1.5 s on most attempts; Step 1 regression | **READY TO RUN from `82e487d`.** Code complete and wired; production live; `app.json` 0.4.0 | Sarah + a second person run T-207 (`VITE_STEP2=1 npm run pack`); include A3/A5/A7 and the T-108 Step 1 check. Risk: `wss://` whitelist → batch fallback |
+| **G2: Step 2 in a live conversation** | Help tap → good suggestion in ≤ ~1.5 s on most attempts; Step 1 regression | **RUNNING on 0.4.2 (batch rolling STT).** With the default realtime STT, Step 2 got no transcript on the G2 (bank-only suggestions): blocker #2, `wss://` likely blocked | Sarah + a second person run T-207 (`VITE_STEP2=1 npm run pack`); include A3/A5/A7 and the T-108 Step 1 check. Risk: `wss://` whitelist → batch fallback |
 | **G3: Step 3 ambient hints** | Auto-hints after a stall, no false-hint spam in a 10-minute soak | **In progress**: T-301 merged (#75), T-302 in draft review (#78), T-303 merged | After G2. Ships flag-off unless it passes (PLAN §2) |
 | **Final** | Beta `.ehpk` + Devpost by **H22 (10 AM Sunday)** | Not started (T-402, T-404, T-405) | Demo assets (T-401) are done |
 
@@ -97,7 +97,7 @@ ORCH infrastructure PRs: #2, #5, #6, #10, #12, #14, #15, #16, #19, #25, #27, #30
 | # | Item | Impact | Owner | Mitigation |
 |---|---|---|---|---|
 | 1 | ~~Packaged WebView origin unknown~~ **Resolved (H11):** it's `http://127.0.0.1:<port>` (Even's local server; 61976 observed, port may change). **Open:** production currently also allows `null`/`file://` | Looser CORS than intended (scripts can forge Origin anyway; the rate limit is the backstop) | Sam | Set exactly `STT_ALLOWED_ORIGINS=http://localhost:5173,http://127.0.0.1:*` (#61) and redeploy; confirm `null` → 403 |
-| 2 | **`wss://` may not pass the Even whitelist** | Step 2 hears nothing on the device | GLASS | Re-pack with `VITE_ROLLING_STT=batch` (PLAN §9) |
+| 2 | **`wss://` likely blocked on the G2** (H11:30: realtime build gave Step 2 no transcript, so suggestions were bank-only) | Step 2 hears nothing on the device | GLASS | **Applied:** 0.4.2 is packed with `VITE_ROLLING_STT=batch` (PLAN §9; verified in the bundle). If G2 passes on it, ORCH makes batch the default for packaged builds (`.env.production`, D17) so every pack and the `v0.2-step2` tag reproduce it |
 | 3 | Gemini **free tier 15 req/min, daily cap unknown** | Suggestions fall back to bank-only under load | AI | Throttle (D11); check AI Studio → Rate limits before the demo; billing would remove it |
 | 4 | **Vercel Hobby** blocks Git deploys from non-members; only Sam can deploy | A deploy bottleneck | AI | D15: only `bash api/_deploy-prod.sh` (merged commits, auto-checks). A `vercel --prod` from a checkout caused the 9-minute 500 outage (05:07-05:16 UTC, issue #56) |
 | 5 | Single-device team (one G2) and minutes-long pack/upload cycles | Slow device iteration | GLASS | Simulator first; batch device checks; G1 and G2 back to back when possible |
@@ -149,6 +149,7 @@ There are no console logs on the device. Use the phone companion's **Preview** t
 
 | When | Change |
 |---|---|
+| Sat 11:40 PM (H11:40) | G2 on the device: the realtime build gave Step 2 no transcript (blocker #2). Sarah re-packed `a0052a5` as **0.4.2 with `VITE_ROLLING_STT=batch`**; `app.json` set to 0.4.2. Proposed D17 (batch default for packaged builds) pending the G2 result |
 | Sat 11:30 PM (H11:30) | Pre-G2 sweep of every open PR and branch. Merged #76 (T-108; juannli merged it), #69 (leak fixed), #71, #75 (T-301). #73 closed. #78 (T-302) reviewed as a draft; `ai/step3-mode` grant added. **`integration` `82e487d` ready for the G2 pack** |
 | Sat 10:30 PM (H10:30) | First version. Step 1 and Step 2 code complete; production `api/` healthy; G1 ready to run |
 | Sat 11:15 PM (H11:15) | **G1 PASSED** (#68). `main` → `4b13180`, tag `v0.1-step1`. D16 (A4 via unit tests; G2_SMOKE A4 reworded). Merged #70, #65; #69 changes requested; T-108 filed (#73). G2 ready to run |
