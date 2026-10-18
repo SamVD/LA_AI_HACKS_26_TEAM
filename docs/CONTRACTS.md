@@ -1,6 +1,6 @@
 # Contracts
 
-The code is the source of truth: `src/core/types.ts`, **CONTRACT_VERSION 1**. This page explains the meaning behind the types and the rules that keep five lanes from breaking each other.
+The code is the source of truth: `src/core/types.ts`, **CONTRACT_VERSION 2**. This page explains the meaning behind the types and the rules that keep five lanes from breaking each other.
 
 ## Rules
 
@@ -18,9 +18,20 @@ The code is the source of truth: `src/core/types.ts`, **CONTRACT_VERSION 1**. Th
 | `SessionRecord` (with `endedAt?`) | Names the shape `saveSession` already took. |
 | `SpeechState`, `UtteranceOptions`, `Unsubscribe`, `WordCategory`, `SuggestionSource`, `ScreenKind`, `ModeId` | Named aliases for shapes that were inline. No behavior change. |
 
+## Version 2 (additive, Phase 1)
+
+| Addition | Why |
+|---|---|
+| `AppShell`, `ModeInfo` | T-101 builds the shell (glasses launcher, mode switching, screen mirroring); T-105's phone UI drives it. One shared interface so neither invents its own. |
+| `ModeContext.leave?()` | A mode had no way to say "I'm done". On BACK at its top level, a mode calls `ctx.leave?.()` and the shell calls `exit()`. Optional so existing mock contexts stay valid. |
+| `GreyImage`, `ImageSource` | T-106 renders pictures and mouth shapes; T-101 sends them to image containers. The PNG must be exactly the container size. |
+| `KeyValueStore` | T-106's `Store` persists through this; T-101 provides one over the SDK's `get/setLocalStorage`, so `src/store/` never imports the SDK. |
+
 ## Semantics
 
-**Intent.** Click = `SELECT`, swipe down = `NEXT`, swipe up = `PREV`, double-click = `BACK`. On the root page, double-click calls `shutDownPageContainer(1)` (system exit dialog) and modes never see it. Long-press is not used. `src/glasses/` (T-101) owns the mapping.
+**Intent.** Click = `SELECT`, swipe down = `NEXT`, swipe up = `PREV`, double-click = `BACK`. The root page is the shell's launcher menu: double-click there calls `shutDownPageContainer(1)` (system exit dialog) and no mode sees it. Inside a mode, double-click is `BACK`, and the mode calls `ctx.leave?.()` when BACK happens at its top level. Long-press is not used. `src/glasses/` (T-101) owns the mapping.
+
+**Menus are text, not list containers.** A firmware list container scrolls internally on swipes (no event) and reports clicks with an item index that `Intent` cannot carry. So `menu` Screens render as one text container with a `> ` marker on `items[index]`, and the mode moves `index` on NEXT/PREV.
 
 **Screen.** Plain data. Modes build Screens; only `src/glasses/` renders them, and `src/phone/` previews them at 576x288.
 - `blank`: nothing visible, but it still captures events (a single-space text container).
@@ -36,7 +47,7 @@ The code is the source of truth: `src/core/types.ts`, **CONTRACT_VERSION 1**. Th
 
 **PredictorService.** `predict` **never rejects**. On timeout (1.2 s), network failure or invalid model output it returns bank-only suggestions. An aborted `signal` resolves with `[]`. Details in `docs/PREDICTOR_PROMPT.md`.
 
-**Store.** On-device only. `getBank` returns built-in words plus personal words. `addWord` upserts by `id`. `getSessions` returns most recent first.
+**Store.** On-device only. `getBank` returns built-in words plus personal words. `addWord` upserts by `id`. `getSessions` returns most recent first. The production Store persists through a `KeyValueStore` and debounces writes (they share the BLE link).
 
 **Mode.** `enter` resolves once the mode is running (not when it ends). `exit` must clear every timer and subscription the mode created; the registry calls it before entering another mode and on app exit.
 

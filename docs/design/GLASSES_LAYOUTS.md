@@ -30,7 +30,7 @@ SVG wireframes: [`screens/`](./screens/) (one file per row below).
 | `feedback` | 1 | 0 | 0 | **1** | feedback text container |
 | `candidates` L1 | 1–2 | 0 | 1 | **2–3** | candidate text container |
 | `candidates` L3 | 1 | 0 | 0 | **1** | full-word text container |
-| `menu` | 0 | 1 | 0 | **1** | **list container** (not per-item text boxes) |
+| `menu` | 1 | 0 | 0 | **1** | single text container with `> ` marker (see §6) |
 | `status` | 1 | 0 | 0 | **1** | status text container |
 
 ---
@@ -127,18 +127,23 @@ Level 2 (first letter only) uses one text container, same geometry as L3, conten
 
 ## 6. `menu`
 
-Use a **single list container** (not one text container per row).
+_ORCH correction (CONTRACT_VERSION 2): **not** a list container. A firmware list scrolls internally on swipes without firing events, and its click carries an item index that `Intent` cannot pass to the mode. Use one text container. The mode moves `index` on NEXT/PREV, and the renderer redraws it with `textContainerUpgrade`._
 
 | Container | x | y | w | h | evt | Notes |
 | --- | ---: | ---: | ---: | ---: | :---: | --- |
-| List | 8 | 40 | 560 | 240 | **1** | 40 px items, 1–20 items, firmware scroll |
+| Text | 8 | 27 | 560 | 243 | **1** | Line 1: `title`; then one item per 27 px line, `> ` before `items[index]`, two spaces before the others |
 
-**Visible rows:** 240 ÷ 40 = **6** items without scrolling. Title can be the first list item or a separate text container (+1 text, capture stays on list).
+**Visible items:** 8 lines below the title. With more items, show a window of 8 around `index`.
 
-Example items: `Step 1 — Say the word`, `Step 2 — Help`, `Word bank`.
+Example:
+```
+Nudge
+> Step 1  Practice
+  Step 2  Assist
+  Word bank
+```
 
-**Counts:** 0 text (title in list) · 1 list · 0 image · **1 total**  
-*(If title is separate text: 1 text + 1 list = 2 total; capture on list.)*
+**Counts:** 1 text · 0 list · 0 image · **1 total**
 
 ---
 

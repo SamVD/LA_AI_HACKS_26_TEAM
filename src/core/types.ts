@@ -6,7 +6,7 @@
 //
 // This file holds types and constants only. No runtime logic, no SDK imports.
 
-export const CONTRACT_VERSION = 1 as const
+export const CONTRACT_VERSION = 2 as const
 
 // ---------------------------------------------------------------------------
 // Input
@@ -151,6 +151,33 @@ export interface SttService {
   transcribeUtterance(o: UtteranceOptions): Promise<Transcript>
 }
 
+/**
+ * Pixel data for one glasses image container (CONTRACT_VERSION 2).
+ * Produced by src/content/ (T-106), sent by src/glasses/ (T-101) through
+ * `updateImageRawData`. `width` and `height` must equal the container size.
+ */
+export interface GreyImage {
+  key: string
+  width: number
+  height: number
+  /** PNG bytes, greyscale line art on black. The SDK converts it to 4-bit grey. */
+  png: Uint8Array
+}
+
+/** Returns the image for `key` rendered at exactly width x height, or null if there is none. */
+export type ImageSource = (key: string, width: number, height: number) => Promise<GreyImage | null>
+
+/**
+ * Minimal persistent key-value storage (CONTRACT_VERSION 2). src/glasses/
+ * provides one over the SDK's get/setLocalStorage; src/store/ builds Store on
+ * top of it and also runs on an in-memory implementation in tests.
+ */
+export interface KeyValueStore {
+  /** Resolves null when the key does not exist. */
+  get(key: string): Promise<string | null>
+  set(key: string, value: string): Promise<void>
+}
+
 export interface PredictorService {
   /** Never rejects; on timeout or invalid model output it returns bank-only suggestions. */
   predict(r: PredictRequest, signal?: AbortSignal): Promise<Suggestion[]>
@@ -194,6 +221,13 @@ export interface ModeContext {
   now(): number
   log(event: string, data?: unknown): void
   flags: Flags
+  /**
+   * Ask the app shell to leave this mode and return to the launcher
+   * (CONTRACT_VERSION 2). The shell then calls `Mode.exit()`. Call it on BACK
+   * at the mode's top level. Optional so plain mock contexts stay valid; call
+   * it as `ctx.leave?.()`.
+   */
+  leave?(): void
 }
 
 export type ModeId = 'step1' | 'step2' | 'step3'
@@ -204,4 +238,35 @@ export interface Mode {
   enter(c: ModeContext): Promise<void>
   /** Must clear every timer and subscription the mode created. */
   exit(): Promise<void>
+}
+
+// ---------------------------------------------------------------------------
+// App shell (CONTRACT_VERSION 2)
+// ---------------------------------------------------------------------------
+
+export interface ModeInfo {
+  id: ModeId
+  title: string
+  /** False when the mode's flag is off (step2Enabled / step3Enabled). */
+  enabled: boolean
+}
+
+/**
+ * The running app, as seen by the phone companion UI (src/phone/). Built by
+ * src/glasses/ (T-101) in production; src/phone/ builds a mock-backed one for
+ * development. The glasses launcher menu is the root screen: a double-click
+ * there opens the system exit dialog.
+ */
+export interface AppShell {
+  modes(): ModeInfo[]
+  /** Leaves the active mode (if any), then enters `id`. */
+  startMode(id: ModeId): Promise<void>
+  /** Leaves the active mode and shows the launcher. */
+  leaveMode(): Promise<void>
+  activeMode(): ModeId | null
+  /** Called with every Screen sent to the glasses, for the phone-side preview. */
+  onScreen(cb: (s: Screen) => void): Unsubscribe
+  /** The most recent Screen, or null before the first one. */
+  lastScreen(): Screen | null
+  store: Store
 }

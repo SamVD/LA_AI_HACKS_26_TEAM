@@ -1,6 +1,6 @@
 # Nudge Task Board
 
-_Last updated: Sat Oct 17, 2026 (about H7) by ORCH. Contracts are frozen at CONTRACT_VERSION 1 (`src/core/types.ts`, `docs/CONTRACTS.md`)._
+_Last updated: Sat Oct 17, 2026 (about H7) by ORCH. Contracts: CONTRACT_VERSION 2 (`src/core/types.ts`, `docs/CONTRACTS.md`). Phase 1 builder prompts: `docs/prompts/phase1-builder-prompts.md`._
 
 Single source of truth for who is doing what. Read `PLAN.md` first for architecture, contracts, ownership, and git rules.
 
@@ -170,8 +170,9 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 - **Status:** READY
 - **Branch:** `glass/renderer`
 - **Depends on:** T-001, T-002, T-003
-- **Files it may EDIT:** `src/glasses/**` (excluding `src/glasses/imu/`)
-- **Read for context:** `src/core/types.ts`, `docs/DISPLAY_LIMITS.md`, `docs/vendor/even-skills/`
+- **Files it may EDIT:** `src/glasses/**` (excluding `src/glasses/imu/`), `src/main.ts` (branch grant for `glass/renderer`)
+- **Read for context:** `src/core/types.ts`, `docs/DISPLAY_LIMITS.md`, `docs/design/GLASSES_LAYOUTS.md`, `docs/vendor/even-skills/`
+- **Also builds (CONTRACT_VERSION 2):** the `AppShell` (glasses launcher as the root screen, mode switching, Screen mirroring for the phone), `createBridgeKeyValue` (a `KeyValueStore` over SDK storage), and lifecycle handling. Full spec in the Phase 1 builder prompt.
 - **Spec:** implement `GlassesUI`: render each `Screen` kind with SDK containers sized by the font-measurement guidance; `blank` is an event-capturing empty container. Map touchpad events to `Intent` (click=SELECT, swipe down=NEXT, swipe up=PREV, double-click=BACK). Reusable cue ladder component (`level 1/2/3`). Page lifecycle: survive phone lock/resume, handle exit. Await `waitForEvenAppBridge()` before SDK calls. Render `feedback` with `√` / `×` or words, never `✓` / `✗` (not in the G2 font). Request `@evenrealities/pretext` in the PR description if you need text measurement; ORCH installs it. Also take over the display path in `src/main.ts` from T-003's console logging (request the edit; `src/main.ts` is ORCH-owned).
 - **Acceptance criteria:**
   - [ ] Each Screen kind renders in the simulator with a screenshot check.
@@ -184,7 +185,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 - **Owner:** LOGIC (Codex)
 - **Status:** READY
 - **Branch:** `logic/step1-mode`
-- **Depends on:** T-001, T-003, T-004 (matcher from T-103 is imported through its interface)
+- **Depends on:** T-001, T-003, T-004, T-103 (`matchWord`), T-106 (`resolveAssets`). Start after T-103 and T-106 merge.
 - **Files it may EDIT:** `src/modes/step1/**`
 - **Spec:** loop: pick a `WordEntry` (rotate categories, avoid repeats within a session), show `prompt` (sentence frame with blank), open `stt.transcribeUtterance({maxMs: 8000, endSilenceMs: 1200, targetHint: word})`, match against the target, show `feedback` (check or X). SELECT during a prompt escalates the cue: level 1 picture, level 2 masked word (`c_p`), level 3 full word. After feedback, auto-advance after a short pause. NEXT skips. BACK leaves the session. Track per-item result (solved at cue level, attempts). A 10-item session ends with a `status` summary screen and `store.saveSession`. Pure TypeScript against `ModeContext` only.
 - **Acceptance criteria:**
@@ -227,7 +228,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 - **Status:** READY
 - **Branch:** `logic/assets-store`
 - **Depends on:** T-002 (reads `docs/DISPLAY_LIMITS.md`), T-004
-- **Files it may EDIT:** `src/content/assets/**`, `src/content/index.ts`, `src/store/**`, `scripts/make-assets.*`
+- **Files it may EDIT:** `src/content/assets/**`, `src/content/index.ts`, `src/content/*.test.ts`, `src/store/**`, `scripts/make-assets.*` (not needed: SVG assets are rasterized at runtime in the WebView; see the Phase 1 builder prompt)
 - **Spec:** (1) greyscale line pictures for the 30 bank words at the max image size from `DISPLAY_LIMITS.md`, produced by a script (SVG source to greyscale PNG) from original or permissively licensed art (record licenses in `src/content/assets/LICENSES.md`); (2) a set of 8-10 mouth-shape images covering common first-sound groups (for example lips together, teeth on lip, rounded lips, open, tongue between teeth); (3) `resolveAssets(entry)` returning `imageKey` and `mouthKey` (heuristic from initial letter or digraph, with `firstSound` override); (4) `Store` implementation over the SDK local-storage wrapper (abstracted so it runs in Node with an in-memory fallback).
 - **Acceptance criteria:** every bank word resolves to an image key; sizes within limits; store tests pass; asset licenses documented.
 
@@ -411,6 +412,7 @@ No new features after H18. Only fixes, packaging, polish, and the story.
 - H7: T-003 foundation merged (PR #8): mocks, registry, config, CI, `check-ownership`.
 - H7: T-004 fixtures merged (PR #9). Follow-up filed as T-007.
 - H7: T-006 design tokens and glasses layouts merged (PR #7, after one round of changes).
+- H7: CONTRACT_VERSION 2 (additive: `AppShell`, `ModeInfo`, `ModeContext.leave?()`, `GreyImage`, `ImageSource`, `KeyValueStore`). `@evenrealities/pretext@0.1.4` installed. Menu layout corrected to a text container. Phase 1 builder prompts added. **All lanes: rebase on `integration`.**
 
 ---
 
