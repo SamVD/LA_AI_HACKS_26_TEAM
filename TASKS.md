@@ -518,6 +518,42 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 - **Builder prompt:**
   > Implement T-319 in `TASKS.md` on branch `glass/imu-roll` from the latest `integration`. Only edit `src/glasses/imu/tilt.ts`, `tilt.test.ts`, `src/glasses/app.ts`, `src/glasses/glasses.test.ts`. Read the T-305 code (`tilt.ts`, the T-305 part of `app.ts`) and `spikes/device/FINDINGS.md` §2 first. Keep `sample(x, t)` without `y` behaving exactly as now. Run `npm run typecheck && npm test` and `node scripts/check-ownership.mjs --branch glass/imu-roll --base origin/integration`. Open a PR to `integration` titled "T-319: sideways head tilt reveals more of the hint" by 10:15 AM.
 
+### T-320 Practice cue ladder: sentence → first letter → letter + picture → show the answer
+- **Owner:** LOGIC (juannli or a helper agent), with a grant for the glasses layout
+- **Status:** TODO (D27, Sun 10:30 AM). It ships in **0.5.1** only after a device check. The 0.5.0 judge build and the video are not blocked on it.
+- **Branch:** `logic/practice-ladder` (OWNERS grant: `src/glasses/layout.ts`, `src/glasses/layout.test.ts`, `src/glasses/glasses.test.ts`, `src/glasses/gallery.ts`)
+- **Files it may EDIT:** `src/modes/step1/**` plus the grant. **No** `src/core/**`: the `cue` Screen and `CueLevel 1 | 2 | 3` stay as they are; only what each level shows changes.
+- **The problem (tester):** after a wrong answer, Practice jumps straight to the **picture** with the same underscores, and it keeps going until the word is fully shown and missed 3 times.
+- **New ladder** (each step only after a wrong answer, a tap, or a NEXT, exactly like today's `escalate()` triggers):
+
+  | Step | Glasses show | Today |
+  |---|---|---|
+  | 0 (prompt) | the sentence: `I walk my dog in the ____` | same |
+  | **L1** | the sentence with the **first letter** in the blank: `I walk my dog in the p _ _ _` (no picture) | the picture |
+  | **L2** | the **first letter + the picture**: picture on the left, `p _ _ _` sentence on the right (today's L1 layout, with the blank replaced by the first-letter mask). No picture asset → L2 is just L1 again (skip straight to the answer is wrong; still give the attempt) | first + last letter |
+  | **Answer** (L3) | **`Not this time`** / **`The word was "park"`**, held **3 s**, then the next word. It counts as **not solved** in the summary. No listening during it | the full word, then 3 more wrong attempts |
+
+  - A correct answer at L0-L2 stays as today (`√ park` / `Yes`, 1.5 s, next).
+  - The brief `× <heard> / Try again` feedback between steps stays (1.2 s).
+  - A wrong answer at **L2** goes to the Answer screen. Remove the `wrongAtFull` 3-strikes loop.
+  - Mask: first letter, then one `_` per remaining letter, keeping spaces and hyphens (e.g. `p _ _ _`, `i c e   c _ _ _ _`). Use or extend the existing `maskWord`/`firstLetterMask` helpers. Names keep their capital.
+  - `solvedAtCue` is 0-2 when solved, `null` when the answer screen was reached. The summary line ("Done! N of M. K without help.") stays correct.
+- **Layout (`src/glasses/layout.ts`, `case 'cue'`):** level 1 = text-only sentence with the mask; level 2 = `withPicture(...)` with the masked sentence; level 3 = two centered lines `Not this time` / `The word was "<word>"`. Never show the full word before level 3 (the ladder rule still holds). Update the gallery samples if they show cues.
+- **Acceptance criteria:**
+  - **Unit tests (step1):**
+    - wrong → L1 (masked sentence, no image);
+    - wrong → L2 (image + mask);
+    - wrong → answer screen, 3 s later the next item, recorded not solved;
+    - a correct answer at L1 → solved at cue 1;
+    - a tap escalates the same way;
+    - no image asset → L2 shows the mask text without a picture;
+    - multi-word and capitalized words are masked correctly.
+  - **Layout tests** for the three levels (the full word never appears at L1/L2).
+  - **Checks:** `npm run typecheck && npm test` green; ownership check passes.
+  - **Device** (Sarah, 0.5.1 test build): 3 words, getting each wrong on purpose. Each shows sentence → letter → letter + picture → "The word was …" → next word.
+- **Builder prompt:**
+  > Implement T-320 in `TASKS.md` on branch `logic/practice-ladder` from the latest `integration`. Edit only `src/modes/step1/**`, `src/glasses/layout.ts`, `src/glasses/layout.test.ts`, `src/glasses/glasses.test.ts`, `src/glasses/gallery.ts`. Read `src/modes/step1/index.ts` (`screen()`, `escalate()`, the wrong-answer branch with `wrongAtFull`) and `layout.ts` `case 'cue'` first. Don't change `src/core/types.ts`. Run `npm run typecheck && npm test` and `node scripts/check-ownership.mjs --branch logic/practice-ladder --base origin/integration`. Open a PR to `integration` titled "T-320: Practice ladder: letter, letter + picture, then show the answer".
+
 ### T-306 Gate G3: audit, soak, decide, tag
 - **Owner:** ORCH
 - **Status:** ✅ **PASSED on G3b** (0.4.6, #134, D23): B clean block 3 of 3 helped, 0 false, ≤ 2.9 s. Tag `v0.3-step3`. Judge build 0.4.7 = Practice + Conversation. (Earlier: not passed on 0.4.4, D20, Gemini blocked.)

@@ -79,6 +79,7 @@
     }
   },
   "branchGrants": {
+    "logic/practice-ladder": ["src/glasses/layout.ts", "src/glasses/layout.test.ts", "src/glasses/glasses.test.ts", "src/glasses/gallery.ts"],
     "ai/speaker-gate": ["src/main.ts"],
     "orch/quick-fixes": [
       "src/ai/predictor/fallback.ts",
