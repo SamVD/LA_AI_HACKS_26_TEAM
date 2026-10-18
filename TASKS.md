@@ -1,6 +1,6 @@
 # Nudge Task Board
 
-_Last updated: Sat Oct 17, 2026 (about H9) by ORCH. Decisions D1-D10: `PLAN.md` Section 13. Contracts: CONTRACT_VERSION 2 (`src/core/types.ts`, `docs/CONTRACTS.md`). Phase 1 builder prompts: `docs/prompts/phase1-builder-prompts.md`._
+_Last updated: Sat Oct 17, 2026 (about H9:30) by ORCH. Decisions D1-D10: `PLAN.md` Section 13. Contracts: CONTRACT_VERSION 2 (`src/core/types.ts`, `docs/CONTRACTS.md`). Phase 1 builder prompts: `docs/prompts/phase1-builder-prompts.md`._
 
 Single source of truth for who is doing what. Read `PLAN.md` first for architecture, contracts, ownership, and git rules.
 
@@ -13,8 +13,8 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 **Queue by lane (now):**
 - GLASS: S-3 is merged. Next: **T-101 now (critical path)**. Fit the S-3 0.1.2 rerun (5-minute lock, SDK storage timing) into a device cycle when convenient.
 - AI: S-1 is merged. Next: finish S-2, then **T-104 (now unblocked: glasses mic, D7)**. Set up the `api/` hosting (Vercel + ElevenLabs key) early. T-203 can share it.
-- LOGIC (Codex): T-103, then T-106, then T-102, then T-007.
-- UI (Cursor): T-105 is merged. Next: the placeholder-label nit plus dev-page intent buttons (small), then T-206 once T-106 lands.
+- LOGIC (Codex): T-103, T-106 and T-007 are merged. Next: **T-102 Step 1 mode now (critical path)**, then the T-106 store follow-up (small), then T-205.
+- UI (Cursor): T-206 (PR #24) needs two fixes (personal-word frames, unique ids) and a retarget to `integration`; see the review.
 
 **Global rules for every task (also repeated in the builder prompt):**
 - Read anything. Edit only the files listed on your card. If you need a change elsewhere, stop and say so in your reply.
@@ -145,7 +145,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ### T-007 Fixture realism (follow-up to T-004)
 - **Owner:** LOGIC (Codex)
-- **Status:** READY (lower priority than T-103, T-106 and T-102; **must merge before T-301 starts**)
+- **Status:** MERGED (PR #23). 11 conversations; no silence threshold separates stalls from normal pauses.
 - **Branch:** `logic/fixtures-v2`
 - **Depends on:** T-004
 - **Files it may EDIT:** `fixtures/**`
@@ -187,7 +187,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ### T-102 Step 1 engine and mode
 - **Owner:** LOGIC (Codex)
-- **Status:** READY
+- **Status:** READY (T-103 and T-106 merged). Builder prompt: `docs/prompts/phase1-builder-prompts.md` #5.
 - **Branch:** `logic/step1-mode`
 - **Depends on:** T-001, T-003, T-004, T-103 (`matchWord`), T-106 (`resolveAssets`). Start after T-103 and T-106 merge.
 - **Files it may EDIT:** `src/modes/step1/**`
@@ -199,7 +199,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ### T-103 Fuzzy matcher
 - **Owner:** LOGIC (Codex)
-- **Status:** READY
+- **Status:** MERGED (PR #21). Short words (3-4 letters) are exact/plural only at strictness 1, documented in `src/matching/README.md`.
 - **Branch:** `logic/matcher`
 - **Depends on:** T-001
 - **Files it may EDIT:** `src/matching/**`
@@ -234,7 +234,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ### T-106 Picture and mouth-shape assets, store
 - **Owner:** LOGIC (Codex)
-- **Status:** READY
+- **Status:** MERGED (PR #22). All 40 assets verified rendering as PNGs at exact container sizes in a browser. **Follow-up (small PR, before T-206 merges):** `load()` must filter out invalid stored entries instead of dropping the whole list (otherwise one malformed entry wipes all personal words on the next write). Add a test.
 - **Branch:** `logic/assets-store`
 - **Depends on:** T-002 (reads `docs/DISPLAY_LIMITS.md`), T-004
 - **Files it may EDIT:** `src/content/assets/**`, `src/content/index.ts`, `src/content/*.test.ts`, `src/store/**`, `scripts/make-assets.*` (not needed: SVG assets are rasterized at runtime in the WebView; see the Phase 1 builder prompt)
@@ -299,7 +299,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ### T-205 Mouth-shape resolver and asset expansion
 - **Owner:** LOGIC (Codex)
-- **Status:** TODO
+- **Status:** READY (T-106 merged). Lower priority than T-102.
 - **Branch:** `logic/mouth-resolver`
 - **Depends on:** T-106
 - **Files it may EDIT:** `src/content/phonetics/**`
@@ -308,7 +308,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ### T-206 Companion v2: personal word bank and debug panel
 - **Owner:** UI (Cursor)
-- **Status:** TODO
+- **Status:** CHANGES_REQUESTED (PR #24): default `frames: []` for personal words, with an optional validated practice sentence; unique ids (non-Latin names collapsed to `p-word`, and `p-maya` collides with the builtin sample); retarget to `integration`.
 - **Branch:** `ui/companion-v2`
 - **Depends on:** T-105, T-106
 - **Files it may EDIT:** `src/phone/**` *(this task owns `src/phone/` for the duration of Phase 2; T-105 must be merged first)*
@@ -426,6 +426,7 @@ No new features after H18. Only fixes, packaging, polish, and the story.
 - H7: T-004 fixtures merged (PR #9). Follow-up filed as T-007.
 - H7: T-006 design tokens and glasses layouts merged (PR #7, after one round of changes).
 - H7: T-002 device checks done (PR #13, `docs/BETA_RESULTS.md`). QR prototype mode is broken on Even's side, so device testing uses packaged Beta builds; README and `docs/G2_SMOKE.md` updated.
+- H9: T-103 matcher (PR #21), T-106 assets and store (PR #22) and T-007 fixtures (PR #23) merged. **T-102 READY.** T-206 (PR #24) changes requested.
 - H9: S-3 device spike merged (PR #20). Decisions D7-D10 (glasses mic, visibilitychange lifecycle, up/down tilt, `app.json` 0.2.0). T-104 READY. T-101 prompt corrected.
 - H8: S-1 ElevenLabs STT spike merged (PR #17). Decisions D1-D5 recorded in `PLAN.md` Section 13; T-104, T-202, T-203 and T-204 cards updated.
 - H7: T-105 phone companion merged (PR #11). Cue-ladder rule added to `GLASSES_LAYOUTS.md` (PR #15): the word stays hidden until level 3.
