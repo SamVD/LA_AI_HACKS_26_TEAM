@@ -1,12 +1,12 @@
 # Nudge: Demo script
 
-_T-404, ORCH. Two uses: (1) the **2–3 minute Devpost video**, (2) the **live judge walk-up** at the table. Timings are targets; rehearse with a stopwatch (T-405 calls for two full rehearsals). **[FILL]** marks anything that depends on the final build._
+_T-404, ORCH. Two uses: (1) the **2–3 minute Devpost video**, (2) the **live judge walk-up** at the table. Timings are targets; rehearse with a stopwatch (T-405 calls for two full rehearsals)._
 
 ## Before anyone walks up (5-minute setup)
 
-- [ ] G2 charged, paired, **final Beta build installed** (version **[FILL]**; check Me → Beta tester). Launcher shows **Practice / Conversation** (**[FILL: or Practice / Assist if G3 failed, decision B]**).
+- [ ] G2 charged, paired, **final Beta build installed** (version **0.5.1**; check Me → Beta tester). Launcher shows **Practice / Conversation**. On the phone: Conversation → Hint settings → **Eager**.
 - [ ] Phone on a **hotspot you control**, not venue Wi-Fi. Phone brightness up, do-not-disturb on, auto-lock off.
-- [ ] Phone companion open on **Home**; Demo tab one tap away. The Home build strip should read the flags you expect.
+- [ ] Phone companion open on **Home**; Demo tab one tap away. Home shows only Practice and Conversation.
 - [ ] Production API alive: `curl -s -o /dev/null -w "%{http_code}\n" -X OPTIONS https://nudge-seven-psi.vercel.app/api/stt/token -H "Origin: http://127.0.0.1:61976" -H "Access-Control-Request-Method: POST"` returns **204**.
 - [ ] Gemini free tier not exhausted: open AI Studio → rate limits. If unsure, do the Assist beat with the tap only and skip Conversation auto-hints.
 - [ ] Simulator (`npm run dev` + `npm run simulate`) running on a laptop as backup **and** the phone Demo tab loaded, so a failure costs one gesture, not a restart.
@@ -55,7 +55,7 @@ Video rules: **say once on screen or in voice that the phone Demo tab is a scrip
 |---|---|
 | "How does it use the G2?" | Display for hints, glasses mic for speech, touchpad for help and next. No camera or speaker on the G2. Details in `DEVPOST.md` → *How the G2 is used*. |
 | "Is this real or scripted?" | The glasses flow is real, with live speech-to-text and a live Gemini call. The phone **Demo tab** is a scripted replay and says so. |
-| "Why so slow?" | Honest answer: about 1.5–2.5 s today. A pause has to last ~1.5 s before we call it a stall; Gemini is ~1 s; packaged builds can't use realtime STT, which would save ~1 s. **[FILL: add the G3 numbers]** |
+| "Why so slow?" | Honest answer: about 1.5–2.5 s today. A pause has to last ~1.5 s before we call it a stall; Gemini is ~1 s; packaged builds can't use realtime STT, which would save ~1 s. On the final build: about 1.5 s after a stall when prefetched, 1.7–1.9 s for a tap. |
 | "Does it work for real patients?" | Not clinically validated. Cueing order follows speech-therapy practice. We want SLP partners next. |
 | "What if the other person talks?" | It can't tell wearer from partner yet. Loudness-based speaker tagging is designed but not built (next step). Step 1 already ignores short non-matching noise. |
 | "What about privacy?" | Audio is never stored; transcripts stay in memory; the word bank stays on the device; no audio passes through our servers. |
@@ -76,5 +76,5 @@ Video rules: **say once on screen or in voice that the phone Demo tab is a scrip
 
 ## After the demo
 
-- Remind the judge of the Devpost and the Beta install path (**[FILL]**).
+- Remind the judge of the Devpost and the repo (the README has the measured results and how to run the demo without glasses).
 - If the G2 is on loan, hand it back per the return arrangement confirmed in T-405.

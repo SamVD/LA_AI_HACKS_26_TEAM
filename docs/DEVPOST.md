@@ -1,6 +1,6 @@
 # Nudge: Devpost writeup
 
-_Draft by ORCH for T-404, Sun Oct 18 2026. Facts come from `PLAN.md`, `docs/ORCH_STATE.md`, `docs/BETA_RESULTS.md` and `spikes/*/FINDINGS.md`. Lines marked **[FILL]** depend on the G3 re-run (decision point B), the final build, or links that don't exist yet. Resolve every **[FILL]** before pasting into Devpost._
+_Draft by ORCH for T-404, Sun Oct 18 2026. Facts come from `PLAN.md`, `docs/ORCH_STATE.md`, `docs/BETA_RESULTS.md` and `spikes/*/FINDINGS.md`._
 
 ---
 
@@ -46,7 +46,7 @@ Nudge is an Even Hub app for the **Even G2**. Three steps, the first two being t
 |---|---|---|
 | 1 | **Practice** | A sentence with a blank ("You drink from a ____."). The wearer says the word. √ or ×. If they're stuck, the cue ladder climbs: picture, then `c_p`, then the full word. |
 | 2 | **Assist** | In a real conversation the wearer taps the temple touchpad. Nudge reads the last few seconds of the conversation, predicts the word they're looking for, and shows it letters-first: `s _ _ _ _`, then `s u n _ _`, then `sunny`. Swipe for the next suggestion. |
-| 3 | **Conversation** | Same hints, but Nudge notices a stall ("…it was really warm and um…") and offers help on its own. Tap still works anytime. **[FILL: ships ON / ships OFF per G3, decision point B]** |
+| 3 | **Conversation** | Same hints, but Nudge notices a stall ("…it was really warm and um…") and offers help on its own. Tap still works anytime. **On in the judge build** (passed gate G3b). |
 
 The display is blank the rest of the time. That is the product: **Quiet Tech**.
 
@@ -103,14 +103,15 @@ Honest table. A judge should be able to trust every "real".
 |---|---|
 | Glasses mic capture, local voice-activity detection | **Real**, on the G2 |
 | Speech-to-text (ElevenLabs Scribe, batch) | **Real**, on the G2 over the hosted token proxy |
-| Gemini word prediction | **Real**, live through `api/predict` (free tier, throttled) |
+| Gemini word prediction | **Real**, live through `api/predict` (throttled; bank-only fallback) |
 | Step 1 Practice, graded with real speech | **Real**: passed on the G2 (gate G1) |
 | Step 2 Assist in a two-person conversation | **Real**: passed on function on the G2 (gate G2); "warm and um um" + tap → "sunny" |
-| Step 3 automatic hints | **[FILL: G3 result]** Works on the G2 (run 1: ~3–4 s per hint, before the latency fix). Re-run on 0.4.4 with the early-prediction fix: **[FILL numbers or "held, off in this build"]** |
+| Step 3 automatic hints (Conversation) | **Real**: passed on the G2 (gate G3b): 3 of 3 planted stalls helped (`sunny`, `umbrella`, `gloves`), 0 false hints, 1.9–2.9 s from stall to letters. On in the judge build |
 | Practice words and pictures | **Real but small**: a 38-word starter bank with 55 line-art pictures and 10 mouth-shape drawings, rendered to greyscale on the device; the wearer adds their own words |
 | **Judge demo** (phone **Demo** tab, `src/phone/demo/`) | **Scripted.** Replays a recorded conversation fixture and shows the hint screens in the G2 preview so a judge can see the flow without a second person. It does not use the mic or Gemini, and the page says so. |
 | Phone preview of the glasses | Real rendering of the same Screen data the glasses get, drawn as SVG at 576×288 |
-| Head-tilt yes/no | **Not built** (measured and cut, D9) |
+| Head gestures | **Real**: look down / up = next / previous suggestion, sideways tilt = reveal more, only while a suggestion shows. On the G2: 4 / 4 sideways tilts, 2 / 2 look-downs |
+| Telling the wearer from the partner by loudness | **Built and measured** (wearer about 10–15 dB louder), **off** in the judge build: not yet verified on the device |
 | Steps 4–5 (mumble detection, sentence completion) | **Not built.** Backlog |
 
 ## Challenges we ran into
@@ -128,7 +129,7 @@ Honest table. A judge should be able to trust every "real".
 - Gemini top-3 of **0.98** on our evaluation set, with schema validation and a fallback that is honest about being worse (0.60).
 - A hint ladder built from how clinicians actually cue: first letter before the whole word.
 - A strict architecture (modes never import the SDK) that held up across four people and four tools, enforced by a CI ownership check on every PR.
-- **About 800 automated tests** (797 on `integration` at the time of writing) **[FILL: final count]**.
+- **839 automated tests**, run in CI on every PR.
 
 ## What we learned
 
@@ -141,7 +142,7 @@ Honest table. A judge should be able to trust every "real".
 ## Honest limitations
 
 - **Not clinically validated.** We have not tested Nudge with people who have aphasia. The design follows speech-therapy cueing practice; it is not a medical device and makes no outcome claims.
-- **Latency is not yet where we want it.** On the G2 the tester described Assist as slow; the simulator median from tap to candidates is about 1.5 s (T-208), not yet confirmed on the glasses. **[FILL: add the G3 re-run numbers for Assist and auto-hints]**
+- **Latency is not yet where we want it.** On the G2 the tester described Assist as slow; on the G2 in the final build, an automatic hint arrives about 1.5 s after the stall when prefetched (about 3 s on the first call), and a tap takes 1.7–1.9 s.
 - **It can't tell who is talking.** The glasses mic hears the conversation partner too. Step 3 can mistake the partner's pause for the wearer's stall. A loudness-based speaker tag (T-314) is designed (an optional `speaker` field is already in the contract) but **not built**.
 - **Free-tier Gemini** is capped at 15 requests/minute. We throttle (prefetch ≤12/min, 3/min reserved for taps) and fall back to bank-only suggestions under load. Billing would remove the cap.
 - **English only**, and the word bank is a 38-word starter set.
@@ -164,29 +165,27 @@ TypeScript, Vite, Even Hub SDK (`@evenrealities/even_hub_sdk`, SDK 0.0.12), Even
 
 ## Try it out
 
-- **Repo:** https://github.com/SamVD/LA_AI_HACKS_26_TEAM (confirm this is public before submitting)
-- **Beta build:** Even Hub Beta group **[FILL: group name / how a judge installs]**, `nudge.ehpk` version **[FILL: final version, 0.4.4 or later]**
+- **Repo:** https://github.com/SamVD/LA_AI_HACKS_26_TEAM
+- **Beta build:** `nudge.ehpk` version **0.5.1** (tag `v0.5.1`) on the Even Hub Beta; ask us at the table to try it on the G2.
 - **Judge demo without glasses:** there is no hosted URL. Run it locally (Node 20 or newer):
   ```
   git clone https://github.com/SamVD/LA_AI_HACKS_26_TEAM && cd LA_AI_HACKS_26_TEAM
   npm ci && npm run dev
   ```
   then open `http://localhost:5173/src/phone/demo/` and tap **Play Step 2 (tap for help)**. The page replays a scripted conversation ("…pour my tea into the ___") and mirrors the glasses preview: `c _ _`, then more letters, then `cup`. It is scripted, with no mic or Gemini, and the page says so.
-- **Demo video (2–3 min):** **[FILL: link]**; shot list in [`DEMO_SCRIPT.md`](./DEMO_SCRIPT.md)
+- **Demo video (2–3 min):** linked on the Devpost submission page; shot list in [`DEMO_SCRIPT.md`](./DEMO_SCRIPT.md)
 - **Screens and design notes:** [`docs/design/DEVPOST_ASSETS.md`](./design/DEVPOST_ASSETS.md), [`docs/design/PAPER.md`](./design/PAPER.md)
 - **System map:** [`docs/design/system-map.html`](./design/system-map.html) (image: `system-map-diagram.png`)
 
 ## Gallery images (from `src/glasses/screenshots/`)
 
-Suggested order: `15-phone-companion.png` (final build: Practice · Assist), **`docs/design/system-map-diagram.png`** (how it works: glasses → phone → cloud), `00-launcher.png`, `01-prompt.png`, `03b-cue-L1-picture.png`, `04-cue-L2.png`, `06-feedback-ok.png`, `16-candidates-v3-L1.png` (`s _ _ _ _`), `17-candidates-v3-L2.png` (`s u n _ _`), `18-candidates-v3-L3.png` (`sunny`). Don't use `08`-`10`/`08b`: they show the old picture and mouth-shape hints that Steps 2-3 no longer use. Add a photo of the real G2 in use if one exists; it is worth more than any screenshot.
+Suggested order: **`docs/design/system-map-diagram.png`** (how it works: glasses → phone → cloud), the current screens in **`docs/design/readme/`** (launcher, Practice ladder: sentence → letter → letter + picture → answer), `06-feedback-ok.png`, `16-candidates-v3-L1.png` (`s _ _ _ _`), `17-candidates-v3-L2.png` (`s u n _ _`), `18-candidates-v3-L3.png` (`sunny`). Don't use `08`-`10`/`08b`: they show the old picture and mouth-shape hints that Steps 2-3 no longer use. Add a photo of the real G2 in use if one exists; it is worth more than any screenshot.
 
 ## Team
 
-| Name | Role | Devpost handle |
-|---|---|---|
-| Aarav Jain | ORCH: architecture, audits, submission | **[FILL: handle]** |
-| Samuel Vander Dussen | AI lane: speech-to-text hosting, Gemini predictor, stall detection | **[FILL: handle]** |
-| Sarah Dias | Glasses lane: renderer, mic, device testing | **[FILL: handle]** |
-| Juan Li Chen | UI and logic lanes: phone companion, Practice mode, matcher, assets | **[FILL: handle]** |
-
-Full names come from the repo's git history; confirm spelling and handles with each person before submitting.
+| Name | Role |
+|---|---|
+| Aarav Jain | Orchestration: architecture, reviews, integration, submission |
+| Samuel Vander Dussen | AI lane: speech-to-text hosting, Gemini predictor, stall detection |
+| Sarah Dias | Glasses lane: renderer, mic, device testing |
+| Juan Li Chen | UI and logic lanes: phone companion, Practice mode, matcher, gestures |

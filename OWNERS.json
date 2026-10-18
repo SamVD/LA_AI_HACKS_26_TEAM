@@ -42,7 +42,7 @@
       ]
     },
     "ai": {
-      "github": ["TBD"],
+      "github": ["SamVD"],
       "tool": "Claude Code + Even plugin",
       "paths": [
         "src/audio/**",
@@ -55,7 +55,7 @@
       ]
     },
     "ui": {
-      "github": ["TBD"],
+      "github": ["juannli"],
       "tool": "Cursor",
       "paths": [
         "src/phone/**",
@@ -63,7 +63,7 @@
       ]
     },
     "logic": {
-      "github": ["TBD"],
+      "github": ["juannli"],
       "tool": "Codex / ChatGPT",
       "paths": [
         "src/matching/**",
@@ -79,6 +79,7 @@
     }
   },
   "branchGrants": {
+    "orch/repo-cleanup": ["tasks/**", "src/glasses/screenshots/**"],
     "logic/practice-ladder": ["src/glasses/layout.ts", "src/glasses/layout.test.ts", "src/glasses/glasses.test.ts", "src/glasses/gallery.ts"],
     "ai/speaker-gate": ["src/main.ts"],
     "orch/quick-fixes": [
