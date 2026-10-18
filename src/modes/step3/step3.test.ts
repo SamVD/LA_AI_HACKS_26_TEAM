@@ -117,6 +117,52 @@ describe('Step 3 behavior', () => {
     await mode.exit()
   })
 
+  it('after an empty auto-hint, BACK leaves the mode (Step 2 is back to idle, not stuck in "empty")', async () => {
+    const { ctx, mode, ui, leave } = setup({ fixture: f(), predictor: slowPredictor({}, 10) })
+    await mode.enter(ctx)
+    await tick(f().stalls[0].tMs + 3000)
+    expect(logged(ctx, 'step3 auto-hint empty').length).toBe(1)
+    ui.emit('BACK')
+    expect(leave).toHaveBeenCalledTimes(1)
+    expect(logged(ctx, 'step2 hide')).toEqual([]) // the reset is silent: the user hid nothing
+    await mode.exit()
+  })
+
+  it('an empty auto-hint sends nothing to the glasses', async () => {
+    const { ctx, mode, ui } = setup({ fixture: f(), predictor: slowPredictor({}, 10) })
+    await mode.enter(ctx)
+    const before = ui.screens.length
+    await tick(f().stalls[0].tMs + 3000)
+    expect(ui.screens.length).toBe(before)
+    await mode.exit()
+  })
+
+  it('skips a stall that arrives while Step 2 is still looking (no second virtual tap)', async () => {
+    let fireAt = [1000, 1400] // two stall signals 0.4 s apart, while an 800 ms lookup is in flight
+    const signal = (tMs: number) => ({ tMs, silenceStartMs: tMs - 1500, silenceMs: 1500, reason: 'function-word' as const, utterance: 'pass me the', transcriptTail: 'pass me the', stalledAfter: 'pass me the', usedPartial: false })
+    const fake: StallDetector = {
+      onEvent: e => {
+        if (e.type !== 'tick' || !fireAt.length || Date.now() - t0 < fireAt[0]) return null
+        fireAt = fireAt.slice(1)
+        return signal(Date.now())
+      },
+      nextCheckMs: () => (fireAt.length ? 0 : null),
+      reset: () => {},
+    }
+    // Step 2 builds the request from the transcripts it heard (none here), so stalledAfter is ''.
+    const predictor = slowPredictor({ '': suggest('cup') }, 800)
+    const { ctx, mode, last } = setup({ predictor, options: { makeDetector: () => fake } })
+    const t0 = Date.now()
+    await mode.enter(ctx)
+    await tick(1300)
+    expect(logged(ctx, 'step3 auto-hint').length).toBe(1)
+    await tick(300)
+    expect(logged(ctx, 'step3 auto-hint skipped').at(-1)?.data).toMatchObject({ why: 'loading' })
+    await tick(1000)
+    expect(last().kind).toBe('candidates')
+    await mode.exit()
+  })
+
   it('a user tap that finds nothing still says so (Step 2 behavior is unchanged)', async () => {
     const { ctx, mode, ui, last } = setup({ predictor: slowPredictor({}, 10) })
     await mode.enter(ctx)

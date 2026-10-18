@@ -29,6 +29,8 @@ export interface Step3Options {
 }
 
 const MAX_TRANSCRIPTS = 40
+/** A help request Step 2 hasn't answered after this long no longer blocks auto-hints. */
+const LOADING_STALE_MS = 10_000
 
 export function createStep3(options: Step3Options = {}): Mode {
   const noticeMs = options.noticeMs ?? 1500
@@ -46,6 +48,8 @@ export function createStep3(options: Step3Options = {}): Mode {
   let paused = false
   let degraded = false // detector failed: plain Step 2 from here on
   let autoPending = false // the next screen answers a virtual tap
+  let pendingSince: number | null = null // a SELECT reached Step 2 on a blank display; it's looking things up
+  let resetting = false // Step 3 is putting Step 2 back to idle after an empty auto-hint
   let noticeTimer: ReturnType<typeof setTimeout> | null = null
   let noticeToken = 0
 
@@ -55,12 +59,22 @@ export function createStep3(options: Step3Options = {}): Mode {
   function proxyUi(real: GlassesUI): GlassesUI {
     return {
       show(s) {
+        pendingSince = null // Step 2 answered whatever it was looking up
         if (autoPending) {
           autoPending = false
-          // An unrequested hint that found nothing stays blank: "No suggestion yet" is
-          // useful after a tap, noise on a display nobody asked to wake.
-          if (s.kind === 'status') { ctx?.log('step3 auto-hint empty'); s = { kind: 'blank' } }
+          if (s.kind === 'status') {
+            // An unrequested hint that found nothing. The display stayed blank while Step 2
+            // looked, so leave it untouched ("No suggestion yet" is useful after a tap, noise
+            // on a display nobody asked to wake), then put Step 2 back to idle. Otherwise it
+            // stays in its "empty" state and the user's next BACK only clears that state
+            // instead of leaving the mode (ORCH audit, #78).
+            ctx?.log('step3 auto-hint empty')
+            queueMicrotask(resetStep2)
+            return Promise.resolve()
+          }
         }
+        // Step 2 redrawing blank while Step 3 resets it: the display is already blank.
+        if (resetting && s.kind === 'blank' && screen === 'blank') return Promise.resolve()
         if (s.kind !== 'status') { clearNotice(); noticeToken++ }
         screen = s.kind
         return real.show(s)
@@ -72,12 +86,26 @@ export function createStep3(options: Step3Options = {}): Mode {
     }
   }
 
+  /** Hands a gesture (real or virtual) to Step 2. */
+  function toStep2(i: Intent, auto: boolean) {
+    if (!ctx || !step2Intent) return
+    if (i === 'SELECT' && screen === 'blank') pendingSince = ctx.now()
+    autoPending = auto // a real gesture: Step 2's response is not an auto-hint
+    step2Intent(i)
+  }
+
+  /** Step 2 is in its "empty" state behind a blank display: BACK returns it to idle (quietly, see proxyUi). */
+  function resetStep2() {
+    if (!step2Intent || screen !== 'blank') return
+    resetting = true
+    try { step2Intent('BACK') } finally { resetting = false }
+  }
+
   function onIntent(i: Intent) {
     if (!ctx) return
     if (!ctx.flags.step3Enabled) { if (i === 'BACK') ctx.leave?.(); return }
     if (screen === 'blank' && (i === 'NEXT' || i === 'PREV') && !degraded) { void togglePause(); return }
-    autoPending = false // a real gesture: Step 2's response is not an auto-hint
-    step2Intent?.(i)
+    toStep2(i, false)
   }
 
   async function togglePause() {
@@ -100,14 +128,19 @@ export function createStep3(options: Step3Options = {}): Mode {
   function onStall(s: StallSignal) {
     if (!ctx) return
     const base = { silenceMs: s.silenceMs, reason: s.reason, stalledAfter: s.stalledAfter }
-    if (paused || screen !== 'blank' || !step2Intent) {
-      ctx.log('step3 auto-hint skipped', { ...base, why: paused ? 'paused' : screen !== 'blank' ? `showing ${screen}` : 'step2 not ready' })
+    const loading = pendingSince !== null && ctx.now() - pendingSince < LOADING_STALE_MS
+    const why = paused ? 'paused'
+      : screen !== 'blank' ? `showing ${screen}`
+      : loading ? 'loading' // Step 2 is still answering an earlier tap; a second SELECT would be ignored
+      : !step2Intent ? 'step2 not ready'
+      : null
+    if (why) {
+      ctx.log('step3 auto-hint skipped', { ...base, why })
       return
     }
     const keywords = extractKeywords(transcripts, bank, { n: 3, nowMs: s.tMs }).map(k => k.word)
     ctx.log('step3 auto-hint', { ...base, keywords })
-    autoPending = true
-    step2Intent('SELECT')
+    toStep2('SELECT', true)
   }
 
   return {
@@ -118,6 +151,8 @@ export function createStep3(options: Step3Options = {}): Mode {
       paused = false
       degraded = false
       autoPending = false
+      pendingSince = null
+      resetting = false
       transcripts = []
       screen = 'blank'
       subs = [c.ui.onIntent(onIntent)]
@@ -132,7 +167,13 @@ export function createStep3(options: Step3Options = {}): Mode {
       }))
       // Step 3 includes Step 2, whatever the Step 2 flag says.
       inner = createStep2(options.step2)
-      await inner.enter({ ...c, ui: proxyUi(c.ui), flags: { ...c.flags, step2Enabled: true } })
+      await inner.enter({
+        ...c,
+        ui: proxyUi(c.ui),
+        flags: { ...c.flags, step2Enabled: true },
+        // Step 2 logs "step2 hide" when Step 3 resets it after an empty auto-hint; the user hid nothing.
+        log: (event, data) => { if (!(resetting && event === 'step2 hide')) c.log(event, data) },
+      })
       detector = makeDetector(options.stall)
       detach = attachStallDetector(c.stt, detector, onStall, {
         now: c.now,
@@ -152,6 +193,7 @@ export function createStep3(options: Step3Options = {}): Mode {
       subs = []
       clearNotice()
       noticeToken++
+      pendingSince = null
       const i = inner
       inner = null
       step2Intent = null
