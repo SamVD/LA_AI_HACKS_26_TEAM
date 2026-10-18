@@ -11,7 +11,7 @@ _Last updated: **Sat Oct 17, 2026, 11:15 PM PT (hackathon hour ~H11:15 of 24)** 
 | `integration` | after PRs #68, #70, #65 (+ this update). CI green: typecheck, 630 tests, build, ownership |
 | `main` | **`4b13180`** (fast-forwarded at G1; the build Sarah tested) |
 | Tags | **`v0.1-step1` → `4b13180`** (G1). Next: `v0.2-step2` at G2, `v0.3-step3` at G3 |
-| `app.json` version | **0.3.0, uploaded and installed for G1.** Bump above 0.3.0 for the G2 upload (D10) |
+| `app.json` version | **0.4.0** for the G2 build (0.3.0 was the G1 upload). Bump again for any re-upload (D10) |
 | Contracts | `CONTRACT_VERSION 2` |
 | Production `api/` | `https://nudge-seven-psi.vercel.app`, redeployed by Sam with the WebView origin. At 10:54 PM: `127.0.0.1:<any port>` preflight 204, **but `null` and `file://` also 204, so it's looser than intended**; tighten after #61 (see blockers) |
 | Open PRs | #69 (UI preview captions): changes requested (leaks the word at L1/L2) |
