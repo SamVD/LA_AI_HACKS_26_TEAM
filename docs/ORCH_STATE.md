@@ -336,6 +336,7 @@ There are no console logs on the device. Use the phone companion's **Preview** t
 
 | When | Change |
 |---|---|
+| Sun 10:30 AM | **D27 / T-320:** Practice ladder fix (letter → letter + picture → show answer → next). Branch `logic/practice-ladder`, grant for glasses layout. Goes into 0.5.1 after a device check; doesn't block 0.5.0 or the video |
 | Sun 10:25 AM | **0.5.0 judge build (D26).** #148: tilt passed (4/4 sideways, 2/2 down, none off-screen) → `VITE_IMU=1` in `.env.production`. Speaker gate untestable (all chunks mixed) → off. Latency: set Eager on the phone for filming; shorter chunks after the hackathon |
 | Sun 10:10 AM | Merged #144 (T-407 phone cleanup) and #146 (T-319 sideways tilt = SELECT). `app.json` **0.4.9** = last test build. No open PRs |
 | Sun 10:00 AM | **D25 / T-319:** sideways head tilt = tap on a suggestion (any roll; S-3 could not split left/right). Cut-off 10:15 (T-407 extended to 10:15 too). Builds: 0.4.9 last test, **0.5.0 judge build** |
