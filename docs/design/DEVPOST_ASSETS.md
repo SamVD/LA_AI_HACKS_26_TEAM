@@ -25,7 +25,18 @@ Captured from the glasses renderer / simulator (`src/glasses/screenshots/`).
 | [`12-status.png`](../../src/glasses/screenshots/12-status.png) | Status |
 | [`13-blank.png`](../../src/glasses/screenshots/13-blank.png) | Blank (Step 2 idle) |
 | [`14-stub-step2.png`](../../src/glasses/screenshots/14-stub-step2.png) | Step 2 (early stub) |
-| [`15-phone-companion.png`](../../src/glasses/screenshots/15-phone-companion.png) | Phone companion |
+| [`15-phone-companion.png`](../../src/glasses/screenshots/15-phone-companion.png) | Phone companion (Home tab) |
+
+### Phone companion (Home)
+
+The packaged phone page (`mountCompanion` in `src/phone/`) is the calm caregiver surface judges see beside the G2.
+
+- **Build strip** — `This build: Practice · Assist · Hints` (or `Assist off` / `Hints off` when flags are off at pack time). One line at the top of Home; no dashboard chrome.
+- **Step 3 card** — Sensitivity (Eager / Balanced / Gentle), pause/resume hints, and a short hint log. **Hidden when Step 3 is not in the build** (`step3` mode disabled); visible when the pack ships with `VITE_STEP3=1`.
+- **Judge demo** — Inline **Demo** tab or standalone `/src/phone/demo/index.html` for scripted stall replay (T-401).
+- **Preview** — Mirrors glasses screens; after T-210 / CONTRACT v3, Step 2–3 **candidates** are letters-first (`c _ _`, then half the word, then full word) with no picture or mouth slot.
+
+Refresh [`15-phone-companion.png`](../../src/glasses/screenshots/15-phone-companion.png) after UI changes if Devpost still shows an older Home (build strip missing, Step 3 card wrong, or pre–letters-first preview).
 
 ## Wireframes (SVG)
 
