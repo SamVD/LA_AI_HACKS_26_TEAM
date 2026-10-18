@@ -14,6 +14,8 @@ Reference for **T-101** (`GlassesUI`). Numbers come from [`DISPLAY_LIMITS.md`](.
 - Max **12** total, **8** text/list, **4** image. Images **20–288 × 20–144** px.
 - Feedback symbols: **`√` / `×`** or words — not `✓` / `✗`.
 
+**Cue ladder rule (ORCH):** the target word is hidden until level 3. Level 1 = visual only (picture in Step 1, mouth shape in Steps 2-3) plus context text. Level 2 = letters only (`c _ p` in Step 1, the first letter in Steps 2-3). Level 3 = the full word. No layout below may put `word` (or `items[index].word`) in a container at level 1 or 2.
+
 SVG wireframes: [`screens/`](./screens/) (one file per row below).
 
 ---
@@ -66,7 +68,7 @@ Separate pages per level (rebuild page on level change).
 | Container | x | y | w | h | evt | Notes |
 | --- | ---: | ---: | ---: | ---: | :---: | --- |
 | Image | 16 | 54 | 200 | 120 | 0 | `imageKey`, ≤288×144 |
-| Text | 232 | 54 | 328 | 162 | **1** | label + word; optional frame in second text container |
+| Text | 232 | 54 | 328 | 162 | **1** | `sentence` (the frame, wrapped to the box), or `' '` if none. **Never `word`** |
 
 Optional frame text container: x=8, y=27, w=560, h=27 (not event capture).
 
@@ -107,7 +109,7 @@ Optional frame text container: x=8, y=27, w=560, h=27 (not event capture).
 | Container | x | y | w | h | evt | Notes |
 | --- | ---: | ---: | ---: | ---: | :---: | --- |
 | Image | 16 | 54 | 180 | 108 | 0 | mouth or picture |
-| Text | 208 | 54 | 360 | 135 | **1** | word, index, level on separate 27 px lines |
+| Text | 208 | 54 | 360 | 135 | **1** | position (`1/3`) and a short hint line. **Never the word.** Image box shows `mouthKey ?? imageKey`; with neither, show text only |
 
 Optional hint line in same text container (third line).
 
