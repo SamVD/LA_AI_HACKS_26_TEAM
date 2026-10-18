@@ -1,6 +1,6 @@
 {
   "$comment": "Path ownership for Nudge. A PR from branch <lane>/<slug> may only change files matching lanes.<lane>.paths, plus branchGrants[<full branch name>] if present (branchGrants are one-off extra paths for Phase 0 tasks that write files another lane owns afterwards). Globs use ** for any depth and * within one path segment. Read by scripts/check-ownership (T-003). Content owned by ORCH; see docs/CONTRACTS.md.",
-  "contractVersion": 2,
+  "contractVersion": 3,
   "lanes": {
     "orch": {
       "github": ["aaravj9"],
@@ -77,6 +77,10 @@
     }
   },
   "branchGrants": {
+    "ai/flush-on-tap": [
+      "src/modes/step2/index.ts",
+      "src/modes/step2/step2.test.ts"
+    ],
     "ai/step3-mode": [
       "src/mocks/foundation.test.ts"
     ],

@@ -6,7 +6,7 @@
 //
 // This file holds types and constants only. No runtime logic, no SDK imports.
 
-export const CONTRACT_VERSION = 2 as const
+export const CONTRACT_VERSION = 3 as const
 
 // ---------------------------------------------------------------------------
 // Input
@@ -19,7 +19,12 @@ export const CONTRACT_VERSION = 2 as const
  */
 export type Intent = 'SELECT' | 'NEXT' | 'PREV' | 'BACK'
 
-/** 1 = visual (picture or mouth shape), 2 = letters, 3 = full word. */
+/**
+ * Step 1 `cue`: 1 = visual (picture or mouth shape), 2 = letters (`c_p`), 3 = full word.
+ * Steps 2-3 `candidates` (CONTRACT_VERSION 3, D18): 1 = first letter + blanks (`s _ _ _ _`),
+ * 2 = half the word (`s u n _ _`, first ceil(n/2) letters), 3 = full word. No pictures or
+ * mouth shapes in Steps 2-3.
+ */
 export type CueLevel = 1 | 2 | 3
 
 // ---------------------------------------------------------------------------
@@ -149,6 +154,13 @@ export interface SttService {
   onSpeechState(cb: (s: SpeechState) => void): Unsubscribe
   /** Step 1: record one utterance and transcribe it. Never rejects; failures set `error`. */
   transcribeUtterance(o: UtteranceOptions): Promise<Transcript>
+  /**
+   * Steps 2-3 (CONTRACT_VERSION 3, T-208): end the current rolling segment now instead of
+   * waiting for the speaker's pause, and resolve once its final transcript has been emitted
+   * through `onTranscript` (or right away when nothing is buffered). Never rejects. Callers
+   * cap the wait themselves. Optional: services without it behave as before.
+   */
+  flush?(): Promise<void>
 }
 
 /**

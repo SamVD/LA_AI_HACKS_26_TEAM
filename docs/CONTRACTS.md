@@ -1,6 +1,6 @@
 # Contracts
 
-The code is the source of truth: `src/core/types.ts`, **CONTRACT_VERSION 2**. This page explains the meaning behind the types and the rules that keep five lanes from breaking each other.
+The code is the source of truth: `src/core/types.ts`, **CONTRACT_VERSION 3**. This page explains the meaning behind the types and the rules that keep five lanes from breaking each other.
 
 ## Rules
 
@@ -27,6 +27,13 @@ The code is the source of truth: `src/core/types.ts`, **CONTRACT_VERSION 2**. Th
 | `GreyImage`, `ImageSource` | T-106 renders pictures and mouth shapes; T-101 sends them to image containers. The PNG must be exactly the container size. |
 | `KeyValueStore` | T-106's `Store` persists through this; T-101 provides one over the SDK's `get/setLocalStorage`, so `src/store/` never imports the SDK. |
 
+## Version 3 (additive, after G2; D18)
+
+| Addition | Why |
+|---|---|
+| `SttService.flush?()` | G2 latency (T-208): in batch mode (D17) the newest words were only transcribed after a ~0.8 s pause, so a help tap right after "um um" took 2-3 s. Step 2 calls `flush` on a tap so the request includes the words just spoken. Optional, so mocks and Step 1 harnesses stay valid. |
+| `CueLevel` meaning for `candidates` | The G2 tester's request, scoped (T-209): Steps 2-3 go letters-first: first letter + blanks, then half the word, then the full word. Pictures and mouth shapes stay in Step 1 only. Same type, new meaning, so it's listed here. |
+
 ## Semantics
 
 **Intent.** Click = `SELECT`, swipe down = `NEXT`, swipe up = `PREV`, double-click = `BACK`. The root page is the shell's launcher menu: double-click there calls `shutDownPageContainer(1)` (system exit dialog) and no mode sees it. Inside a mode, double-click is `BACK`, and the mode calls `ctx.leave?.()` when BACK happens at its top level. Long-press is not used. `src/glasses/` (T-101) owns the mapping.
@@ -36,14 +43,14 @@ The code is the source of truth: `src/core/types.ts`, **CONTRACT_VERSION 2**. Th
 **Screen.** Plain data. Modes build Screens; only `src/glasses/` renders them, and `src/phone/` previews them at 576x288.
 - `blank`: nothing visible, but it still captures events (a single-space text container).
 - `prompt`: a sentence with exactly one `____`.
-- `cue`: one level of the ladder. Level 1 shows `imageKey` (Step 1) or `mouthKey` (Steps 2-3). Level 2 shows `masked` (Step 1, for example `c_p`) or the first letter (Steps 2-3). Level 3 shows `word`.
+- `cue` (Step 1): one level of the ladder. Level 1 shows `imageKey` (or `mouthKey` when there's no picture). Level 2 shows `masked` (for example `c_p`). Level 3 shows `word`.
 - `feedback`: `ok` true or false. Render with `√` / `×` or words; `✓` / `✗` are not in the G2 font (see `docs/DISPLAY_LIMITS.md`).
-- `candidates`: `items[index]` shown at `level`; NEXT/PREV change `index` and reset `level` to 1.
+- `candidates` (Steps 2-3, v3): `items[index]` shown at `level`: 1 = first letter + one blank per remaining letter (`s _ _ _ _`), 2 = the first ⌈n/2⌉ letters then blanks (`s u n _ _`), 3 = the word. No picture or mouth shape. SELECT reveals more (up to 3); NEXT/PREV change `index` and reset `level` to 1. No head tilt left/right (D9).
 - `menu`, `status`: as named. Keep `status.text` within about 60 characters per line and 10 lines.
 
 **Time.** All `*Ms` fields are on the `ModeContext.now()` clock. Modes use `now()`, never `Date.now()`, so tests control time.
 
-**SttService.** `start`/`stop` open and close the mic for the rolling transcript (Steps 2-3). `transcribeUtterance` is Step 1's one-shot call; it opens the mic itself if needed and **never rejects**: on failure it resolves with `text: ''` and `error` set. `onTranscript` emits partials (`isFinal: false`) and finals; consumers that only want finals filter on `isFinal`.
+**SttService.** `start`/`stop` open and close the mic for the rolling transcript (Steps 2-3). `transcribeUtterance` is Step 1's one-shot call; it opens the mic itself if needed and **never rejects**: on failure it resolves with `text: ''` and `error` set. `onTranscript` emits partials (`isFinal: false`) and finals; consumers that only want finals filter on `isFinal`. `flush?()` (v3) ends the current rolling segment early and resolves after its final is emitted; it never rejects, and callers cap the wait.
 
 **PredictorService.** `predict` **never rejects**. On timeout (1.2 s), network failure or invalid model output it returns bank-only suggestions. An aborted `signal` resolves with `[]`. Details in `docs/PREDICTOR_PROMPT.md`.
 
