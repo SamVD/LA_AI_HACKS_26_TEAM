@@ -24,6 +24,21 @@ _T-404, ORCH. Two uses: (1) the **2–3 minute Devpost video**, (2) the **live j
 | 1:55–2:10 | **[FILL, only if Step 3 ships ON]** Stall with no tap; hint appears by itself. Otherwise cut this beat. | "It can also notice the stall and offer help on its own." |
 | 2:10–2:30 | Phone companion Home: personal words, sensitivity, hint log. End on the blank glasses. | "A caregiver sets it up on the phone, with the person's own names, medications and places. Speech-to-text by ElevenLabs, word prediction by Gemini. Quiet until it matters. This is Nudge." |
 
+### Shoot plan (T-406)
+
+**Who films and on what: [DECIDE at the team check-in].** Proposed: the glasses-view footage is a screen recording from the Even app or a phone held at the lens, shot by whoever wears the G2 (Sarah, who has the device); Juan records the phone companion and judge-demo screens with the macOS screen recorder (Shift-Cmd-5); Aarav records the voice-over once the final cut is assembled.
+
+| Beat | Shoot now? | Source |
+|---|---|---|
+| 0:00–0:15 Aphasia hook | **Now**, no build needed | Phone camera, two people |
+| 0:15–0:30 Blank display | **Now** | G2 on, nothing shown |
+| 0:30–1:05 Practice | **Now** (Step 1 passed G1) | G2 plus phone preview |
+| 1:05–1:55 Assist tap (`s _ _ _ _` → `sunny`) | **Now** (Step 2 passed G2) | G2, two people |
+| 1:55–2:10 Auto-hint | **Wait** for the final build and the G3 decision | Cut if Step 3 ships off |
+| 2:10–2:30 Phone companion | **Now** for Home and Words; re-shoot Home if the build strip changes | Screen recording |
+
+Shoot the **now** beats first, then slot the Conversation auto-hint in if it ships.
+
 Video rules: **say once on screen or in voice that the phone Demo tab is a scripted replay**, if it appears. Don't show the API keys, `.env.local`, or the Vercel dashboard. Record at least two takes of the conversation beat; the first is usually the stiffest.
 
 ## Live walk-up (3 minutes, judge wears the G2)

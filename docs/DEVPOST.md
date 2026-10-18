@@ -4,9 +4,31 @@ _Draft by ORCH for T-404, Sun Oct 18 2026. Facts come from `PLAN.md`, `docs/ORCH
 
 ---
 
+## Devpost form map
+
+Paste each section into the matching Devpost field. Devpost's tagline limit is 60 characters; the short line below is 53.
+
+| Devpost field | Paste this section | Notes |
+|---|---|---|
+| Project name | Nudge | |
+| Elevator pitch / tagline | **Tagline** (short line) | Max 60 characters |
+| Inspiration | **Inspiration / the problem** | |
+| What it does | **What it does**, then **How the G2 is used** | |
+| How we built it | **How we built it**, including **Sponsor tech** | |
+| Challenges we ran into | **Challenges we ran into** | |
+| Accomplishments that we're proud of | **Accomplishments** | |
+| What we learned | **What we learned** | |
+| What's next | **What's next** | Add **Honest limitations** and **What's real and what's mocked** to "What it does" or the end of "How we built it" if there's room |
+| Built with | **Built with** | Enter as tags |
+| Try it out links | **Try it out** | One link per row |
+| Image gallery | **Gallery images** | Upload in the listed order |
+| Team | **Team** | Add members on the Devpost team screen |
+
 ## Tagline
 
-A quiet word-finding aid for people with aphasia. The glasses stay blank until you're stuck on a word.
+Quiet word-finding help for aphasia, on smart glasses
+
+Longer version for the video description: A quiet word-finding aid for people with aphasia. The glasses stay blank until you're stuck on a word.
 
 ## Inspiration / the problem
 
@@ -108,6 +130,14 @@ Honest table. A judge should be able to trust every "real".
 - A strict architecture (modes never import the SDK) that held up across four people and four tools, enforced by a CI ownership check on every PR.
 - **About 800 automated tests** (797 on `integration` at the time of writing) **[FILL: final count]**.
 
+## What we learned
+
+- **Device-only bugs are real.** The packaged app's WebView origin (`http://127.0.0.1:<port>`) broke our token server's CORS rules, and realtime STT over `wss://` worked in the simulator but not on the glasses. The simulator never showed either.
+- **Measure latency before optimizing.** We assumed Gemini was the slow part. It is about 1 s; the deliberate 1.5 s silence we use to tell a stall from a pause was the bigger cost.
+- **Speech-to-text that "corrects" speech is wrong for aphasia grading.** An STT that quietly turns a near-miss into a real word makes a wrong answer look right, so Step 1 never biases toward the target word.
+- **Mocks plus a mode contract that never touches the SDK let four people share one pair of glasses.** Every mode ran in plain Node and the simulator, and device time was saved for three gates.
+- **Say what isn't built.** Judges and clinicians trust a short list of limitations more than a long list of features, so we don't claim paraphasia classification or speaker separation.
+
 ## Honest limitations
 
 - **Not clinically validated.** We have not tested Nudge with people who have aphasia. The design follows speech-therapy cueing practice; it is not a medical device and makes no outcome claims.
@@ -136,14 +166,26 @@ TypeScript, Vite, Even Hub SDK (`@evenrealities/even_hub_sdk`, SDK 0.0.12), Even
 
 - **Repo:** https://github.com/SamVD/LA_AI_HACKS_26_TEAM (confirm this is public before submitting)
 - **Beta build:** Even Hub Beta group **[FILL: group name / how a judge installs]**, `nudge.ehpk` version **[FILL: final version, 0.4.4 or later]**
-- **Judge demo without glasses:** the phone page → **Demo** tab, or `/src/phone/demo/index.html` **[FILL: hosted URL if there is one]**
+- **Judge demo without glasses:** there is no hosted URL. Run it locally with Node 22+:
+  ```
+  git clone https://github.com/SamVD/LA_AI_HACKS_26_TEAM && cd LA_AI_HACKS_26_TEAM
+  npm ci && npm run dev
+  ```
+  then open `http://localhost:5173/src/phone/demo/` and tap **Play Step 2 (tap for help)**. The page replays a scripted conversation ("…pour my tea into the ___") and mirrors the glasses preview: `c _ _`, then more letters, then `cup`. It is scripted, with no mic or Gemini, and the page says so.
 - **Demo video (2–3 min):** **[FILL: link]**; shot list in [`DEMO_SCRIPT.md`](./DEMO_SCRIPT.md)
 - **Screens and design notes:** [`docs/design/DEVPOST_ASSETS.md`](./design/DEVPOST_ASSETS.md), [`docs/design/PAPER.md`](./design/PAPER.md)
 
 ## Gallery images (from `src/glasses/screenshots/`)
 
-Suggested order: `15-phone-companion.png` (refresh first, see ORCH_STATE), `00-launcher.png`, `01-prompt.png`, `03b-cue-L1-picture.png`, `04-cue-L2.png`, `06-feedback-ok.png`, `16-candidates-v3-L1.png` (`s _ _ _ _`), `17-candidates-v3-L2.png` (`s u n _ _`), `18-candidates-v3-L3.png` (`sunny`). Don't use `08`-`10`/`08b`: they show the old picture and mouth-shape hints that Steps 2-3 no longer use. Add a photo of the real G2 in use if one exists; it is worth more than any screenshot.
+Suggested order: `15-phone-companion.png` (refreshed with Step 3 on, no Debug tab), `00-launcher.png`, `01-prompt.png`, `03b-cue-L1-picture.png`, `04-cue-L2.png`, `06-feedback-ok.png`, `16-candidates-v3-L1.png` (`s _ _ _ _`), `17-candidates-v3-L2.png` (`s u n _ _`), `18-candidates-v3-L3.png` (`sunny`). Don't use `08`-`10`/`08b`: they show the old picture and mouth-shape hints that Steps 2-3 no longer use. Add a photo of the real G2 in use if one exists; it is worth more than any screenshot.
 
 ## Team
 
-Aarav (ORCH / architecture and audits), Sam (AI lane: speech-to-text hosting, Gemini predictor, stall detection), Sarah (glasses lane: renderer, mic, device testing), juannli (UI and logic lanes: phone companion, Practice mode, matcher, assets). **[FILL: full names and Devpost handles]**
+| Name | Role | Devpost handle |
+|---|---|---|
+| Aarav Jain | ORCH: architecture, audits, submission | **[FILL: handle]** |
+| Samuel Vander Dussen | AI lane: speech-to-text hosting, Gemini predictor, stall detection | **[FILL: handle]** |
+| Sarah Dias | Glasses lane: renderer, mic, device testing | **[FILL: handle]** |
+| Juan Li Chen | UI and logic lanes: phone companion, Practice mode, matcher, assets | **[FILL: handle]** |
+
+Full names come from the repo's git history; confirm spelling and handles with each person before submitting.
