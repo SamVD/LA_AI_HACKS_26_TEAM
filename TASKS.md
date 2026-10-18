@@ -734,6 +734,58 @@ No new features after H18. Only fixes, packaging, polish, and the story.
 - **Acceptance criteria:** tests green; deployed; live `/api/predict` answers with StepFun and falls back to Gemini when StepFun is forced to fail; p50 through the proxy ≤ ~1.2 s.
 - **Priority:** same as T-317. Gemini billing, the 0.4.5 build, the video and the Devpost come first.
 
+### T-407 Phone companion cleanup: two modes, plain words, four tabs
+- **Owner:** UI (Cursor, driven by juannli or Aarav)
+- **Status:** TODO (D24, Sun 9:30 AM). **Hard cut-off: PR green by 10:10 AM** to ride in the 0.4.9 judge build. Late = it waits, and 0.4.9 ships the current UI.
+- **Branch:** `ui/phone-cleanup` (UI lane owns `src/phone/**`, so no grant is needed)
+- **Files it may EDIT:** `src/phone/**` only (including its tests). **No** `src/glasses/**`, `src/modes/**`, `src/main.ts`, `src/core/**`, `app.json`, `.env.*`. ORCH updates `docs/DEVPOST.md` / `docs/DEMO_SCRIPT.md` afterwards.
+- **Why:** the companion reads like a dev console. It shows six tabs in two rows, a "THIS BUILD: …" flag strip, a judge-demo card and a Step 3 settings card above the modes, "Step 1/2/3" jargon, and a word list made of nested scroll boxes. The judge build is **Practice + Conversation** (D23), and the phone should match it.
+- **Look at it first:** `npx vite`, then open `http://localhost:5173/src/phone/dev/index.html?step3=1&step2=1` at phone width (375 px). That's what 0.4.7 shows.
+
+**Spec (in priority order; 1-5 are MUST, 6-8 are SHOULD, drop them if late):**
+1. **Tabs** (`mountCompanion.ts` `tabs`), one row at 375 px: **Home · Preview · Word Bank · Demo**, plus **Debug** only when it shows today (`companionShowsDebugTab`, `VITE_DEBUG=1`).
+   - **Remove the "Step 1" tab** (`summary` panel) and its tab id.
+   - **Rename "Words" → "Word Bank".**
+   - Keep the `nudge-panel-<id>` ids for the tabs that stay.
+2. **Home shows only the modes, as cards:** **Practice** and **Conversation**. More generally, exactly the modes the glasses launcher shows (when `step3Enabled`, Step 2 stays hidden as today, #103).
+   - **Remove from Home:**
+     - the "THIS BUILD: …" strip (`buildCapability`); move it to the Debug tab, or drop it;
+     - the "Start a mode for the glasses. This page stays calm…" lead;
+     - the **Judge demo card** (the Demo tab stays; Devpost points judges to it);
+     - any "Not in this build / Coming soon" card.
+3. **Remove the "Step 3 hints" card from Home, but keep the controls**, because the glasses read them (`src/modes/index.ts` → `readStep3Settings`) and the demo script uses "Eager".
+   - Move **sensitivity (Calm / Balanced / Eager)** and **Pause hints** into the **Conversation card**, behind a collapsed `<details>` "Hint settings" (closed by default).
+   - The hint log ("No hints yet…") goes inside the same `<details>`, or to Debug.
+   - **Don't change** `step3Settings.ts`'s storage key, value format, or `STEP3_SETTINGS_EVENT`. The glasses must still react.
+4. **Plain words, no "Step N" anywhere user-visible:**
+   - Header tagline: **"Word-finding help on your glasses."**
+   - Practice: **"Name everyday things with gentle letter cues."**
+   - Conversation: **"Talk normally. If you pause on a word, a hint appears on the glasses. Tap anytime for help."**
+   - Preview lead: **"Mirrors the glasses."** (nothing else).
+   - Word Bank form: heading **"Add a word"**; practice hint **"Optional. Used in Practice: one ____ blank, up to 55 characters."**
+   - Session-log text in Debug: drop "paste into the G3 results PR".
+   - Tests: `modeCopy.test.ts` and others get updated to the new copy, not deleted.
+5. **No regressions:**
+   - the Start buttons still start the mode on the glasses;
+   - adding and removing a personal word still works and still reaches the bank;
+   - the Preview still follows the glasses;
+   - Debug's **Export session log** still works;
+   - Demo tab still plays;
+   - light and dark themes both still work;
+   - no horizontal scroll at 375 px.
+6. *SHOULD:* **Word Bank list:** replace the per-category inner scroll boxes with one page scroll, categories as small headings and words as wrapping chips. Personal words come first and are visibly marked, each with an accessible remove (×) button (today's behavior).
+7. *SHOULD:* the Practice card shows one line from the last saved session, e.g. "Last practice: 4 of 5 found" (`sessionSummary.ts`), replacing what the removed Step 1 tab showed. Nothing if there's no session.
+8. *SHOULD:* while a mode runs, its card shows "Running on the glasses" and the other card's Start is disabled (only if the shell already exposes `activeMode()`, which `mountCompanion` uses).
+
+**Acceptance criteria:**
+- **Checks:** `npm run typecheck && npm test` green; `node scripts/check-ownership.mjs --branch ui/phone-cleanup --base origin/integration` passes.
+- **PR includes before/after screenshots** at 375 px for Home, Word Bank and Preview, in light and dark.
+- **Visible text on Home:** at 375 px with `?step3=1&step2=1`, Home shows exactly: the header, the tab row (one line), a Practice card and a Conversation card. Nothing else.
+- **Settings still work:** opening "Hint settings" and choosing Eager or Pause changes `readStep3Settings()` exactly as the old card did (a unit test or a manual note in the PR).
+
+**Builder prompt (Cursor):**
+> Implement T-407 in `TASKS.md` on branch `ui/phone-cleanup` from `integration`. Only edit `src/phone/**`. Start by running `npx vite` and opening `/src/phone/dev/index.html?step3=1&step2=1` at 375 px to see the current UI. Work through spec items 1-5 first and commit; then 6-8 if time allows. Don't change `step3Settings.ts` storage or events, since the glasses read them. Update the tests for the new copy. Run `npm run typecheck && npm test` and the ownership check. Open a PR to `integration` titled "T-407: phone companion cleanup (Practice + Conversation, Word Bank)" with before/after screenshots, by 10:10 AM.
+
 ### T-405 Final audit and submission
 - **Owner:** ORCH
 - **Spec:** final audit pass; confirm tag, Beta build, Devpost, and G2 return arrangement; two full rehearsals.

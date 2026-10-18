@@ -36,6 +36,8 @@ Two small features, **both off by default behind a flag**, built in parallel whi
    - The wearer makes 3 planted stalls: **at least 2 hints**.
 3. **Log (2 min):** Debug → Export session log. `imu.tilt` lines appear, and `stt.speaker` lines tag the partner `other` and the wearer `wearer`. Post the counts in Discord, and in a results PR if there's time.
 
+**Also in 0.4.9 if green by 10:10: T-407 phone cleanup** (Cursor, `ui/phone-cleanup`, D24). Home = Practice + Conversation only, tabs Home · Preview · Word Bank · Demo, hint settings folded into the Conversation card. Phone-only: ORCH checks it in the browser at 375 px; no device check needed. **Film phone-screen shots after 0.4.9**, or keep them short.
+
 **If G3b failed but the speaker gate passes,** ORCH may still ship Conversation in 0.4.9 (call at 10:15). That needs partner speech to give 0 hints and the wearer's stalls to give at least 2.
 
 ## Conversation re-test (G3b, D21): ✅ PASSED 9:20 AM (#134, D23)
@@ -319,6 +321,7 @@ There are no console logs on the device. Use the phone companion's **Preview** t
 
 | When | Change |
 |---|---|
+| Sun 9:30 AM | **D24 / T-407:** phone companion cleanup for Cursor (`ui/phone-cleanup`, cut-off 10:10, joins 0.4.9). From the tester suggestions: no Step 1 tab, Words → Word Bank, Home = Practice + Conversation only, Preview caption "Mirrors the glasses.", Step 3 card folded into Conversation → Hint settings |
 | Sun 9:20 AM | **G3 PASSES on G3b (D23).** Merged #134 (Sarah: B clean block 3/3 helped, 0 false, ≤ 2.9 s). 0.4.7: `VITE_STEP3=1`, predictor timeout 1.5 → **2 s** (15 % of calls timed out), `dropSamples: true` (no more "Maya"). Main fast-forwarded, tag `v0.3-step3`. Known: Practice counts 300 ms fragments |
 | Sun 9:05 AM | **D22:** two flag-gated late features. **T-305** head tilt (juannli, `VITE_IMU`) and **T-314** speaker gate at −20 dB (Sam, `VITE_SPEAKER_GATE`). Cut-off 9:45; feature test build 0.4.8 at 10:00; **judge build 0.4.9** at 10:20 either way; 0.4.7 is the safe filming build. Grant `ai/speaker-gate` → `src/main.ts` |
 | Sun 8:45 AM | Merged #132 (Sam): like-for-like Gemini baseline for T-317, p50 764 ms, 31/31 in top 3, 0 over 1.2 s. StepFun FAIL confirmed. Gemini $5 monthly spend cap set. **No open PRs**; waiting on the G3b re-test for 9:30 |

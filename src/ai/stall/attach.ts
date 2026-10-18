@@ -39,7 +39,7 @@ export function attachStallDetector(
   }
 
   const offSpeech = stt.onSpeechState(s => feed(() => detector.onEvent({ type: 'speech', speaking: s.speaking, tMs: s.tMs })))
-  const offText = stt.onTranscript(t => feed(() => detector.onEvent({ type: 'transcript', text: t.text, isFinal: t.isFinal, tMs: t.tEndMs })))
+  const offText = stt.onTranscript(t => feed(() => detector.onEvent({ type: 'transcript', text: t.text, isFinal: t.isFinal, tMs: t.tEndMs, speaker: t.speaker })))
   const timer = setIv(() => {
     if (detector.nextCheckMs() === null) return // nothing pending: cheap no-op
     feed(() => detector.onEvent({ type: 'tick', tMs: now() }))

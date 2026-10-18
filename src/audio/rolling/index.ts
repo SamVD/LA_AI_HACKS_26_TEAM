@@ -6,7 +6,7 @@
 //     the Even whitelist): VAD-segmented utterances through batch STT, back to back.
 // Select with VITE_ROLLING_STT=batch at pack time.
 import type { EvenAppBridge } from '@evenrealities/even_hub_sdk'
-import type { SttService, Transcript, UtteranceOptions, WordEntry } from '../../core/types'
+import type { Speaker, SttService, Transcript, UtteranceOptions, WordEntry } from '../../core/types'
 import { createGlassesMic } from '../capture'
 import { sttTokenUrl } from '../index'
 import type { MicSource } from '../mic'
@@ -63,6 +63,8 @@ export interface RollingSttOptions {
   socket?: SocketFactory
   /** Batch fallback: one rolling utterance ends after this much silence. */
   segmentSilenceMs?: number
+  /** T-314: when set, each emitted final is tagged `other` below this speechDb. Unset = no tagging. */
+  speakerSplitDb?: number
 }
 
 export class RollingStt implements SttService {
@@ -132,7 +134,14 @@ export class RollingStt implements SttService {
         const level = this.o.base.lastLevel
         const junk = junkReason(t.text, level)
         if (junk) this.o.log?.('rolling.drop', { reason: junk, ...level, text: t.text.trim() })
-        else this.o.base.emitTranscript({ ...t, text: t.text.trim(), isFinal: true })
+        else if (this.o.speakerSplitDb === undefined) {
+          this.o.base.emitTranscript({ ...t, text: t.text.trim(), isFinal: true })
+        } else {
+          // T-314: below the split it's the partner; no level = wearer (never tag on missing data).
+          const speaker: Speaker = level && level.speechDb < this.o.speakerSplitDb ? 'other' : 'wearer'
+          this.o.log?.('stt.speaker', { speechDb: level?.speechDb ?? null, speechMs: level?.speechMs ?? null, speaker, text: t.text.trim() })
+          this.o.base.emitTranscript({ ...t, text: t.text.trim(), isFinal: true, speaker })
+        }
       }
       segmentHandled() // before any backoff, so a flush never waits on it
       if (t.text.trim() && !t.error) continue
@@ -160,9 +169,10 @@ export function createRollingStt(
     mode?: RollingMode
     keyterms?: () => string[] | Promise<string[]>
     socket?: SocketFactory
+    speakerSplitDb?: number
   } = {},
 ): RollingStt {
-  const { tokenUrl, mode, keyterms, socket, ...rest } = o
+  const { tokenUrl, mode, keyterms, socket, speakerSplitDb, ...rest } = o
   const url = tokenUrl ?? sttTokenUrl()
   const mic = createGlassesMic(bridge)
   const base = new ElevenLabsStt({
@@ -179,5 +189,6 @@ export function createRollingStt(
     now: rest.now,
     log: rest.log,
     socket,
+    speakerSplitDb,
   })
 }

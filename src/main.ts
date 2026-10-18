@@ -41,7 +41,13 @@ let realStt: SttService | undefined
 const sttForMode = (): SttService =>
   flags.mockServices
     ? new MockStt()
-    : (realStt ??= createRollingStt(bridge, { now: Date.now, log, keyterms: async () => personalKeyterms(await store.getBank()) }))
+    : (realStt ??= createRollingStt(bridge, {
+      now: Date.now,
+      log,
+      keyterms: async () => personalKeyterms(await store.getBank()),
+      // T-314: -20 dB splits wearer (-9..-15) from partner (-24..-30); off unless flagged on.
+      speakerSplitDb: (import.meta as ImportMeta & { env?: Record<string, unknown> }).env?.VITE_SPEAKER_GATE === '1' ? -20 : undefined,
+    }))
 
 // Prediction (T-201 + T-203): the Gemini proxy at VITE_PREDICT_URL (set for packaged
 // builds in .env.production). Without it, the predictor runs bank-only (fallback v2).

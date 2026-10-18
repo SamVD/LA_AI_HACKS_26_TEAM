@@ -118,3 +118,49 @@ describe('createStallDetector', () => {
     expect(d.onEvent({ type: 'tick', tMs: 8500 })?.transcriptTail).toBe('out of the')
   })
 })
+
+describe('speaker gate (T-314): partner speech never triggers a Conversation hint', () => {
+  const finO = (text: string, tMs: number): StallEvent => ({ type: 'transcript', text, isFinal: true, tMs, speaker: 'other' })
+  const finW = (text: string, tMs: number): StallEvent => ({ type: 'transcript', text, isFinal: true, tMs, speaker: 'wearer' })
+
+  it('a final tagged other never produces a stall, however unfinished the ending', () => {
+    const { out } = run([sp(true, 0), finO('pour my tea into the', 2000), sp(false, 2000)], 10_000)
+    expect(out).toEqual([])
+  })
+
+  it('a late partner final cancels a stall that was still pending', () => {
+    // Wearer stalls at 2 s; the hint would fire at 3.5 s — but the partner's answer
+    // lands (tagged other) at 3 s and cancels it.
+    const { out } = run([
+      sp(true, 0), finW('pour my tea into the', 2000), sp(false, 2000),
+      finO('sure, go on', 3000),
+    ], 10_000)
+    expect(out).toEqual([])
+  })
+
+  it('partner text still reaches the predictor context (transcriptTail)', () => {
+    const { out } = run([
+      sp(true, 0), finW('pour my tea into the', 2000), sp(false, 2000),
+      finO('sure, go on', 3000),
+      ...utterance('right, pour my tea into the', 5000),
+    ], 10_000)
+    expect(out).toHaveLength(1)
+    expect(out[0].transcriptTail).toContain('sure, go on')
+    expect(out[0].utterance).toBe('right, pour my tea into the')
+  })
+
+  it('wearer-tagged finals stall exactly like untagged ones', () => {
+    const { out } = run([sp(true, 0), finW('pour my tea into the', 2000), sp(false, 2000)], 8_000)
+    expect(out).toHaveLength(1)
+    expect(out[0].utterance).toBe('pour my tea into the')
+  })
+
+  it('a wearer final after partner text stalls again — the gate does not stick', () => {
+    const { out } = run([
+      sp(true, 0), finO('that is the', 2000), sp(false, 2000), // partner fragment, cancelled
+      ...utterance('pour my tea into the', 5000), // wearer stalls afterwards
+    ], 10_000)
+    expect(out).toHaveLength(1)
+    expect(out[0].silenceStartMs).toBe(7000)
+  })
+})
