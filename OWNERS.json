@@ -74,6 +74,12 @@
     }
   },
   "branchGrants": {
+    "glass/step2-mode": [
+      "src/mocks/foundation.test.ts"
+    ],
+    "glass/audio-rolling": [
+      "src/audio/rolling/**"
+    ],
     "logic/step1-mode": [
       "src/glasses/main.test.ts",
       "src/phone/dev/devShell.test.ts"

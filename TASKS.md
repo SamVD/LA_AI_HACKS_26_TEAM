@@ -11,8 +11,8 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 **Device testing (all lanes):** QR prototype mode is broken on Even's side, so the glasses only run **packaged Beta builds** (pack → upload at hub.evenrealities.com → Me → Beta tester; a few minutes per cycle). Iterate in the simulator and batch device checks. The workflow, including how to pack a spike page on its own, is in `README.md` → "Run on the real G2". Gate flags are set at pack time with `VITE_STEP2=1` / `VITE_STEP3=1` (`docs/G2_SMOKE.md`).
 
 **Queue by lane (now):**
-- GLASS: T-101 passed on the real G2 (PR #38). Next: **the G1 run** (T-107 runbook) as soon as `api/stt` is hosted. Meanwhile **T-204 (Step 2 mode) on mocks**: use the throttle stub interface from the T-204 card until T-201 part 2 lands.
-- AI: S-1, S-2 and T-104 are merged. Next: **host `api/` on Vercel with Aarav** (`ELEVENLABS_API_KEY`, `STT_ALLOWED_ORIGINS`; later `GEMINI_API_KEY`); this blocks G1. Then T-203 (`api/predict` on the same project), then T-202 (rolling STT).
+- GLASS: T-204 is in review (PR #43; a branch grant lets you update `src/mocks/foundation.test.ts`). Next: **the G1 run** (T-107 runbook) as soon as `api/stt` is live, then **T-202 rolling STT** (reassigned to GLASS; branch `glass/audio-rolling`).
+- AI: S-1, S-2 and T-104 are merged. Next: **get `api/stt` live** (Vercel Git deploys are blocked because commit authors aren't team members: deploy with `npx vercel --prod` from your own login, or add the team); send Aarav the host. Then T-203 (`api/predict`). T-202 moved to GLASS.
 - LOGIC (Codex): T-102 Step 1 is merged (PR #34); Step 1 code is complete. Next: **T-201 part 2** (fallback v2 + throttle; T-204 needs it), then T-205. Small fixture fix: eval-04 should accept "Sunrise Clinic".
 - UI (Cursor): T-206 and T-401 part 1 are merged. Next (lower priority than Step 2): T-401 part 2, the Demo entry inside `mountCompanion` so judges can reach it in the packaged app, with a cancellable replay.
 
@@ -275,9 +275,9 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 - **Acceptance criteria:** schema validation rejects malformed output; fallback engages on timeout and on invalid JSON (tested); eval script runs and prints accuracy.
 
 ### T-202 Rolling-transcript STT and buffer
-- **Owner:** AI
-- **Status:** READY (T-104 merged). After the hosting and T-203 in the AI queue.
-- **Branch:** `ai/audio-rolling`
+- **Owner:** GLASS (reassigned from AI at H10 to balance load; AI keeps hosting + T-203)
+- **Status:** READY (T-104 merged). GLASS, after the G1 run and alongside the #43 fixes. Builds on `ElevenLabsStt.emitTranscript` and `onSpeechState` from `src/audio/` (T-104); does not edit files outside `src/audio/rolling/`.
+- **Branch:** `glass/audio-rolling` (branch grant for `src/audio/rolling/**` in `OWNERS.json`)
 - **Depends on:** T-104, S-1
 - **Files it may EDIT:** `src/audio/rolling/**`
 - **Spec:** implement `onTranscript` for continuous use (streaming, or chunked utterances per the S-1 recommendation) and a `TranscriptBuffer` giving the last N seconds/words with timestamps. Reconnect on failure. Keep mic lifecycle consistent with `src/audio/`'s existing capture.
@@ -440,6 +440,7 @@ No new features after H18. Only fixes, packaging, polish, and the story.
 - H7: T-004 fixtures merged (PR #9). Follow-up filed as T-007.
 - H7: T-006 design tokens and glasses layouts merged (PR #7, after one round of changes).
 - H7: T-002 device checks done (PR #13, `docs/BETA_RESULTS.md`). QR prototype mode is broken on Even's side, so device testing uses packaged Beta builds; README and `docs/G2_SMOKE.md` updated.
+- H10: T-202 reassigned AI → GLASS (grant for `glass/audio-rolling`). Grant for `glass/step2-mode` to update `src/mocks/foundation.test.ts` (it asserts the old Step 2 stub). Vercel project `nudge` exists, but its Git deployments are blocked (team membership); hosting is the G1 blocker.
 - H9:45: **T-102 merged (PR #34): all Step 1 code is in.** T-101 passed on the real G2 (PR #38). T-401 part 1 merged (PR #40). `app.json` 0.3.0 for the G1 build; G1 runbook in T-107. **G1 is blocked only on hosting `api/stt`.** T-204, T-202 and T-203 READY.
 - H9: PR #36 (dev-shell test + playlist) merged. T-102 (PR #34): changes requested (rebase off duplicated commits; verified `main.test.ts` patch; mic-stop fix). `docs/G2_SMOKE.md` gains B5 (touchpad while the mic is open: two SDK event listeners) and B6 (mic across items).
 - H9: **T-104 mic + STT merged (PR #33)** and wired in `src/main.ts`; `app.json` gets `g2-microphone` + ElevenLabs. T-102 (PR #34) approved, pending stub-test updates (grant added). Step 1 now needs: T-102 merged, `api/stt` hosted, then a packaged G1 run on the real G2.
