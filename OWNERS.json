@@ -79,6 +79,7 @@
     }
   },
   "branchGrants": {
+    "ai/speaker-gate": ["src/main.ts"],
     "orch/quick-fixes": [
       "src/ai/predictor/fallback.ts",
       "src/ai/predictor/validate.ts",

@@ -433,15 +433,54 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 - **Files it may EDIT:** `src/phone/**`
 - **Spec:** sensitivity setting (maps to stall thresholds), pause/resume, a session log showing when hints fired and whether they helped. Includes demo mode controls (see T-401).
 
-### T-305 Stretch: head tilt to intents
-- **Owner:** GLASS
-- **Status:** TODO (start only when G2 passes; drop if it threatens G3)
-- **Branch:** `glass/imu-tilt`
-- **Depends on:** S-3, T-101
-- **Files it may EDIT:** `src/glasses/imu/**`
-- **Spec:** calibrate on mode entry (look straight), derive tilt from raw x/y/z, emit `NEXT`/`PREV` through the same `Intent` stream (modes need no changes). Debounce, dead-zone, and a visible indicator when tilt is active. Flag `imuEnabled`, default off.
-  - **Per S-3 (D9):** look up / look down only (x axis, ±0.15 g dead zone around a calibrated rest value, ~10 Hz). No left/right.
-- **Acceptance criteria:** on the real G2, 20 deliberate tilts register at least 18 times and 20 idle head movements trigger at most 2 false intents.
+### T-305 Head tilt switches the suggestion (look down = next, look up = previous)
+- **Owner:** juannli (Claude / Cursor / Codex), filling in for GLASS while Sarah tests G3b
+- **Status:** TODO, **revived Sun 9:00 AM (D22)**. **Hard cut-off: PR green by 9:45 AM**, or it's dropped and 0.4.7 stays final.
+- **Branch:** `glass/imu-tilt` (GLASS lane owns `src/glasses/**`, so no grant is needed)
+- **Files it may EDIT:** `src/glasses/**` only. In practice: new `src/glasses/imu/tilt.ts` + `tilt.test.ts`, and small edits to `app.ts`, `bridge.ts`, `ui.ts`, `testing.ts`, `glasses.test.ts`. **No** `src/modes/**`, `src/main.ts`, `src/core/**`, `app.json`.
+- **Depends on:** S-3 data (`spikes/device/FINDINGS.md` §2), D9. The `imuEnabled` flag already exists (`VITE_IMU=1` or `?imu=1`, default off).
+- **What the wearer gets:** while suggestions are on the glasses (Steps 2-3 `candidates` screen), **look down = next suggestion, look up = previous**, exactly what a swipe does today (the cue ladder resets to letters). Swipes keep working. **No left/right tilt**: S-3 could not separate them (D9).
+- **Facts from S-3 (real G2):** `bridge.imuControl(true, ImuReportPace.P100)` → about 10 samples/s. Samples arrive as `sysEvent` with `eventType 8` (`IMU_DATA_REPORT`) and `imuData {x, y, z}` in g. Missing fields mean 0 (protobuf). Straight ahead x ≈ 0.03; **look up x ≈ +0.30**, **look down x ≈ −0.25**. No extra `app.json` permission was needed. `toIntent` already ignores IMU events.
+- **Spec:**
+  1. **`src/glasses/imu/tilt.ts`, pure and unit-tested:** `createTiltDetector(opts?)` with:
+     - `sample(x, tMs)` → `'NEXT' | 'PREV' | null`;
+     - `arm(tMs)`: sets `rest` = median x of the samples from the last 2 s (fewer than 5 samples → use the next 3 instead);
+     - `disarm()`.
+     
+     Defaults:
+     - `fire` 0.18 g from rest;
+     - `holdSamples` 4 (about 400 ms in a row past `fire`, so a quick nod doesn't count);
+     - `deadZone` 0.10 g to re-arm (2 samples back inside it before the next fire);
+     - `cooldownMs` 700.
+     
+     **x − rest ≤ −fire → `NEXT` (look down); ≥ +fire → `PREV` (look up).** It keeps a 2 s sample history even while disarmed, so `arm` has data.
+  2. **`bridge.ts`:** add `imuControl(on: boolean): Promise<boolean>` to `HubBridge` (wrap `bridge.imuControl(on, ImuReportPace.P100)` with the existing error/timeout helper). Add it to the fake hub in `testing.ts`.
+  3. **`ui.ts`:** expose the kind of the screen currently shown (e.g. `currentKind(): Screen['kind'] | null`).
+  4. **`app.ts`:**
+     - When `opts.flags.imuEnabled`, call `hub.imuControl(true)` after the launcher shows, and log `imu.on {ok}`.
+     - In `onEvent`, route `sysEvent.imuData` samples to the detector.
+     - **Arm** when the shown screen becomes `candidates` (also after each tilt or swipe redraw, so rest follows the head). **Disarm** on any other screen.
+     - Dispatch a tilt intent **only while `currentKind() === 'candidates'`**. This matters: on the blank Conversation screen, NEXT/PREV **toggles pause**; in Practice, NEXT **skips the word**; on the launcher, it moves the menu. Tilt must not do any of that.
+     - Log `imu.tilt {dir, dx}` for each fire.
+     - Flag off → no `imuControl` call and no behavior change at all.
+  5. Optional, only if done by 9:30: turn IMU off on foreground-exit and back on at enter (lifecycle). Skip the "tilt active" indicator.
+- **Acceptance criteria:**
+  - **Unit tests** (synthetic 10 Hz streams from the S-3 numbers):
+    - still head → 0 intents;
+    - look down held 600 ms → exactly 1 `NEXT`;
+    - look up → 1 `PREV`;
+    - 2-sample nod → 0;
+    - holding down for 3 s → still only 1 (re-arm needed);
+    - not armed → 0.
+  - **App test:** flag on + IMU events while the screen is `blank` or `menu` → no intent dispatched; while `candidates` → dispatched.
+  - **Checks:** flag off → existing tests unchanged; `npm run typecheck && npm test` green; ownership check passes.
+  - **Device** (Sarah, in the 0.4.8 feature build):
+    - 10 deliberate look-downs/ups with suggestions showing → at least 8 move the right way;
+    - 2 minutes of normal talking and nodding with suggestions showing → at most 1 unwanted switch;
+    - blank Conversation screen, 5 head moves → no pause toggle.
+- **Builders can't test on the glasses** (the simulator has no IMU). Rely on unit tests; Sarah checks on the device.
+- **Builder prompt:**
+  > Implement T-305 in `TASKS.md` on branch `glass/imu-tilt` from `integration`. Only edit `src/glasses/**`. Read `src/glasses/app.ts`, `input.ts`, `bridge.ts`, `ui.ts`, `testing.ts` and `spikes/device/FINDINGS.md` §2 first. Keep the detector pure and fully unit-tested. With `imuEnabled` false, behavior must be identical to today. Run `npm run typecheck && npm test` and `node scripts/check-ownership.mjs --branch glass/imu-tilt --base origin/integration`. Open a PR to `integration` titled "T-305: head tilt switches the suggestion (flag VITE_IMU)" by 9:45 AM.
 
 ### T-306 Gate G3: audit, soak, decide, tag
 - **Owner:** ORCH
@@ -502,17 +541,45 @@ Order and cut-offs: see `docs/ORCH_STATE.md` → **Wake-up plan**. In short: MUS
   - Keep the 3-wrong-at-L3 rule and T-108.
 - **Acceptance criteria:** tests: a 150 ms utterance is ignored and the cue is unchanged; a 400 ms wrong answer escalates as today; an `other` utterance is ignored; silence behavior is unchanged.
 
-### T-314 Speaker tagging by loudness (cut-off 5:30)
+### T-314 Speaker tagging by loudness: partner speech never triggers a Conversation hint
 - **Owner:** AI (Sam)
-- **Status:** ON HOLD (decided Sun 6:35 AM): **measure first with T-316**, then decide after the G3 re-run using the exported `stt.level` data. Not built before G3.
-- **Branch:** `ai/speaker-gate`
-- **Files it may EDIT:** `src/audio/**`, `src/ai/stall/**`, `src/modes/step3/**`
-- **Depends on:** CONTRACT_VERSION 4 (`speaker?` on `Transcript` and `SpeechState`)
+- **Status:** TODO, **revived Sun 9:00 AM (D22)** with the G3 data. **Hard cut-off: PR green by 9:45 AM**, or it's dropped. (Earlier: on hold until T-316 measured; that data is now in.)
+- **Branch:** `ai/speaker-gate` (OWNERS grant: `src/main.ts`, for one option line)
+- **Files it may EDIT:** `src/audio/**`, `src/ai/stall/**`, `src/modes/step3/**`, plus the grant. **No** `src/ai/predictor/**`, `src/modes/step2/**`, `src/core/**`, `api/**`.
+- **Depends on:** CONTRACT_VERSION 4 (`Speaker`, `speaker?` on `Transcript`; already merged). T-316 `stt.level` + `lastLevel` (merged). #122 junk filter (merged).
+- **Data (G3 re-runs, `docs/BETA_RESULTS.md`):**
+  - Single-speaker chunks on the glasses mic: **wearer −9 to −15 dB**, **partner −24 to −30 dB**.
+  - **A −20 dB split held on every single-speaker chunk** across about 10 minutes.
+  - Mixed chunks read as the louder voice (the wearer). That's the safe direction: a mixed chunk behaves as today.
 - **Spec:**
-  - Tag each speech burst and transcript `wearer` or `other` from its level on the glasses mic: the wearer is much louder than a partner about 1 m away. Use a margin over the running speech level and log `stt.speaker {db, speaker}`.
-  - The stall detector only treats silence after **wearer** speech as a stall. Other speech still goes into the transcript (useful context).
-  - **If it isn't stable on the device by 5:30, it ships off** (flag or default threshold that tags everything `wearer`).
-- **Acceptance criteria:** unit tests with synthetic levels; a G3 re-run where the partner's pauses don't trigger hints (T-315 log shows the `speaker` tags).
+  1. **`src/audio/rolling/index.ts`:** new option `speakerSplitDb?: number` (unset = no tagging, exactly today's behavior).
+     - When set, each final emitted by the batch loop gets `speaker: lastLevel.speechDb < speakerSplitDb ? 'other' : 'wearer'`. **No level → `wearer`.** Never tag `other` on missing data.
+     - Log `stt.speaker {speechDb, speechMs, speaker, text}` once per emitted final.
+     - Junk-dropped chunks stay dropped (no tag needed).
+  2. **Stall (`src/ai/stall/attach.ts` and/or `detector.ts`):**
+     - A final tagged `other` **never produces a stall** and **cancels a pending one**: the partner spoke last, so the wearer isn't stuck.
+     - `wearer` or untagged finals work exactly as today.
+     - Partner text may still reach the prediction context (it's useful context); only the stall trigger is gated.
+  3. **`src/main.ts` (grant), one change:** pass `speakerSplitDb: import.meta.env.VITE_SPEAKER_GATE === '1' ? -20 : undefined` into `createRollingStt(...)`. Default off; ORCH turns it on in `.env.production` only after the device check passes.
+  4. Don't change `segmentSilenceMs`, the junk filter, Step 1 (`transcribeUtterance` direct path) or the predictor.
+- **Acceptance criteria:**
+  - **Unit tests, tagging:**
+    - level −12 → `wearer`;
+    - −26 → `other`;
+    - `null` level → `wearer`;
+    - option unset → no `speaker` field.
+  - **Unit tests, stall:**
+    - wearer "…I have two, um" → stall as today;
+    - partner "…do you have, um" (`other`) → no stall;
+    - wearer "um" then an `other` final before the stall fires → no stall.
+  - **Checks:** existing tests unchanged; `npm run typecheck && npm test` green; ownership check passes.
+  - **Device** (Sarah, 0.4.8 feature build, Conversation):
+    - the partner talks with 3 pauses or "um"s → **0 auto-hints**;
+    - the wearer makes 3 planted stalls → **at least 2 hints**;
+    - the exported log shows `stt.speaker` with the partner as `other` and the wearer as `wearer`.
+- **Builders can't test loudness locally** (laptop mic levels differ from the glasses mic). Rely on unit tests; Sarah checks on the device.
+- **Builder prompt:**
+  > Implement T-314 in `TASKS.md` on branch `ai/speaker-gate` from `integration`. Read `src/audio/rolling/index.ts` (batchLoop, junkReason, lastLevel), `src/audio/stt.ts`, `src/ai/stall/attach.ts`, `detector.ts` and the G3 sections of `docs/BETA_RESULTS.md` first. Default off: with `speakerSplitDb` unset, behavior must be identical. Missing level = wearer. Run `npm run typecheck && npm test` and `node scripts/check-ownership.mjs --branch ai/speaker-gate --base origin/integration`. Open a PR to `integration` titled "T-314: speaker tagging by loudness gates Conversation stalls (flag VITE_SPEAKER_GATE)" by 9:45 AM.
 
 ### T-316 Speaker loudness logging (measure-only, before T-314)
 - **Owner:** juannli (Claude), filling in for the AI lane while Sam is away

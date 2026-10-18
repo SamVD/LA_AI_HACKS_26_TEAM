@@ -4,6 +4,40 @@ The orchestrator's single snapshot of where Nudge stands. **ORCH updates this af
 
 _Last updated: **Sun Oct 18, 2026, 8:40 AM PT** by ORCH (aaravj9). **Gemini is back (0.95-1.22 s).** Next: **Conversation re-test G3b on 0.4.6 (Sarah), decision at 9:30 → final judge build 0.4.7.** Read "Conversation re-test" first. Video due 11:00 AM._
 
+## Late features (D22): head tilt + partner-proof Conversation, cut-off 9:45 AM
+
+Two small features, **both off by default behind a flag**, built in parallel while Sarah runs G3b. Anything not green by 9:45 is dropped.
+
+| Task | Who | Branch | Flag | What it does |
+|---|---|---|---|---|
+| **T-305** head tilt | juannli | `glass/imu-tilt` | `VITE_IMU=1` | While suggestions show: **look down = next, look up = previous** (same as a swipe). No left/right (D9). Ignored on every other screen |
+| **T-314** speaker gate | Sam | `ai/speaker-gate` | `VITE_SPEAKER_GATE=1` | Chunks quieter than **−20 dB** are tagged the partner (`other`); a partner chunk never triggers or keeps a Conversation hint |
+
+**Timeline (all times AM):**
+
+| When | What |
+|---|---|
+| 9:30 | G3b decision (D21). ORCH merges `app.json` **0.4.7** (+ `VITE_STEP3=1` on a pass). Sarah packs a clean 0.4.7 and uploads it: **the safe build; start filming the main demo on it** |
+| **9:45** | **Cut-off:** T-305 / T-314 PRs open with green CI. Late = dropped |
+| 9:55 | ORCH audits and merges; `app.json` → **0.4.8** |
+| 10:00 | Sarah packs the **feature test build 0.4.8** (test only): `npm ci && npm test && VITE_STEP3=1 VITE_IMU=1 VITE_SPEAKER_GATE=1 VITE_DEBUG=1 npm run pack` |
+| 10:00-10:12 | **Feature check** (below) |
+| 10:15 | ORCH decides each feature on its own: pass → its flag goes into `.env.production`. `app.json` → **0.4.9** |
+| 10:20 | Sarah packs a clean **0.4.9** (`npm ci && npm test && npm run pack`), uploads it **last**, and deletes or disables 0.4.6 and 0.4.8 if the portal allows. **0.4.9 is the judge build either way.** It's the highest version, so the 0.4.8 test build can't win. If nothing passed, it is 0.4.7's code again |
+| 10:20-10:50 | Film any tilt / Conversation clips on 0.4.9; cut; upload. **Submit by 11:00** |
+
+**Feature check on 0.4.8 (12 min, partner about 1 m away):**
+1. **Tilt (5 min):**
+   - Tap for help so a suggestion shows. 10 deliberate looks down / up: **at least 8** switch the right way.
+   - 2 min of normal talking and nodding with a suggestion showing: **at most 1** unwanted switch.
+   - Blank Conversation screen, 5 head moves: **no** pause toggle.
+2. **Speaker gate (5 min, Conversation):**
+   - The partner talks with 3 pauses or "um"s: **0 auto-hints**.
+   - The wearer makes 3 planted stalls: **at least 2 hints**.
+3. **Log (2 min):** Debug → Export session log. `imu.tilt` lines appear, and `stt.speaker` lines tag the partner `other` and the wearer `wearer`. Post the counts in Discord, and in a results PR if there's time.
+
+**If G3b failed but the speaker gate passes,** ORCH may still ship Conversation in 0.4.9 (call at 10:15). That needs partner speech to give 0 hints and the wearer's stalls to give at least 2.
+
 ## Conversation re-test (G3b, D21): today, decision at 9:30 AM
 
 **Why:** G3 ran with Gemini blocked (all hints were fallback words). Gemini is back as of 8:31 AM: 5 live calls took **0.95-1.22 s** with good answers, after one **2.06 s cold start**. **No new code**; the four quick fixes (#122) are already in.
@@ -260,10 +294,10 @@ There are no console logs on the device. Use the phone companion's **Preview** t
 
 | Person | Now | Then |
 |---|---|---|
-| **Sarah (GLASS)** | **T-312** launcher label ("Practice", "Conversation": show `ModeInfo.title` only). Then the **G3 re-run** on 0.4.4 with the tally + log export | T-402 final Beta at 7:00 (after the freeze) |
-| **Sam (AI)** | ✅ Gemini billing + $5 cap, T-317 done (#129, #132). **No `api/` deploys before the demo.** Next: help Sarah with the G3b re-test if needed, then the video and the Devpost technical section | Help with the Devpost technical section |
-| **juannli (LOGIC via Devin + UI)** | **T-313** Step 1 short-speech filter (Devin); **T-312** phone Home (hide Step 2, Conversation copy); **T-315** export-log button | Refresh `15-phone-companion.png`; final T-403 polish |
-| **Aarav (ORCH)** | Audit T-311..T-315 as they land; flip `.env.production` (`VITE_STEP2=0`, `VITE_STEP3=1`) when T-312 is in; bump to 0.4.4; record the G3 re-run; tag `v0.3-step3` on a pass | **T-404 Devpost + demo script** (start now), T-405 submission |
+| **Sarah (GLASS)** | **G3b re-test on 0.4.6 → results by 9:30.** Then a clean 0.4.7 (safe build, start filming). At about 10:00, the **feature check on 0.4.8** (Late features section). At 10:20, the clean **0.4.9 judge build**, uploaded last | Video footage of the phone screen only from 0.4.7 / 0.4.9 |
+| **Sam (AI)** | **T-314 speaker gate** (`ai/speaker-gate`, flag `VITE_SPEAKER_GATE`), **PR green by 9:45**. No `api/` deploys before the demo | Then the video and the Devpost technical section |
+| **juannli (LOGIC via Devin + UI)** | **T-305 head tilt** (`glass/imu-tilt`, flag `VITE_IMU`), **PR green by 9:45** | Devpost [FILL]s after |
+| **Aarav (ORCH)** | 9:30 G3b decision → 0.4.7. Audit and merge T-305 / T-314 by 9:55 → 0.4.8. 10:15 feature decision → 0.4.9 flags | Devpost [FILL]s, video link, submit by 11:00 |
 
 ## Loose ends (non-blocking)
 
@@ -285,6 +319,7 @@ There are no console logs on the device. Use the phone companion's **Preview** t
 
 | When | Change |
 |---|---|
+| Sun 9:05 AM | **D22:** two flag-gated late features. **T-305** head tilt (juannli, `VITE_IMU`) and **T-314** speaker gate at −20 dB (Sam, `VITE_SPEAKER_GATE`). Cut-off 9:45; feature test build 0.4.8 at 10:00; **judge build 0.4.9** at 10:20 either way; 0.4.7 is the safe filming build. Grant `ai/speaker-gate` → `src/main.ts` |
 | Sun 8:45 AM | Merged #132 (Sam): like-for-like Gemini baseline for T-317, p50 764 ms, 31/31 in top 3, 0 over 1.2 s. StepFun FAIL confirmed. Gemini $5 monthly spend cap set. **No open PRs**; waiting on the G3b re-test for 9:30 |
 | Sun 8:40 AM | Gemini back (billing): live predict 0.95-1.22 s. **D21:** one fair Conversation re-test (G3b) on **0.4.6** (`VITE_STEP3=1 VITE_DEBUG=1`), 15-min checklist with pass criteria, decision at 9:30, **final judge build 0.4.7** uploaded last. `app.json` → 0.4.6 |
 | Sun 8:25 AM | Merged #129 (T-317 StepFun spike: **FAIL**, reasoning model, p50 6.6 s). T-318 cancelled; #124 closed. Merged #121 (T-406), #128 (gallery). **No open PRs.** Left: Gemini billing, 0.4.5 final build + check, video, Devpost FILLs, submit |
