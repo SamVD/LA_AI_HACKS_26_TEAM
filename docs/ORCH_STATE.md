@@ -336,6 +336,7 @@ There are no console logs on the device. Use the phone companion's **Preview** t
 
 | When | Change |
 |---|---|
+| Sun 10:47 AM | Merged #151 (T-320 Practice ladder). **0.5.1 = final judge build** (0.5.0 was never uploaded): Practice + Conversation + head tilt, no Debug. Main fast-forwarded, tag `v0.5.1` |
 | Sun 10:30 AM | **D27 / T-320:** Practice ladder fix (letter → letter + picture → show answer → next). Branch `logic/practice-ladder`, grant for glasses layout. Goes into 0.5.1 after a device check; doesn't block 0.5.0 or the video |
 | Sun 10:25 AM | **0.5.0 judge build (D26).** #148: tilt passed (4/4 sideways, 2/2 down, none off-screen) → `VITE_IMU=1` in `.env.production`. Speaker gate untestable (all chunks mixed) → off. Latency: set Eager on the phone for filming; shorter chunks after the hackathon |
 | Sun 10:10 AM | Merged #144 (T-407 phone cleanup) and #146 (T-319 sideways tilt = SELECT). `app.json` **0.4.9** = last test build. No open PRs |
