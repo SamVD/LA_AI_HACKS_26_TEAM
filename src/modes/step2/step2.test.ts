@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { PredictRequest, PredictorService, Screen, SpeechState, SttService, Suggestion, Transcript } from '../../core/types'
 import { MockStt, MockUI, createMockContext, type ConversationFixture } from '../../mocks'
+import { layoutScreen } from '../../glasses/layout'
 import { createStep2 } from './index'
 import { buildRequest } from './request'
 import { createThrottledPredictor } from '../../ai/predictor'
@@ -109,12 +110,35 @@ describe('Step 2 ladder and gestures', () => {
     await mode.exit()
   })
 
-  it('suggestions get a mouth shape and, for bank words, a picture', async () => {
-    const { last, mode } = await helpShown()
-    const screen = last()
+  it('suggestions carry no picture or mouth shape (letters only, CONTRACT_VERSION 3)', async () => {
+    const env = setup({ predictor: { predict: async () => [
+      { word: 'cup', confidence: 0.9, source: 'bank', imageKey: 'cup', mouthKey: 'mouth:back' },
+      { word: 'mug', confidence: 0.5, source: 'bank' },
+    ] } })
+    await env.mode.enter(env.ctx)
+    env.ui.emit('SELECT'); await tick(0)
+    const screen = env.last()
     if (screen.kind !== 'candidates') throw new Error('expected candidates')
-    expect(screen.items[0].mouthKey).toMatch(/^mouth:/)
-    await mode.exit()
+    for (const item of screen.items) {
+      expect(item.imageKey).toBeUndefined()
+      expect(item.mouthKey).toBeUndefined()
+    }
+    await env.mode.exit()
+  })
+
+  it('on the glasses: tap → s _ _ _ _, tap → s u n _ _, tap → sunny; swipe → next word at the first letter', async () => {
+    const env = setup({ predictor: { predict: async () => suggest('sunny', 'warm') } })
+    await env.mode.enter(env.ctx)
+    const shown = () => layoutScreen(env.last()).texts.map(t => t.content)
+    env.ui.emit('SELECT'); await tick(0)
+    expect(shown()).toEqual(['s _ _ _ _', '1/2'])
+    env.ui.emit('SELECT'); await tick(0)
+    expect(shown()).toEqual(['s u n _ _', '1/2'])
+    env.ui.emit('SELECT'); await tick(0)
+    expect(shown()).toEqual(['sunny', '1/2'])
+    env.ui.emit('NEXT'); await tick(0)
+    expect(shown()).toEqual(['w _ _ _', '2/2'])
+    await env.mode.exit()
   })
 
   it('auto-dismisses after the timeout, counted from the last gesture', async () => {
