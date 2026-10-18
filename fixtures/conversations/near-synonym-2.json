@@ -1,6 +1,6 @@
 {
   "id": "near-synonym-2",
-  "description": "Soup at lunch, user rejects fork for spoon. Synthetic two-person talk: user 0-3s, caregiver 5-7s, user 9-18s, caregiver 21-23.5s, user 26-28s. Complete-sentence pauses and caregiver turns are negative examples.",
+  "description": "Synthetic conversation with fictional personal entries. Turns: user 0-6s, caregiver 8-12s, user 18-22s, caregiver 24-28s, user 30-35s, user 38.1-42s, caregiver 49-54s, user 57-61s. Long complete-sentence pauses are intentional negative examples.",
   "events": [
     {
       "tMs": 0,
@@ -8,126 +8,194 @@
       "speaking": true
     },
     {
-      "tMs": 1200,
+      "tMs": 2700,
       "type": "transcript",
-      "text": "The tomato soup smells good",
+      "text": "I warmed the tomato soup",
       "isFinal": false,
       "tStartMs": 0
     },
     {
-      "tMs": 3000,
+      "tMs": 4500,
       "type": "transcript",
-      "text": "The tomato soup smells good and is still warm.",
+      "text": "I warmed the tomato soup and put bread on a",
+      "isFinal": false,
+      "tStartMs": 0
+    },
+    {
+      "tMs": 6000,
+      "type": "transcript",
+      "text": "I warmed the tomato soup and put bread on a plate.",
       "isFinal": true,
       "tStartMs": 0
     },
     {
-      "tMs": 3100,
+      "tMs": 6100,
       "type": "speech",
       "speaking": false
     },
     {
-      "tMs": 5000,
+      "tMs": 8000,
       "type": "speech",
       "speaking": true
     },
     {
-      "tMs": 7000,
+      "tMs": 12000,
       "type": "transcript",
-      "text": "Shall I bring you something to eat it with?",
+      "text": "Would you like to eat outside where it is quiet?",
       "isFinal": true,
-      "tStartMs": 5000
+      "tStartMs": 8000
     },
     {
-      "tMs": 7100,
+      "tMs": 12100,
       "type": "speech",
       "speaking": false
-    },
-    {
-      "tMs": 9000,
-      "type": "speech",
-      "speaking": true
-    },
-    {
-      "tMs": 10500,
-      "type": "transcript",
-      "text": "Please bring a fork, no, not",
-      "isFinal": false,
-      "tStartMs": 9000
-    },
-    {
-      "tMs": 12500,
-      "type": "transcript",
-      "text": "Please bring a fork, no, not a fork, the",
-      "isFinal": true,
-      "tStartMs": 9000
-    },
-    {
-      "tMs": 12600,
-      "type": "speech",
-      "speaking": false
-    },
-    {
-      "tMs": 16000,
-      "type": "speech",
-      "speaking": true
     },
     {
       "tMs": 18000,
-      "type": "transcript",
-      "text": "spoon. That was the word I wanted.",
-      "isFinal": true,
-      "tStartMs": 16000
-    },
-    {
-      "tMs": 18100,
-      "type": "speech",
-      "speaking": false
-    },
-    {
-      "tMs": 21000,
       "type": "speech",
       "speaking": true
     },
     {
-      "tMs": 23500,
+      "tMs": 19800,
       "type": "transcript",
-      "text": "Of course. I understand what you mean now.",
-      "isFinal": true,
-      "tStartMs": 21000
+      "text": "Yes, the weather",
+      "isFinal": false,
+      "tStartMs": 18000
     },
     {
-      "tMs": 23600,
+      "tMs": 22000,
+      "type": "transcript",
+      "text": "Yes, the weather feels warm enough today.",
+      "isFinal": true,
+      "tStartMs": 18000
+    },
+    {
+      "tMs": 22100,
       "type": "speech",
       "speaking": false
     },
     {
-      "tMs": 26000,
+      "tMs": 24000,
       "type": "speech",
       "speaking": true
+    },
+    {
+      "tMs": 25800,
+      "type": "transcript",
+      "text": "I will take your",
+      "isFinal": false,
+      "tStartMs": 24000
     },
     {
       "tMs": 28000,
       "type": "transcript",
-      "text": "Thank you. We can carry on with our day.",
+      "text": "I will take your bowl to the bench.",
       "isFinal": true,
-      "tStartMs": 26000
+      "tStartMs": 24000
     },
     {
       "tMs": 28100,
+      "type": "speech",
+      "speaking": false
+    },
+    {
+      "tMs": 30000,
+      "type": "speech",
+      "speaking": true
+    },
+    {
+      "tMs": 33750,
+      "type": "transcript",
+      "text": "Please bring a fork, no, not a fork,",
+      "isFinal": false,
+      "tStartMs": 30000
+    },
+    {
+      "tMs": 35000,
+      "type": "transcript",
+      "text": "Please bring a fork, no, not a fork, the",
+      "isFinal": true,
+      "tStartMs": 30000
+    },
+    {
+      "tMs": 35100,
+      "type": "speech",
+      "speaking": false
+    },
+    {
+      "tMs": 38100,
+      "type": "speech",
+      "speaking": true
+    },
+    {
+      "tMs": 39855,
+      "type": "transcript",
+      "text": "Spoon. The soup will",
+      "isFinal": false,
+      "tStartMs": 38100
+    },
+    {
+      "tMs": 42000,
+      "type": "transcript",
+      "text": "Spoon. The soup will be easier with that.",
+      "isFinal": true,
+      "tStartMs": 38100
+    },
+    {
+      "tMs": 42100,
+      "type": "speech",
+      "speaking": false
+    },
+    {
+      "tMs": 49000,
+      "type": "speech",
+      "speaking": true
+    },
+    {
+      "tMs": 51250,
+      "type": "transcript",
+      "text": "Here it is, and",
+      "isFinal": false,
+      "tStartMs": 49000
+    },
+    {
+      "tMs": 54000,
+      "type": "transcript",
+      "text": "Here it is, and I brought a napkin.",
+      "isFinal": true,
+      "tStartMs": 49000
+    },
+    {
+      "tMs": 54100,
+      "type": "speech",
+      "speaking": false
+    },
+    {
+      "tMs": 57000,
+      "type": "speech",
+      "speaking": true
+    },
+    {
+      "tMs": 61000,
+      "type": "transcript",
+      "text": "Thank you. Let us start before it gets cold.",
+      "isFinal": true,
+      "tStartMs": 57000
+    },
+    {
+      "tMs": 61100,
       "type": "speech",
       "speaking": false
     }
   ],
   "stalls": [
     {
-      "tMs": 15000,
+      "tMs": 35100,
       "stalledAfter": "not a fork, the",
       "intendedWord": "spoon",
       "expectedTop3": [
         "spoon",
-        "ladle",
-        "bowl"
+        "ladle"
       ],
       "inBank": true
     }

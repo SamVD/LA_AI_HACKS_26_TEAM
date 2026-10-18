@@ -1,6 +1,6 @@
 {
   "id": "clean-stall",
-  "description": "Breakfast, user wants the tea cup. Synthetic two-person talk: user 0-3s, caregiver 5-7s, user 9-18s, caregiver 21-23.5s, user 26-28s. Complete-sentence pauses and caregiver turns are negative examples.",
+  "description": "Synthetic conversation with fictional personal entries. Turns: user 0-4s, caregiver 6-9s, user 11-15s, user 17.8-20s, caregiver 26-29s, user 31-35s, user 37.4-41s, caregiver 43-47s. Long complete-sentence pauses are intentional negative examples.",
   "events": [
     {
       "tMs": 0,
@@ -8,96 +8,93 @@
       "speaking": true
     },
     {
-      "tMs": 1200,
+      "tMs": 1800,
       "type": "transcript",
-      "text": "The tea is ready and",
+      "text": "The tea smells",
       "isFinal": false,
       "tStartMs": 0
     },
     {
       "tMs": 3000,
       "type": "transcript",
-      "text": "The tea is ready and the table is set.",
+      "text": "The tea smells lovely this",
+      "isFinal": false,
+      "tStartMs": 0
+    },
+    {
+      "tMs": 4000,
+      "type": "transcript",
+      "text": "The tea smells lovely this morning.",
       "isFinal": true,
       "tStartMs": 0
     },
     {
-      "tMs": 3100,
+      "tMs": 4100,
       "type": "speech",
       "speaking": false
     },
     {
-      "tMs": 5000,
+      "tMs": 6000,
       "type": "speech",
       "speaking": true
-    },
-    {
-      "tMs": 7000,
-      "type": "transcript",
-      "text": "What would you like me to bring over?",
-      "isFinal": true,
-      "tStartMs": 5000
-    },
-    {
-      "tMs": 7100,
-      "type": "speech",
-      "speaking": false
     },
     {
       "tMs": 9000,
+      "type": "transcript",
+      "text": "Would you like your usual cup?",
+      "isFinal": true,
+      "tStartMs": 6000
+    },
+    {
+      "tMs": 9100,
+      "type": "speech",
+      "speaking": false
+    },
+    {
+      "tMs": 11000,
       "type": "speech",
       "speaking": true
     },
     {
-      "tMs": 10500,
+      "tMs": 12800,
       "type": "transcript",
-      "text": "I would like my tea now.",
+      "text": "Yes, please pour",
       "isFinal": false,
-      "tStartMs": 9000
+      "tStartMs": 11000
     },
     {
-      "tMs": 12500,
+      "tMs": 15000,
       "type": "transcript",
-      "text": "I would like my tea now. Please pass me the",
+      "text": "Yes, please pour my tea into the",
       "isFinal": true,
-      "tStartMs": 9000
+      "tStartMs": 11000
     },
     {
-      "tMs": 12600,
+      "tMs": 15100,
       "type": "speech",
       "speaking": false
     },
     {
-      "tMs": 16000,
+      "tMs": 17800,
       "type": "speech",
       "speaking": true
     },
     {
-      "tMs": 18000,
+      "tMs": 18790,
       "type": "transcript",
-      "text": "cup. That was the word I wanted.",
-      "isFinal": true,
-      "tStartMs": 16000
+      "text": "Cup. Thank you,",
+      "isFinal": false,
+      "tStartMs": 17800
     },
     {
-      "tMs": 18100,
-      "type": "speech",
-      "speaking": false
-    },
-    {
-      "tMs": 21000,
-      "type": "speech",
-      "speaking": true
-    },
-    {
-      "tMs": 23500,
+      "tMs": 20000,
       "type": "transcript",
-      "text": "Of course. I understand what you mean now.",
+      "text": "Cup. Thank you, that is perfect.",
       "isFinal": true,
-      "tStartMs": 21000
+      "tStartMs": 17800
     },
     {
-      "tMs": 23600,
+      "tMs": 20100,
       "type": "speech",
       "speaking": false
     },
@@ -107,27 +104,109 @@
       "speaking": true
     },
     {
-      "tMs": 28000,
+      "tMs": 28250,
       "type": "transcript",
-      "text": "Thank you. We can carry on with our day.",
+      "text": "We can sit by the",
+      "isFinal": false,
+      "tStartMs": 26000
+    },
+    {
+      "tMs": 29000,
+      "type": "transcript",
+      "text": "We can sit by the window.",
       "isFinal": true,
       "tStartMs": 26000
     },
     {
-      "tMs": 28100,
+      "tMs": 29100,
+      "type": "speech",
+      "speaking": false
+    },
+    {
+      "tMs": 31000,
+      "type": "speech",
+      "speaking": true
+    },
+    {
+      "tMs": 32800,
+      "type": "transcript",
+      "text": "Before we go out,",
+      "isFinal": false,
+      "tStartMs": 31000
+    },
+    {
+      "tMs": 35000,
+      "type": "transcript",
+      "text": "Before we go out, I need the door",
+      "isFinal": true,
+      "tStartMs": 31000
+    },
+    {
+      "tMs": 35100,
+      "type": "speech",
+      "speaking": false
+    },
+    {
+      "tMs": 37400,
+      "type": "speech",
+      "speaking": true
+    },
+    {
+      "tMs": 39020,
+      "type": "transcript",
+      "text": "Keys. They are",
+      "isFinal": false,
+      "tStartMs": 37400
+    },
+    {
+      "tMs": 41000,
+      "type": "transcript",
+      "text": "Keys. They are beside the front door.",
+      "isFinal": true,
+      "tStartMs": 37400
+    },
+    {
+      "tMs": 41100,
+      "type": "speech",
+      "speaking": false
+    },
+    {
+      "tMs": 43000,
+      "type": "speech",
+      "speaking": true
+    },
+    {
+      "tMs": 47000,
+      "type": "transcript",
+      "text": "I will get them after I finish my tea.",
+      "isFinal": true,
+      "tStartMs": 43000
+    },
+    {
+      "tMs": 47100,
       "type": "speech",
       "speaking": false
     }
   ],
   "stalls": [
     {
-      "tMs": 15000,
-      "stalledAfter": "pass me the",
+      "tMs": 15100,
+      "stalledAfter": "my tea into the",
       "intendedWord": "cup",
       "expectedTop3": [
         "cup",
-        "tea",
-        "water"
+        "mug",
+        "teacup"
+      ],
+      "inBank": true
+    },
+    {
+      "tMs": 35100,
+      "stalledAfter": "I need the door",
+      "intendedWord": "keys",
+      "expectedTop3": [
+        "keys",
+        "car keys"
       ],
       "inBank": true
     }
