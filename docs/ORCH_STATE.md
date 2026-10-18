@@ -38,7 +38,7 @@ Two small features, **both off by default behind a flag**, built in parallel whi
 
 **If G3b failed but the speaker gate passes,** ORCH may still ship Conversation in 0.4.9 (call at 10:15). That needs partner speech to give 0 hints and the wearer's stalls to give at least 2.
 
-## Conversation re-test (G3b, D21): today, decision at 9:30 AM
+## Conversation re-test (G3b, D21): ✅ PASSED 9:20 AM (#134, D23)
 
 **Why:** G3 ran with Gemini blocked (all hints were fallback words). Gemini is back as of 8:31 AM: 5 live calls took **0.95-1.22 s** with good answers, after one **2.06 s cold start**. **No new code**; the four quick fixes (#122) are already in.
 
@@ -160,8 +160,8 @@ The version history then reads: 0.4.5 Practice + Assist candidate, 0.4.6 G3b tes
 |---|---|
 | `integration` | **`24c8ea8`** after #116 (T-316). typecheck, build, **802 tests**. **G3 re-run pack verified:** `VITE_STEP3=1 VITE_DEBUG=1 npm run pack` → 0.4.4, batch STT, Step 3 + Debug tab, `stt.level` logging |
 | `main` | **`ae2294d`** (fast-forwarded at G2: the tested 0.4.2 code + D17 + D18; a plain `npm run pack` reproduces it byte-for-byte) |
-| Tags | `v0.1-step1` → `4b13180` (G1); **`v0.2-step2` → `ae2294d`** (G2); **`backup-g3-working` → `34e46db`** (the G3 run-1 build, 0.4.3 + `VITE_STEP3=1`; a backup, **not** a passed gate). Next: `v0.3-step3` on a G3 pass |
-| `app.json` version | **0.4.6** = the G3b Conversation **test** build (Step 3 + Debug). The **final judge build is 0.4.7** (after the 9:30 decision), uploaded last |
+| Tags | `v0.1-step1` → `4b13180` (G1); **`v0.2-step2` → `ae2294d`** (G2); **`backup-g3-working` → `34e46db`** (the G3 run-1 build, 0.4.3 + `VITE_STEP3=1`; a backup, **not** a passed gate). Next: `v0.3-step3` on a G3 pass; **`v0.3-step3` → the #136 merge commit** (G3b) |
+| `app.json` version | **0.4.7** = the **safe judge build** (Practice + Conversation, no Debug, predictor timeout 2 s, no sample words to Gemini). Upload now and film on it. **0.4.8** = feature test build (D22, if T-305/T-314 land); **0.4.9** = final judge build at 10:20, uploaded last |
 | Contracts | **`CONTRACT_VERSION 4`**: v3 (`SttService.flush?`, letters-first candidates) + v4 (`Speaker`, `speaker?` on `Transcript`/`SpeechState`, T-314) |
 | Production `api/` | `https://nudge-seven-psi.vercel.app`, redeployed by Sam with the WebView origin. At 10:54 PM: `127.0.0.1:<any port>` preflight 204, **but `null` and `file://` also 204, so it's looser than intended**; tighten after #61 (see blockers) |
 | Open PRs | #121 (T-406 Devpost finish, juannli), #118 (screenshot). #111 **closed** (D20: no Conversation default) |
@@ -173,7 +173,7 @@ The version history then reads: 0.4.5 Practice + Assist candidate, 0.4.6 G3b tes
 |---|---|---|---|
 | **G1: Step 1 on the real G2** | Practice: 10 prompts, cue ladder, √/× feedback, lock/resume, mic denial, exit | ✅ **PASSED (H11:15, #68)**: real speech graded on the G2; lock, exit, B5, B6 pass; A4 accepted via unit tests (D16). Tagged `v0.1-step1` | Done. A3/A5/A7 carried to G2 |
 | **G2: Step 2 in a live conversation** | Help tap → good suggestion in ≤ ~1.5 s on most attempts; Step 1 regression | ✅ **PASSED on function (H13, D18, #90/#91)**: 0.4.2 batch followed the conversation ("warm and um um" → "sunny"); Step 1 + T-108 clean. **Latency not demonstrated** (the tester said 2-3 s) | Tagged `v0.2-step2`. Latency → **T-208**; ladder request → **T-209/T-210** |
-| **G3: Step 3 ambient hints** | Auto-hints after a stall, no false-hint spam in a 10-minute soak | ❌ **NOT PASSED (D20).** Re-run (#120) cut short by the Gemini daily quota; stall detection worked (4/8 real), 0 helpful hints (fallback only); loudness splits speakers at −20 dB | Ships **off**. Conversation is presented as experimental in the Devpost |
+| **G3: Step 3 ambient hints** | Auto-hints after a stall, no false-hint spam | ✅ **PASSED on G3b (0.4.6, #134, D23).** A: taps 2 ms cached / 0.97 s live, 3 of 4 fitting. B clean block: 3 of 3 planted stalls helped (`sunny`, `umbrella`, `gloves`; all Gemini), 0 false, 1.9-2.9 s. C pause ✅. Tag `v0.3-step3` | Ships **on** in 0.4.7: launcher **Practice + Conversation** |
 | **Final** | Beta `.ehpk` + Devpost by **H22 (10 AM Sunday)** | Not started (T-402, T-404, T-405) | Demo assets (T-401) are done |
 
 ## Every task
@@ -294,7 +294,7 @@ There are no console logs on the device. Use the phone companion's **Preview** t
 
 | Person | Now | Then |
 |---|---|---|
-| **Sarah (GLASS)** | **G3b re-test on 0.4.6 → results by 9:30.** Then a clean 0.4.7 (safe build, start filming). At about 10:00, the **feature check on 0.4.8** (Late features section). At 10:20, the clean **0.4.9 judge build**, uploaded last | Video footage of the phone screen only from 0.4.7 / 0.4.9 |
+| **Sarah (GLASS)** | **Now: pack 0.4.7** from `integration` (`npm ci && npm test && npm run pack`), upload, install, check the launcher shows **Practice / Conversation** and there's no Debug tab; **start filming the main demo**. ~10:00: feature check on 0.4.8. 10:20: clean **0.4.9**, uploaded last | Warm-up tap before every take |
 | **Sam (AI)** | **T-314 speaker gate** (`ai/speaker-gate`, flag `VITE_SPEAKER_GATE`), **PR green by 9:45**. No `api/` deploys before the demo | Then the video and the Devpost technical section |
 | **juannli (LOGIC via Devin + UI)** | **T-305 head tilt** (`glass/imu-tilt`, flag `VITE_IMU`), **PR green by 9:45** | Devpost [FILL]s after |
 | **Aarav (ORCH)** | 9:30 G3b decision → 0.4.7. Audit and merge T-305 / T-314 by 9:55 → 0.4.8. 10:15 feature decision → 0.4.9 flags | Devpost [FILL]s, video link, submit by 11:00 |
@@ -319,6 +319,7 @@ There are no console logs on the device. Use the phone companion's **Preview** t
 
 | When | Change |
 |---|---|
+| Sun 9:20 AM | **G3 PASSES on G3b (D23).** Merged #134 (Sarah: B clean block 3/3 helped, 0 false, ≤ 2.9 s). 0.4.7: `VITE_STEP3=1`, predictor timeout 1.5 → **2 s** (15 % of calls timed out), `dropSamples: true` (no more "Maya"). Main fast-forwarded, tag `v0.3-step3`. Known: Practice counts 300 ms fragments |
 | Sun 9:05 AM | **D22:** two flag-gated late features. **T-305** head tilt (juannli, `VITE_IMU`) and **T-314** speaker gate at −20 dB (Sam, `VITE_SPEAKER_GATE`). Cut-off 9:45; feature test build 0.4.8 at 10:00; **judge build 0.4.9** at 10:20 either way; 0.4.7 is the safe filming build. Grant `ai/speaker-gate` → `src/main.ts` |
 | Sun 8:45 AM | Merged #132 (Sam): like-for-like Gemini baseline for T-317, p50 764 ms, 31/31 in top 3, 0 over 1.2 s. StepFun FAIL confirmed. Gemini $5 monthly spend cap set. **No open PRs**; waiting on the G3b re-test for 9:30 |
 | Sun 8:40 AM | Gemini back (billing): live predict 0.95-1.22 s. **D21:** one fair Conversation re-test (G3b) on **0.4.6** (`VITE_STEP3=1 VITE_DEBUG=1`), 15-min checklist with pass criteria, decision at 9:30, **final judge build 0.4.7** uploaded last. `app.json` → 0.4.6 |

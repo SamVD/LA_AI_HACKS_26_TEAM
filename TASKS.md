@@ -484,7 +484,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ### T-306 Gate G3: audit, soak, decide, tag
 - **Owner:** ORCH
-- **Status:** NOT PASSED on 0.4.4 (D20; Gemini was blocked). **G3b re-test on 0.4.6 today (D21):** checklist and pass criteria in `docs/ORCH_STATE.md` → "Conversation re-test"; decision at 9:30 AM; final judge build 0.4.7.
+- **Status:** ✅ **PASSED on G3b** (0.4.6, #134, D23): B clean block 3 of 3 helped, 0 false, ≤ 2.9 s. Tag `v0.3-step3`. Judge build 0.4.7 = Practice + Conversation. (Earlier: not passed on 0.4.4, D20, Gemini blocked.)
 - **Spec:** audit; 10-minute live soak; count false hints per minute; decide whether `step3Enabled` ships default ON; tag `v0.3-step3` (or keep `v0.2` as the ship candidate); upload Beta.
 - **G3 runbook (GLASS with a second person, ORCH records it; one 0.4.3 upload covers all of it):**
   1. Clean `integration`: `npm ci && npm run typecheck && npm test`, then **`VITE_STEP3=1 npm run pack`**. `.env.production` already sets batch STT and Step 2 (D17). Verified: it packs, and the bundle has `VITE_STEP3:"1"`. Upload; install 0.4.3 from Me → Beta tester.
