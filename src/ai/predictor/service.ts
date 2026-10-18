@@ -3,7 +3,23 @@ import { rankFallback, type SuggestionHistory } from './fallback'
 import { toWireRequest } from './input'
 import { type AssetResolver, validateModelOutput } from './validate'
 
-export type FallbackReason = 'timeout' | 'network' | 'http' | 'invalid' | 'unconfigured'
+export type FallbackReason = 'timeout' | 'network' | 'http' | 'rate-limited' | 'invalid' | 'unconfigured'
+
+// Local metadata shared with the limiter without changing the frozen service contract.
+const cooldowns = new WeakMap<PredictorService, () => number>()
+export const rateLimitedUntil = (predictor: PredictorService) => cooldowns.get(predictor)?.() ?? 0
+
+function retryDelayMs(response: Response, body: string, now: number): number {
+  const header = response.headers.get('retry-after')
+  const seconds = header?.trim() ? Number(header) : NaN
+  const date = header && !Number.isFinite(seconds) ? Date.parse(header) : NaN
+  const delay = body.match(/"retryDelay"\s*:\s*"(\d+(?:\.\d+)?)s"/)?.[1]
+  // Missing/malformed hints still back off; use the longest valid server hint.
+  const hints = [Number.isFinite(seconds) ? seconds * 1000 : 0,
+    Number.isFinite(date) ? date - now : 0, delay ? Number(delay) * 1000 : 0]
+    .filter(value => Number.isFinite(value) && value > 0)
+  return hints.length ? Math.max(...hints) : 20_000
+}
 
 export interface PredictorOptions {
   /** Full URL of T-203's api/predict. Without it every call uses the bank-only fallback. */
@@ -36,6 +52,7 @@ export function createPredictor(options: PredictorOptions = {}): PredictorServic
   } = options
   const doFetch = options.fetch ?? ((...args: Parameters<typeof fetch>) => globalThis.fetch(...args))
   const history: SuggestionHistory = new Map()
+  let blockedUntil = 0
 
   function remember(items: Suggestion[]) {
     const t = now()
@@ -59,9 +76,14 @@ export function createPredictor(options: PredictorOptions = {}): PredictorServic
     const bank: WordEntry[] = dropSamples ? request.bank.filter(e => !e.tags.includes('sample')) : request.bank
     const req = { ...request, bank }
     if (!endpoint) return fallback(req, 'unconfigured', startedAt)
+    if (now() < blockedUntil) return fallback(req, 'rate-limited', startedAt, { blockedUntil })
 
     const controller = new AbortController()
     let timedOut = false
+    let rejectAbort: (reason: Error) => void = () => {}
+    const aborted = new Promise<never>((_, reject) => { rejectAbort = reject })
+    const rejectOnAbort = () => rejectAbort(new Error('aborted'))
+    controller.signal.addEventListener('abort', rejectOnAbort, { once: true })
     const timer = setTimeout(() => {
       timedOut = true
       controller.abort()
@@ -69,14 +91,29 @@ export function createPredictor(options: PredictorOptions = {}): PredictorServic
     const onAbort = () => controller.abort()
     signal?.addEventListener('abort', onAbort, { once: true })
     try {
-      const res = await doFetch(endpoint, {
+      const res = await Promise.race([doFetch(endpoint, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify(toWireRequest(req)),
         signal: controller.signal,
-      })
+      }), aborted])
+      if (signal?.aborted) return []
+      if (res.status === 429) {
+        // Start the cooldown before reading the body, even if it hangs or fails.
+        const receivedAt = now()
+        const previousBlock = blockedUntil
+        const provisional = receivedAt + retryDelayMs(res, '', receivedAt)
+        blockedUntil = Math.max(blockedUntil, provisional)
+        let text = ''
+        try { text = await Promise.race([res.text(), aborted]) } catch { /* Keep the header/default cooldown. */ }
+        if (signal?.aborted) return []
+        // Prefer the server's actual delay to the provisional default.
+        blockedUntil = Math.max(blockedUntil === provisional ? previousBlock : blockedUntil,
+          receivedAt + retryDelayMs(res, text, receivedAt))
+        return fallback(req, 'rate-limited', startedAt, { status: 429, blockedUntil })
+      }
       if (!res.ok) return fallback(req, 'http', startedAt, { status: res.status })
-      const text = await res.text()
+      const text = await Promise.race([res.text(), aborted])
       if (signal?.aborted) return []
       const v = validateModelOutput(text, req, resolveAssets)
       if (v.invalid) return fallback(req, 'invalid', startedAt, { why: v.invalid, dropped: v.dropped })
@@ -87,11 +124,12 @@ export function createPredictor(options: PredictorOptions = {}): PredictorServic
       return fallback(req, timedOut ? 'timeout' : 'network', startedAt)
     } finally {
       clearTimeout(timer)
+      controller.signal.removeEventListener('abort', rejectOnAbort)
       signal?.removeEventListener('abort', onAbort)
     }
   }
 
-  return {
+  const predictor: PredictorService = {
     async predict(request, signal) {
       if (signal?.aborted) return []
       try {
@@ -103,4 +141,6 @@ export function createPredictor(options: PredictorOptions = {}): PredictorServic
       }
     },
   }
+  cooldowns.set(predictor, () => blockedUntil)
+  return predictor
 }
