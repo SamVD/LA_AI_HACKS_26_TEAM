@@ -2,7 +2,7 @@
 
 The orchestrator's single snapshot of where Nudge stands. **ORCH updates this after every gate (G1, G2, G3, final) and after any merge that changes a gate's readiness.** Detailed task cards live in `TASKS.md`, decisions in `PLAN.md` §13, contracts in `docs/CONTRACTS.md`.
 
-_Last updated: **Sat Oct 17, 2026, 11:40 PM PT (hackathon hour ~H11:40 of 24)** by ORCH (aaravj9). **G1 PASSED. G2 running on 0.4.2 (batch rolling STT).**_
+_Last updated: **Sat Oct 17, 2026, 11:45 PM PT (hackathon hour ~H11:45 of 24)** by ORCH (aaravj9). **G1 PASSED. G2 running on 0.4.2 (batch rolling STT).** Vercel deploy quota exhausted (blocker #7)._
 
 ## Snapshot
 
@@ -96,11 +96,12 @@ ORCH infrastructure PRs: #2, #5, #6, #10, #12, #14, #15, #16, #19, #25, #27, #30
 
 | # | Item | Impact | Owner | Mitigation |
 |---|---|---|---|---|
-| 1 | ~~Packaged WebView origin unknown~~ **Resolved (H11):** it's `http://127.0.0.1:<port>` (Even's local server; 61976 observed, port may change). **Open:** production currently also allows `null`/`file://` | Looser CORS than intended (scripts can forge Origin anyway; the rate limit is the backstop) | Sam | Set exactly `STT_ALLOWED_ORIGINS=http://localhost:5173,http://127.0.0.1:*` (#61) and redeploy; confirm `null` → 403 |
+| 1 | ~~Packaged WebView origin unknown; production origins too loose~~ **Resolved (H11:45):** production now answers `127.0.0.1:<port>` and `localhost:5173` preflights with 204, and `null` and `file://` with 403 (checked live) | — | Sam | Done |
 | 2 | **`wss://` likely blocked on the G2** (H11:30: realtime build gave Step 2 no transcript, so suggestions were bank-only) | Step 2 hears nothing on the device | GLASS | **Applied:** 0.4.2 is packed with `VITE_ROLLING_STT=batch` (PLAN §9; verified in the bundle). If G2 passes on it, ORCH makes batch the default for packaged builds (`.env.production`, D17) so every pack and the `v0.2-step2` tag reproduce it |
 | 3 | Gemini **free tier 15 req/min, daily cap unknown** | Suggestions fall back to bank-only under load | AI | Throttle (D11); check AI Studio → Rate limits before the demo; billing would remove it |
 | 4 | **Vercel Hobby** blocks Git deploys from non-members; only Sam can deploy | A deploy bottleneck | AI | D15: only `bash api/_deploy-prod.sh` (merged commits, auto-checks). A `vercel --prod` from a checkout caused the 9-minute 500 outage (05:07-05:16 UTC, issue #56) |
 | 5 | Single-device team (one G2) and minutes-long pack/upload cycles | Slow device iteration | GLASS | Simulator first; batch device checks; G1 and G2 back to back when possible |
+| 7 | **Vercel Hobby deploy quota exhausted** (100 per 24 h, rolling; error `api-deployments-young-hobby-team-24h` on every PR since about #79). Cause: every branch push made a preview deploy | **Production keeps serving** (checked live), but Sam **can't redeploy `api/`** until slots free up. Each freed slot was being used by the next push | ORCH / Sam | `vercel.json` `git.deploymentEnabled: false` (this PR) stops preview deploys. `api/_deploy-prod.sh` writes its own `vercel.json`, so production deploys are unaffected. **Avoid `api/` changes before the demo**; if one is critical, Sam checks `vercel ls` for a free slot. Ignore the red "Vercel" status on PRs; `verify` is the check that counts |
 | 6 | Not yet seen on hardware: mic denial path, SDK storage persistence across restarts, multiple `onEvenHubEvent` listeners | Possible G1 failures | GLASS | G2_SMOKE A4, A7, B5 cover them explicitly |
 
 ## G1 troubleshooting (symptom → cause → fix)
@@ -125,7 +126,7 @@ There are no console logs on the device. Use the phone companion's **Preview** t
 | Person | Now | Then |
 |---|---|---|
 | **Sarah (GLASS)** | **Pack G2 from `integration` `82e487d`** (`VITE_STEP2=1 npm run pack`, 0.4.0) and run T-207 with a second person; include A3/A5/A7 and a Step 1 pass for T-108 | T-305 only if time allows |
-| **Sam (AI)** | **Tighten `STT_ALLOWED_ORIGINS`** to `localhost:5173` + `127.0.0.1:*` and redeploy (`api/_deploy-prod.sh`); be on call for G2 (Vercel log) | #78: push the `foundation.test.ts` line (grant is in), mark ready |
+| **Sam (AI)** | Be on call for G2 (Vercel log: predict errors, 429s). Origins are tightened (done). **No `api/` redeploys** until the quota frees (blocker #7) | #78: push the `foundation.test.ts` line (grant is in), mark ready |
 | **juannli (LOGIC via Devin + UI)** | **T-304** companion v3 (T-301 is merged; the Step 3 log can show #78's key-word logs) | Final T-403 polish; #71 nit (stale hint after submit) |
 | **Aarav (ORCH)** | Record G2; on a pass make `step2Enabled` the default, fast-forward `main`, tag `v0.2-step2`; audit #78 when ready | T-404 Devpost + demo script |
 
@@ -149,6 +150,7 @@ There are no console logs on the device. Use the phone companion's **Preview** t
 
 | When | Change |
 |---|---|
+| Sat 11:45 PM (H11:45) | Found the Vercel Hobby quota exhausted (blocker #7). Added `vercel.json` to stop Git preview deploys; production unaffected. Blocker #1 resolved (origins tightened, checked live) |
 | Sat 11:40 PM (H11:40) | G2 on the device: the realtime build gave Step 2 no transcript (blocker #2). Sarah re-packed `a0052a5` as **0.4.2 with `VITE_ROLLING_STT=batch`**; `app.json` set to 0.4.2. Proposed D17 (batch default for packaged builds) pending the G2 result |
 | Sat 11:30 PM (H11:30) | Pre-G2 sweep of every open PR and branch. Merged #76 (T-108; juannli merged it), #69 (leak fixed), #71, #75 (T-301). #73 closed. #78 (T-302) reviewed as a draft; `ai/step3-mode` grant added. **`integration` `82e487d` ready for the G2 pack** |
 | Sat 10:30 PM (H10:30) | First version. Step 1 and Step 2 code complete; production `api/` healthy; G1 ready to run |

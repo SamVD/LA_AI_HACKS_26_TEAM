@@ -19,6 +19,7 @@
         ".gitignore",
         ".env.example",
         ".env.production",
+        "vercel.json",
         ".github/**",
         "README.md",
         "CONTRIBUTING.md",
