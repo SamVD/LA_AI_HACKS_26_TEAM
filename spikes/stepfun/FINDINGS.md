@@ -13,6 +13,7 @@ _Status: DONE, Sun Oct 18 2026, 8:20 AM PT, AI lane (Sam). Raw data: `results/20
 
 | Model | Config | top-1 | top-3 | valid JSON | p50 ms | p95 ms |
 |---|---|---|---|---|---|---|
+| **gemini-3.5-flash-lite, same set, run 08:34 AM** (1 rep, after billing) | few-shot | **1.00** | **1.00** | **1.00** | **764** | **846** |
 | gemini-3.5-flash-lite (S-2, prompt v1, 25 cases) | few-shot | 0.96 | 0.98 | 1.00 | 671 | 885 |
 | gemini-3.5-flash-lite (S-2, prompt v1, 25 cases) | zero-shot | 0.94 | 0.94 | 1.00 | 651 | 835 |
 | **step-5-preview**, all 62 calls (timeouts count as misses) | few-shot | 0.55 | 0.55 | 0.55 | – | – |
@@ -21,7 +22,7 @@ _Status: DONE, Sun Oct 18 2026, 8:20 AM PT, AI lane (Sam). Raw data: `results/20
 
 - Fastest successful call: 2,861 ms. Slowest: 9,623 ms. Rep spread: p50 6.8 s and 6.3 s.
 - **Zero-shot was not run.** It removes the few-shot turns but not the reasoning step, so it can't get close to 1.2 s, and the deadline was close.
-- **Comparability:** S-2's Gemini numbers used prompt v1 and 25 cases. This run used prompt v2 and the current 31 cases. A Gemini re-run on the same set was started and **stopped on purpose**: it uses the production key's free-tier quota (15/min), which the team needs for the demo and video right now. The latency gap is about 10×, far larger than any effect of that difference.
+- **Comparability:** the like-for-like Gemini row (bold) was run on the same prompt v2 and 31 cases at 8:34 AM, after Gemini billing and a $5 spend cap were set up (`results/2026-10-18T15-34-14-959Z-gemini-3.5-flash-lite.*`). Results: 31/31 in the top 3, 0 calls over 1.2 s, 0 rate-limit errors. The earlier S-2 rows (prompt v1, 25 cases) are kept for reference.
 
 ## Pass bar
 
