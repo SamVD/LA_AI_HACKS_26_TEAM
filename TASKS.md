@@ -482,6 +482,42 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 - **Builder prompt:**
   > Implement T-305 in `TASKS.md` on branch `glass/imu-tilt` from `integration`. Only edit `src/glasses/**`. Read `src/glasses/app.ts`, `input.ts`, `bridge.ts`, `ui.ts`, `testing.ts` and `spikes/device/FINDINGS.md` §2 first. Keep the detector pure and fully unit-tested. With `imuEnabled` false, behavior must be identical to today. Run `npm run typecheck && npm test` and `node scripts/check-ownership.mjs --branch glass/imu-tilt --base origin/integration`. Open a PR to `integration` titled "T-305: head tilt switches the suggestion (flag VITE_IMU)" by 9:45 AM.
 
+### T-319 Head tilt sideways reveals more of the hint (replaces the tap on suggestions)
+- **Owner:** GLASS lane, built by a helper agent (Aarav assigns)
+- **Status:** TODO (D25, Sun 10:00 AM). **Hard cut-off: PR green by 10:15 AM.** Late = dropped; the judge build ships T-305 as it is.
+- **Branch:** `glass/imu-roll` (GLASS lane owns `src/glasses/**`, so no grant is needed)
+- **Files it may EDIT:** `src/glasses/imu/tilt.ts`, `src/glasses/imu/tilt.test.ts`, `src/glasses/app.ts`, `src/glasses/glasses.test.ts`. Nothing else.
+- **What the wearer gets:** while a suggestion is on the glasses, **tilting the head sideways (ear toward the shoulder) = a tap**: the ladder goes `s _ _ _ _` → `s u n _ _` → the word. Look down / up still switch suggestions (T-305). Taps keep working. Off the `candidates` screen, sideways tilt does nothing (the existing gate in `app.ts`).
+- **Why "sideways", not "right":** in S-3 (`spikes/device/FINDINGS.md` §2), tilt left and tilt right **both** moved **y negative** (rest y ≈ −0.16; left ≈ −0.40, right ≈ −0.64), and nothing separated them reliably. We only need one sideways gesture, so any clear roll counts. Tell users "tilt right"; tilting left also works, and that's fine.
+- **Facts from S-3:**
+  - Rest x ≈ 0.03, y ≈ −0.16.
+  - Look up/down moves **x** by about ±0.3, while y moves only ~±0.09.
+  - Tilt right: y ≈ −0.64 (Δ ≈ −0.48), x moves only about −0.1.
+- **Spec:**
+  1. **`tilt.ts`:** `sample(x, tMs, y?)`. When `y` is given, keep a `restY` exactly like `rest` (same `arm` median / first-3-samples logic, same history).
+     - **Roll:** `|y − restY| ≥ rollFire` (default **0.28**) for `holdSamples` (4) in a row → return **`'SELECT'`**.
+     - Same lock / re-arm (`|Δy| < deadZone` for 2 samples) and the same **shared** cooldown as up/down.
+     - **Roll wins:** while `|Δy| ≥ 0.20`, don't count an x run, so a tilted head can't also fire NEXT or PREV.
+     - `TiltDir` becomes `'NEXT' | 'PREV' | 'SELECT'`. With `y` omitted, behavior is identical to today (existing tests unchanged).
+  2. **`app.ts`:** pass `imu.y ?? 0` too, and dispatch `'SELECT'` exactly like NEXT/PREV (only while `lastScreen()?.kind === 'candidates'`). Log `imu.tilt {dir}`.
+  3. Same flag (`VITE_IMU`), no new config.
+- **Acceptance criteria:**
+  - **Unit tests** (10 Hz, S-3 numbers):
+    - tilt right (y −0.64 held 600 ms, x −0.08) → exactly 1 `SELECT` and no NEXT/PREV;
+    - tilt left (y −0.40) → 1 `SELECT`;
+    - look down / up → still NEXT / PREV with no SELECT;
+    - holding a tilt for 2 s, then returning → only 1 `SELECT`;
+    - 2-sample wobble → nothing;
+    - no `y` passed → old behavior.
+  - **App test:** a roll on `candidates` dispatches SELECT; on `blank` it dispatches nothing.
+  - **Checks:** `npm run typecheck && npm test` green; ownership check passes.
+  - **Device** (Sarah, the 0.4.9 test build):
+    - with a suggestion showing, 10 sideways tilts → at least 8 reveal one more step;
+    - 10 looks down/up still switch suggestions, with at most 1 wrong reveal;
+    - 2 min of talking and nodding → at most 1 unwanted action.
+- **Builder prompt:**
+  > Implement T-319 in `TASKS.md` on branch `glass/imu-roll` from the latest `integration`. Only edit `src/glasses/imu/tilt.ts`, `tilt.test.ts`, `src/glasses/app.ts`, `src/glasses/glasses.test.ts`. Read the T-305 code (`tilt.ts`, the T-305 part of `app.ts`) and `spikes/device/FINDINGS.md` §2 first. Keep `sample(x, t)` without `y` behaving exactly as now. Run `npm run typecheck && npm test` and `node scripts/check-ownership.mjs --branch glass/imu-roll --base origin/integration`. Open a PR to `integration` titled "T-319: sideways head tilt reveals more of the hint" by 10:15 AM.
+
 ### T-306 Gate G3: audit, soak, decide, tag
 - **Owner:** ORCH
 - **Status:** ✅ **PASSED on G3b** (0.4.6, #134, D23): B clean block 3 of 3 helped, 0 false, ≤ 2.9 s. Tag `v0.3-step3`. Judge build 0.4.7 = Practice + Conversation. (Earlier: not passed on 0.4.4, D20, Gemini blocked.)
