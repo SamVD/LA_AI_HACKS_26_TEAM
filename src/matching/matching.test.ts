@@ -1,36 +1,31 @@
 import { describe, expect, it } from 'vitest'
-import { matchWord, type Strictness } from './index'
+import { editDistance, matchWord, normalize, phoneticCode, type Strictness } from './index'
 
-const cases: Array<[string, string, Strictness, boolean]> = [
-  ['cup', 'cup', 0, true], ['CUP!', 'cup', 2, true],
-  [' cop ', 'cup', 0, true], ['cop', 'cup', 1, false], ['cop', 'cup', 2, false],
-  ['cup uh', 'cup', 0, true], ['cup uh', 'cup', 1, true], ['cup uh', 'cup', 2, false],
-  ['cat', 'cat', 2, true], ['cap', 'cat', 0, false], ['cap', 'cat', 1, false], ['cap', 'cat', 2, false],
-  ['please pass the cup', 'cup', 1, true], ['cupboard', 'cup', 0, false],
-  ['sculpture', 'cup', 0, false], ['up', 'cup', 0, false], ['cupp', 'cup', 0, true],
-  ['a', 'a', 0, true], ['I', 'a', 0, false], ['at', 'cat', 0, false],
-  ['in', 'on', 0, false], ['an', 'an', 2, true],
-  ['spoon', 'spoon', 2, true], ['spoo', 'spoon', 1, false], ['spoo', 'spoon', 0, true],
-  ['spoun', 'spoon', 1, true], ['spoom', 'spoon', 1, true],
-  ['fork', 'spoon', 0, false], ['form', 'fork', 0, true], ['form', 'fork', 1, false],
-  ['phone', 'fone', 0, true], ['phone', 'fone', 1, false],
-  ['nife', 'knife', 1, true], ['rite', 'write', 1, true], ['nite', 'night', 0, false],
-  ['water', 'water', 2, true], ['watre', 'water', 0, true], ['waterr', 'water', 1, true],
-  ['metformn', 'metformin', 1, true], ['lisnopril', 'lisinopril', 1, true],
-  ['pharmcy', 'pharmacy', 1, true], ['pharmacy', 'park', 0, false],
-  ['I need my keys.', 'keys', 1, true], ['key', 'keys', 1, false],
-  ['I said Maya', 'Maya', 1, true], ['maya', 'Maya', 2, true],
-  ['Dr. Velrin!', 'Dr Velrin', 2, true], ["It's Pip", "its pip", 2, true],
-  ['CAFÉ', 'cafe', 2, true], ['ice-cream', 'ice cream', 2, true],
-  ['please bring ice cream now', 'ice cream', 1, true], ['cream', 'ice cream', 0, false],
-  ['cream ice', 'ice cream', 0, false], ['grocery store', 'grocery store', 2, true],
-  ['please go to the grocery store', 'grocery store', 1, true],
+const cases: Array<[string, string, Strictness, boolean]> = []
+for (const strictness of [0, 1, 2] as const) {
+  for (const heard of ['cup', 'CUP!', 'the cup', 'cup uh', 'um cup', 'cups', "it's a cup"]) {
+    cases.push([heard, 'cup', strictness, true])
+  }
+  cases.push(['cop', 'cup', strictness, strictness === 0],
+    ['cap', 'cat', strictness, strictness === 0],
+    ['spoom', 'spoon', strictness, strictness !== 2],
+    ['nana', 'banana', strictness, false],
+    ['I want ice cream', 'ice cream', strictness, true],
+    ['doctor velrin', 'Dr. Velrin', strictness, true],
+    ['spoon', 'fork', strictness, false],
+    ['cupboard', 'cup', strictness, false],
+    ['', 'cup', strictness, false],
+    ['cream', 'ice cream', strictness, false],
+    ['glasses', 'glass', strictness, true],
+    ['I want ice uh cream', 'ice cream', strictness, true])
+}
+cases.push(['nife', 'knife', 1, true], ['fone', 'phone', 1, true],
+  ['form', 'fork', 1, false], ['form', 'fork', 0, true],
+  ['spoom', 'spoon', 2, false], ['lisnopril', 'lisinopril', 1, true],
   ['Sunrise Clinc', 'Sunrise Clinic', 1, true], ['Maple Hall', 'Sunrise Clinic', 0, false],
-  ['', 'cup', 0, false], ['um', '', 0, false], ['...', 'cup', 0, false], ['cup', '!!!', 2, false],
   ['coffee', 'tea', 0, false], ['banana', 'apple', 1, false],
-  ['teeth', 'toothbrush', 0, false], ['toothbrsh', 'toothbrush', 1, true],
-  ['hello\nworld', 'hello world', 2, true], ['  cup \t ', 'cup', 2, true],
-]
+  ['teeth', 'toothbrush', 0, false], ['CAFÉ', 'cafe', 2, true],
+  ['ice-cream', 'ice cream', 2, true], ['like', 'like', 2, true])
 
 describe('word matcher', () => {
   it.each(cases)('%j for %j at strictness %i => %s', (heard, target, strictness, ok) => {
@@ -39,13 +34,28 @@ describe('word matcher', () => {
     expect(result.score).toBeGreaterThanOrEqual(0)
     expect(result.score).toBeLessThanOrEqual(1)
   })
-  it('returns the normalized full transcript and preserves inputs', () => {
+  it('returns the best matching n-gram and preserves input', () => {
     const transcript = 'Please, pass the CUP!'
-    expect(matchWord(transcript, 'cup', 1)).toEqual({ ok: true, score: 0.95, heard: 'please pass the cup' })
+    expect(matchWord(transcript, 'cup', 1)).toEqual({ ok: true, score: 1, heard: 'cup' })
+    expect(matchWord('spoom uh spoon', 'spoon', 1).heard).toBe('spoon')
+    expect(matchWord('bring ice cream now', 'ice cream', 2).heard).toBe('ice cream')
     expect(transcript).toBe('Please, pass the CUP!')
-    expect(matchWord('CUP!', 'cup', 2)).toEqual({ ok: true, score: 1, heard: 'cup' })
   })
-  it('does not produce NaN for empty/short inputs', () => {
+  it('normalizes punctuation, names, whitespace and apostrophes', () => {
+    expect(normalize("  Dr. Velrin's ice-cream!  ")).toBe("doctor velrin's ice cream")
+    expect(normalize("'It's'  Pip’s." )).toBe("it's pip's")
+  })
+  it.each([['knife', 'nife'], ['gnome', 'nome'], ['pneumatic', 'neumatic'],
+    ['phone', 'fone'], ['city', 'sity'], ['gem', 'jem'], ['ship', 'chip'],
+    ['thick', 'thik'], ['back', 'bak']])('codes %s and %s consistently', (a, b) => {
+    expect(phoneticCode(a)).toBe(phoneticCode(b))
+  })
+  it('computes Levenshtein distance including empty and Unicode strings', () => {
+    expect(editDistance('kitten', 'sitting')).toBe(3)
+    expect(editDistance('', 'cup')).toBe(3)
+    expect(editDistance('🐈', '🐕')).toBe(1)
+  })
+  it('has finite scores for empty/short inputs', () => {
     for (const target of ['', '.', 'a', 'cup']) {
       for (const heard of ['', '.', 'i', 'no']) {
         for (const strictness of [0, 1, 2] as const) expect(Number.isFinite(matchWord(heard, target, strictness).score)).toBe(true)

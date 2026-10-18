@@ -1,36 +1,33 @@
 # Word matching (T-103)
 
-`matchWord(transcript, target, strictness = 1)` is a pure function. It returns
-`{ ok, score, heard }`. `heard` is the normalized full transcript. `score` is
-similarity evidence between 0 and 1, not confidence or a clinical measurement.
+`matchWord(transcript, target, strictness = 1)` is pure and returns
+`{ ok, score, heard }`. `heard` is the best normalized token or n-gram, including
+on a failed match (empty when there is no complete n-gram). Score is evidence
+in [0, 1], not clinical confidence.
 
-Normalization lowercases text, removes accents, joins apostrophes, replaces
-other punctuation with spaces, and collapses whitespace. Matching uses whole
-words and contiguous phrases: `cup` is not contained in `cupboard`, and
-`ice cream` must contain both words in order.
+`normalize`, `phoneticCode`, and Levenshtein `editDistance` are also exported.
+Normalization lowercases, removes accents and punctuation, preserves inner
+apostrophes, turns hyphens into spaces, expands `dr` to `doctor`, and collapses
+whitespace. Matching removes fillers `um/uh/er/erm/hmm/like` (unless present in
+the target), ignores a leading article, and checks whole contiguous n-grams.
+`cup` never matches inside `cupboard`; `ice cream` requires both words in order.
 
-| Strictness | Accepted evidence |
+| Strictness | Rules |
 | --- | --- |
-| 0 (lenient) | Exact utterance or contained target, bounded phonetic-code match, or small edit distance. |
-| 1 (normal) | Exact utterance or contained target, tighter phonetic match for words of 4+ letters, or tighter edit distance. |
-| 2 (exact) | The entire normalized utterance equals the entire normalized target. `cup uh` fails; `Cup!` passes. |
+| 2 (exact) | Exact n-gram or simple final-word plural (`s` / `es`). |
+| 1 (default) | Exact/plural; edit distance ≤1 for targets of 5–7 letters, ≤2 for 8+; equal phonetic code for targets of 5+ letters. |
+| 0 (lenient) | Level 1 plus distance ≤1 for 3–4 letters with the same first letter; equal phonetic code at any length. |
 
-For a candidate and target, let **L** be the shorter length excluding spaces.
-For one or two letters, only exact matches pass. For three letters, lenient
-mode permits only a matching phonetic code within one edit; normal mode
-requires exact text. This accepts `cop` for `cup` in lenient mode while
-rejecting `cap` for `cat` and short fragments such as `up` for `cup`.
+The builder prompt says both "phonetic at 4+" and "3–4 letters only exact or a
+plural" for level 1. The latter, explicit short-word restriction takes
+precedence here. Lenient mode accepts `cop/cup` and `cap/cat`; levels 1 and 2
+reject them. Exact mode accepts `cup uh`, `the cup`, `cups`, and `it's a cup`.
 
-For L >= 4 the maximum edit distance is `min(3, floor(L / 4))` in lenient
-mode and `min(2, floor(L / 5))` in normal mode. The phonetic edit limit is
-`max(1, floor(L / 2))` in lenient mode or `max(1, floor(L / 3))` in normal mode.
+The English phonetic heuristic handles silent initial k/g/p before n, wr/wh,
+ph→f, soft c→s and soft g→j before e/i/y, ck/c/q→k, sh/ch→x, th→0,
+noninitial vowels, and repeated letters. It preserves word boundaries.
+It is not a pronunciation dictionary. Non-Latin words use text/edit matching.
 
-The English-oriented phonetic code handles initial `kn`, `wr`, `wh`, plus
-`ph`, `ght`, `qu`, soft/hard `c`, repeated letters, and noninitial vowels.
-It preserves consonant order and word boundaries. It is a lightweight
-heuristic, so it does not cover every homophone, accent, or pronunciation.
-Non-Latin words use exact/edit matching only.
-
-Exact utterance score = 1; contained exact target = 0.95. Otherwise the score
-is `1 - distance / max(candidate.length, target.length)`, with a floor of 0.85
-for an accepted phonetic match. Empty inputs always fail with score 0.
+Exact score = 1; plural score = 0.95. Otherwise score is
+`1 - distance / max(candidate.length, target.length)`, with an accepted phonetic
+match scoring at least 0.85. Empty input always fails with score 0.
