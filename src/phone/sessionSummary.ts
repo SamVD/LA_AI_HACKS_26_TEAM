@@ -47,8 +47,29 @@ export function summarizeStep1Session(session: SessionRecord): Step1SessionSumma
   return { solved, solvedWithoutHelp, items }
 }
 
+function cueHelpLabel(cue: 0 | 1 | 2 | 3): string {
+  if (cue === 0) return 'solved without cues'
+  return `solved at cue L${cue}`
+}
+
+export function formatSessionStartedAt(startedAt: number): string {
+  if (!Number.isFinite(startedAt) || startedAt <= 0) return 'Latest session'
+  return new Date(startedAt).toLocaleString(undefined, {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  })
+}
+
+export function formatStep1SessionHeadline(
+  session: SessionRecord,
+  summary: Step1SessionSummary,
+): string {
+  const when = formatSessionStartedAt(session.startedAt)
+  return `${when} · ${summary.solved} solved · ${summary.solvedWithoutHelp} without cues`
+}
+
 export function formatStep1ItemLine(item: Step1ItemSummary): string {
   if (item.status === 'skipped') return `${item.word} · skipped`
   if (item.status === 'not-solved') return `${item.word} · not solved`
-  return `${item.word} · cue ${item.solvedAtCue}`
+  return `${item.word} · ${cueHelpLabel(item.solvedAtCue ?? 0)}`
 }

@@ -77,6 +77,15 @@ a.nudge-btn {
   margin-bottom: var(--nudge-space-2);
 }
 
+.nudge-build-capability {
+  margin: 0 0 var(--nudge-space-3);
+  font-size: var(--nudge-font-sm);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--nudge-text);
+}
+
 .nudge-home-lead,
 .nudge-mode-lead {
   margin: 0 0 var(--nudge-space-3);
@@ -97,6 +106,13 @@ a.nudge-btn {
 
 .nudge-mode-actions {
   margin-top: var(--nudge-space-4);
+}
+
+.nudge-preview-live {
+  margin: 0 0 var(--nudge-space-3);
+  font-size: var(--nudge-font-sm);
+  font-weight: 600;
+  color: var(--nudge-success);
 }
 
 .nudge-preview-lead {
@@ -155,6 +171,17 @@ a.nudge-btn {
 .nudge-summary-body p {
   margin: 0 0 var(--nudge-space-4);
   color: var(--nudge-text-muted);
+}
+
+.nudge-summary-headline {
+  color: var(--nudge-text) !important;
+  font-size: var(--nudge-font-md);
+  line-height: 1.45;
+}
+
+.nudge-summary-empty {
+  font-size: var(--nudge-font-md);
+  line-height: 1.45;
 }
 
 .nudge-intent-bar {
