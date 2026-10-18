@@ -22,6 +22,46 @@
   background: var(--nudge-accent-soft);
 }
 
+.nudge-tab:focus-visible {
+  outline: 2px solid var(--nudge-focus);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nudge-tab {
+    transition: none;
+  }
+}
+
+.nudge-tagline {
+  margin: var(--nudge-space-3) 0 0;
+  font-size: var(--nudge-font-md);
+  font-weight: 400;
+  color: var(--nudge-text-muted);
+  line-height: 1.45;
+}
+
+.nudge-home-demo h2 {
+  margin: 0 0 var(--nudge-space-2);
+  font-size: var(--nudge-font-lg);
+}
+
+.nudge-home-demo-lead {
+  margin: 0 0 var(--nudge-space-4);
+  color: var(--nudge-text-muted);
+  font-size: var(--nudge-font-md);
+  line-height: 1.45;
+}
+
+.nudge-home-demo {
+  margin-bottom: var(--nudge-space-4);
+}
+
+a.nudge-btn {
+  text-decoration: none;
+  box-sizing: border-box;
+}
+
 .nudge-panels section[hidden] {
   display: none !important;
 }
@@ -39,7 +79,7 @@
 
 .nudge-coming-soon {
   margin: 0;
-  color: var(--nudge-text-faint);
+  color: var(--nudge-text-muted);
   font-size: var(--nudge-font-sm);
 }
 

@@ -1,11 +1,13 @@
 import './theme/tokens.css'
 import './companion.css'
+import './demo/demo.css'
 import { builtinBank } from '../content'
 import type { AppShell, Screen, Suggestion, Transcript, Unsubscribe, WordCategory, WordEntry } from '../core/types'
 import { applyPhoneTheme, watchThemePreference } from './theme/applyTheme'
 import { buildPersonalEntry, isPersonalCategory, validatePracticeFrame } from './personalWord'
 import { ensurePreviewImages, renderPreviewOptions } from './preview/previewAssets'
 import { renderScreen } from './preview/renderScreen'
+import { bindJudgeDemo } from './demo/bindJudgeDemo'
 import { formatStep1ItemLine, summarizeStep1Session } from './sessionSummary'
 
 export type CompanionDebugState = {
@@ -24,7 +26,7 @@ export type CompanionMountOptions = {
   debug?: CompanionDebugSource
 }
 
-type TabId = 'home' | 'preview' | 'summary' | 'words' | 'debug'
+type TabId = 'home' | 'demo' | 'preview' | 'summary' | 'words' | 'debug'
 
 const builtinIds = new Set(builtinBank().map(entry => entry.id))
 
@@ -68,6 +70,9 @@ export function mountCompanion(
   panels.className = 'nudge-panels'
 
   const homePanel = document.createElement('section')
+  const demoPanel = document.createElement('section')
+  demoPanel.className = 'nudge-demo-inline'
+  const demoBinding = bindJudgeDemo(demoPanel, { compact: true })
   const previewPanel = document.createElement('section')
   const summaryPanel = document.createElement('section')
   const wordsPanel = document.createElement('section')
@@ -320,6 +325,7 @@ export function mountCompanion(
       btn.classList.toggle('nudge-tab--active', selected)
     }
     homePanel.hidden = id !== 'home'
+    demoPanel.hidden = id !== 'demo'
     previewPanel.hidden = id !== 'preview'
     summaryPanel.hidden = id !== 'summary'
     wordsPanel.hidden = id !== 'words'
@@ -332,6 +338,7 @@ export function mountCompanion(
 
   const tabs: Array<{ id: TabId; label: string }> = [
     { id: 'home', label: 'Home' },
+    { id: 'demo', label: 'Demo' },
     { id: 'preview', label: 'Preview' },
     { id: 'summary', label: 'Step 1' },
     { id: 'words', label: 'Words' },
@@ -388,7 +395,7 @@ export function mountCompanion(
   wordsPanel.append(wordForm, wordBankBody)
   debugPanel.append(debugTranscript, debugSuggestions)
 
-  panels.append(homePanel, previewPanel, summaryPanel, wordsPanel, debugPanel)
+  panels.append(homePanel, demoPanel, previewPanel, summaryPanel, wordsPanel, debugPanel)
 
   const formHint = wordForm.querySelector<HTMLParagraphElement>('[data-form-hint]')!
   wordForm.addEventListener('submit', event => {
@@ -459,6 +466,7 @@ export function mountCompanion(
   refreshPreview()
   void refreshWords()
   return () => {
+    demoBinding.reset()
     unsubScreen()
     unsubDebug?.()
     unwatchTheme()
