@@ -1,10 +1,10 @@
 # Nudge Task Board
 
-_Last updated: Sat Oct 17, 2026 (about H10:45) by ORCH. **Current snapshot of every task, PR, decision and blocker: `docs/ORCH_STATE.md`.** Decisions D1-D14: `PLAN.md` Section 13. Contracts: CONTRACT_VERSION 2 (`src/core/types.ts`, `docs/CONTRACTS.md`). Phase 1 builder prompts: `docs/prompts/phase1-builder-prompts.md`._
+_Last updated: Sat Oct 17, 2026 (about H11) by ORCH. **Current snapshot of every task, PR, decision and blocker: `docs/ORCH_STATE.md`.** Decisions D1-D14: `PLAN.md` Section 13. Contracts: CONTRACT_VERSION 2 (`src/core/types.ts`, `docs/CONTRACTS.md`). Phase 1 builder prompts: `docs/prompts/phase1-builder-prompts.md`._
 
 Single source of truth for who is doing what. Read `PLAN.md` first for architecture, contracts, ownership, and git rules.
 
-**Lanes:** ORCH = orchestrator (Claude). GLASS = Claude Code #2. AI = Claude Code #3. UI = Cursor. LOGIC = Codex/ChatGPT. Branch format: `<lane>/<slug>`, PR into `integration`.
+**Lanes:** ORCH = orchestrator (Claude). GLASS = Claude Code #2. AI = Claude Code #3. UI = Cursor. LOGIC = Devin (was Codex/ChatGPT until H11). Branch format: `<lane>/<slug>`, PR into `integration`.
 
 **Status values:** TODO, READY, IN_PROGRESS, IN_REVIEW, CHANGES_REQUESTED, APPROVED, MERGED, BLOCKED.
 
@@ -12,8 +12,8 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 **Queue by lane (now):**
 - GLASS: T-204 and T-202 are merged. Next: **G1 now**: production passes the curl check (`integration` @ `4b13180`). Then **G2** (T-207 runbook) with a second person.
-- AI: Production redeployed from `integration` @ `4b13180`; `api/stt` (both token types) and `api/predict` are curl-checked. Deploys go through `bash api/_deploy-prod.sh` (#57). Standing by during G1/G2 to add the WebView origin. Next: **T-301 stall detector**.
-- LOGIC (Codex): T-201 (both parts) and T-303 are merged. Next: T-205 (mouth-shape resolver) and the eval-04 fixture fix; then help T-302 if AI is busy.
+- AI: G1 origin fixed: the Even WebView origin is `http://127.0.0.1:<port>` (#61 adds `:*` matching). **Next: tighten production `STT_ALLOWED_ORIGINS` to exactly `http://localhost:5173,http://127.0.0.1:*`** (at H11 production also accepted `null`/`file://`) and redeploy with `api/_deploy-prod.sh`. Then T-301 stall detector.
+- LOGIC (Devin): T-201, T-205 (#62) and T-303 are merged. Next: the T-205 `hourglass` nit (silent-h rule) and the eval-04 fixture fix; then help T-302 if AI is busy. Board changes go in your task PR description; ORCH applies them (the `orch/` prefix is ORCH-only).
 - UI (Cursor): T-206 and T-401 part 1 are merged. Next (lower priority than Step 2): T-401 part 2, the Demo entry inside `mountCompanion` so judges can reach it in the packaged app, with a cancellable replay.
 
 **Global rules for every task (also repeated in the builder prompt):**
@@ -243,7 +243,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ### T-107 Gate G1: audit, integrate, smoke, tag
 - **Owner:** ORCH (with GLASS holding the device)
-- **Status:** **READY TO RUN.** All Step 1 code merged; production `api/` healthy (verified 10:20 PM: tokens 200, foreign origin 403, predict 200). Sarah runs the runbook below; ping Sam within 1 h about the WebView origin.
+- **Status:** **IN PROGRESS (Sarah + Sam), origin blocker fixed.** The packaged WebView origin is `http://127.0.0.1:<port>` (61976 observed); added on Vercel and `:*` matching merged (#61). Sarah is re-testing on the device.
 - **Depends on:** T-101 to T-106
 - **Spec:** audit every PR against the checklist; verify no contract drift; merge order T-101, T-104, T-103, T-102, T-106, T-105; run `docs/G2_SMOKE.md` on the real G2 with the Beta build; fast-forward `main`, tag `v0.1-step1`, upload the `.ehpk`.
 - **Acceptance criteria (gate):** Step 1 runs 10 prompts on the real G2, with check/X feedback and the cue ladder; survives a 5-minute lock/resume; mic-denied path shows a message; root double-tap exits cleanly.
@@ -312,8 +312,8 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
   - [ ] `step2Enabled` flag gates the whole mode.
 
 ### T-205 Mouth-shape resolver and asset expansion
-- **Owner:** LOGIC (Codex)
-- **Status:** IN PROGRESS: branch `logic/mouth-resolver` pushed without a PR; needs the 60-word table test and wiring into `resolveAssets` before review.
+- **Owner:** LOGIC (Devin)
+- **Status:** MERGED (PR #62): phonetic resolver (digraphs, silent letters, soft/hard g, `firstSound` overrides), 67-case table, wired via `mouthKeyFor` → `resolveAssets`, 25 new CC0 pictures (65 SVGs total). Follow-up nit: `hourglass` resolves to `mouth:back` (silent-h rule keeps the remainder).
 - **Branch:** `logic/mouth-resolver`
 - **Depends on:** T-106
 - **Files it may EDIT:** `src/content/phonetics/**`
@@ -417,7 +417,7 @@ No new features after H18. Only fixes, packaging, polish, and the story.
 
 ### T-403 Design polish (Paper challenge)
 - **Owner:** UI (Cursor)
-- **Status:** PARTLY DONE (PRs #44, #47: tagline, focus rings, contrast, in-app demo CTA). Final polish pass before H18.
+- **Status:** PARTLY DONE (PRs #44, #47, #64: tagline, focus rings, contrast, in-app demo CTA, Devpost asset index, Home copy). Final polish pass before H18.
 - **Branch:** `ui/polish`
 - **Files it may EDIT:** `src/phone/**` (excluding `src/phone/demo/`, owned by T-401), `docs/design/**`
 - **Spec:** one polish pass per the Paper brief (design fundamentals, ease of use, personal craft).
@@ -448,6 +448,7 @@ No new features after H18. Only fixes, packaging, polish, and the story.
 - H7: T-004 fixtures merged (PR #9). Follow-up filed as T-007.
 - H7: T-006 design tokens and glasses layouts merged (PR #7, after one round of changes).
 - H7: T-002 device checks done (PR #13, `docs/BETA_RESULTS.md`). QR prototype mode is broken on Even's side, so device testing uses packaged Beta builds; README and `docs/G2_SMOKE.md` updated.
+- H11: **G1 'No connection' root cause:** the Even app serves packaged builds from a local server, so the WebView origin is `http://127.0.0.1:<port>` (61976); every token preflight got 403. Sam added it on Vercel; #61 adds `scheme://host:*` origin matching. Merged #62 (T-205) and #64 (T-403 assets). #63 closed (`orch/` prefix is ORCH-only; the grant wasn't needed). LOGIC tool is now Devin. Production origins to tighten to `localhost:5173` + `127.0.0.1:*`.
 - H10:45: Production `api/` redeployed from `integration` @ `4b13180`; `api/stt` and `api/predict` are live and curl-checked. Incident 05:07-05:16 UTC: `vercel --prod` run from a checkout on an unmerged branch put pre-#50 code live, and `api/stt` returned 500 for ~9 min. No secrets were uploaded. Rule: deploy only with `bash api/_deploy-prod.sh` (#57, issue #56; PLAN D15). `docs/ORCH_STATE.md` added (#58).
 - H10:30: T-201 part 2 (#51) and T-203 `api/predict` (#53) merged. ORCH wired the real predictor in `src/main.ts` (1.5 s timeout, D14; `VITE_PREDICT_URL` in `.env.production`). **All Step 2 code is in.** G2 runbook added to T-207. Production `api/` still needs Sam's redeploy.
 - H10:15: `api/stt` hosted on Vercel (#50: ESM `.js` import fix; Sam deploys via CLI because Hobby blocks Git deploys from non-members). T-202 rolling STT (#49), T-303 keywords (#52) and dev Step 2 (#48) merged. ORCH: rolling STT wired in `main.ts`, `app.json` whitelist + `wss://`, `.env.production` with the token URL, `.vercel` ignored, grant for #51. **Production `api/stt` needs a redeploy** (500 at 10:10).
