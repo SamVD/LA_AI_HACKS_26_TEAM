@@ -14,8 +14,10 @@ export const GALLERY: Screen[] = [
   { kind: 'status', text: 'Screen gallery\nSwipe down: next screen\nSwipe up: previous\nTap: show the gesture\nDouble-tap: back to launcher' },
   { kind: 'prompt', sentence: 'You drink from a ____.' },
   { kind: 'prompt', sentence: 'We sit on a bench by the playground in the ____.' },
-  { kind: 'cue', level: 1, word: 'cup', imageKey: 'cup', sentence: 'You drink from a ____.' },
-  { kind: 'cue', level: 2, word: 'cup', masked: 'c_p' },
+  // T-320 ladder: masked sentence, then picture + masked sentence, then the answer.
+  { kind: 'cue', level: 1, word: 'cup', sentence: 'You drink from a ____.' },
+  { kind: 'cue', level: 2, word: 'cup', imageKey: 'cup', sentence: 'You drink from a ____.' },
+  { kind: 'cue', level: 2, word: 'ice cream', sentence: 'You put ____ in the drink.' },
   { kind: 'cue', level: 3, word: 'cup' },
   { kind: 'feedback', ok: true, word: 'cup' },
   { kind: 'feedback', ok: false, word: 'cup' },

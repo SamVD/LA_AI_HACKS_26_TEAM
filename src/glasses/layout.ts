@@ -96,10 +96,28 @@ export function spaceLetters(masked: string): string {
   return [...masked].join(' ')
 }
 
-/** The first letter followed by one `_` per remaining letter, e.g. `cup` -> `c _ _`. */
-function firstLetterMask(word: string): string {
-  const letters = [...word]
-  return spaceLetters(letters[0] + '_'.repeat(Math.max(0, letters.length - 1)))
+/**
+ * T-320 Practice mask (unspaced): the first word of a phrase stays whole; every
+ * later word keeps its first letter and one `_` per remaining letter, so spaces
+ * and hyphens survive (`ice cream` -> `ice c____`). A single word is just its
+ * first letter plus blanks (`park` -> `p___`, `Maya` -> `M___`).
+ */
+export function letterMask(word: string): string {
+  const runs = word.match(/[\p{L}\p{N}]+/gu) ?? []
+  const maskRun = (run: string) => {
+    const chars = [...run]
+    return chars[0] + '_'.repeat(chars.length - 1)
+  }
+  if (runs.length <= 1) return runs.length ? maskRun(runs[0] ?? '') : word
+  let seen = 0
+  return word.replace(/[\p{L}\p{N}]+/gu, run => (++seen === 1 ? run : maskRun(run)))
+}
+
+/** The cue sentence with its `____` replaced by the spaced mask; bare mask when there is no blank. */
+function maskedSentence(screen: { word: string; masked?: string; sentence?: string }): string {
+  const mask = spaceLetters(screen.masked ?? letterMask(screen.word))
+  const sentence = screen.sentence ?? ''
+  return sentence.includes('____') ? sentence.replace('____', mask) : mask
 }
 
 function truncateLines(lines: string[], width: number): string {
@@ -128,15 +146,18 @@ export function layoutScreen(screen: Screen, opts: LayoutOptions = { images: fal
       return { texts: [centered('main', { x: 8, y: 99, w: 560, h: 81 }, screen.sentence)], images: [] }
 
     case 'cue': {
-      if (screen.level === 1) {
-        // Never `word` before level 3 (cue ladder rule).
-        const key = screen.imageKey ?? screen.mouthKey
-        return withPicture(key, opts, { x: 16, y: 54, w: 200, h: 120 }, { x: 232, y: 54, w: 328, h: 162 }, screen.sentence ?? ' ')
+      // T-320: L1 = the sentence with the first-letter mask in the blank (no
+      // picture); L2 = the picture beside that masked sentence (no picture asset
+      // -> the same text-only layout as L1); L3 = the answer. Never `word` before
+      // level 3 (cue ladder rule).
+      if (screen.level === 3) {
+        return { texts: centeredLines({ x: 8, y: 99, w: 560, h: 108 }, ['Not this time', `The word was "${screen.word}"`]), images: [] }
       }
-      const content = screen.level === 2
-        ? (screen.masked ? spaceLetters(screen.masked) : firstLetterMask(screen.word))
-        : screen.word
-      return { texts: [centered('main', { x: 8, y: 108, w: 560, h: 81 }, content)], images: [] }
+      if (screen.level === 2) {
+        const key = screen.imageKey ?? screen.mouthKey
+        return withPicture(key, opts, { x: 16, y: 54, w: 200, h: 120 }, { x: 232, y: 54, w: 328, h: 162 }, maskedSentence(screen))
+      }
+      return { texts: centeredLines({ x: 8, y: 99, w: 560, h: 108 }, maskedSentence(screen).split('\n')), images: [] }
     }
 
     case 'feedback': {
