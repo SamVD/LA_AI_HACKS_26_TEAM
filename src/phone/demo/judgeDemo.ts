@@ -96,7 +96,7 @@ export async function runJudgeDemo(
     items,
   }
   host.onState({ phase: 'help', transcripts: [...transcripts], suggestions: items })
-  await paint(host, helpScreen, `after help tap · stall “${stall.intendedWord}”`)
+  await paint(host, helpScreen, 'after help tap')
 }
 
 export function stallCueLine(): string {
