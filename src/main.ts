@@ -45,7 +45,8 @@ const sttForMode = (): SttService =>
 
 // Prediction (T-201 + T-203): the Gemini proxy at VITE_PREDICT_URL (set for packaged
 // builds in .env.production). Without it, the predictor runs bank-only (fallback v2).
-// Timeout 1.5 s: T-203 measured p95 ~1.15 s through Vercel (PREDICTOR_PROMPT §2). One
+// Timeout 2 s (G3b, #134: model median ~1.0 s + network missed 1.5 s on 15% of calls);
+// sample bank entries never reach the model (PREDICTOR_PROMPT §4: "Who's Maya?"). One
 // shared instance, so suggestion history and the 429 cooldown span modes. Step 2 wraps
 // it in the shared throttle (D11). `?svc=mock` keeps the canned MockPredictor.
 const predictUrl = (import.meta as ImportMeta & { env?: Record<string, unknown> }).env?.VITE_PREDICT_URL
@@ -55,7 +56,8 @@ const predictorForMode = (): PredictorService =>
     ? new MockPredictor()
     : (realPredictor ??= createPredictor({
         endpoint: typeof predictUrl === 'string' && predictUrl ? predictUrl : undefined,
-        timeoutMs: 1500,
+        timeoutMs: 2000,
+        dropSamples: true,
         now: Date.now,
         log,
         resolveAssets,
