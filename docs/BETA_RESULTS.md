@@ -155,3 +155,61 @@ The risk is only the launcher text and a flag. Step 1's and Step 3's code paths 
 | R-7 | **End-to-end UX review**: Claude runs every flow in the simulator against the conversation fixtures, plus a device pass, and writes a prioritized UX report; each fix becomes a card | GLASS (Claude) | None: review only |
 
 Order suggestion: **R-1 first** (it measures everything else), R-6 and R-3/R-4 in parallel, then R-2 and R-5 with R-1's data, R-7 last before the demo freeze.
+
+## G3 re-run on 0.4.4 (Sarah + partner, Sun Oct 18, 7:06-7:09 AM PT)
+
+**Build:** `integration` @ `0467898`, v0.4.4, `VITE_STEP3=1 VITE_DEBUG=1` (batch STT, Step 2 on). Data: the phone Debug tab export (96 events, Conversation mode only). No audio stored.
+
+**The run stopped after ~3 minutes: Gemini's daily free quota ran out.** At 7:09:11 `api/predict` returned **429** with `blockedUntil` = **4:59:59 PM PT** (midnight UTC), so every hint after that is the bank fallback. The 10-minute tally, the 10 timed taps and the Practice check were **not done**. Until billing is on (R-3) or the quota resets, predictions don't work on any device.
+
+### What the log shows
+
+| Area | Measured |
+|---|---|
+| Batch STT | 22 transcript chunks; `sttMs` 367-1392, typically ~550 ms. Chunks are long (up to 14.9 s, one hit the `max` cap) and often **contain both people**. |
+| Predictor | 22 calls: **14 model** (915-1083 ms, typically ~1020 ms), **7 timeout** (32 %), 1 rate-limited. The client timeout is **1200 ms** (`src/ai/predictor/service.ts`), barely above the model's typical time, so a third of calls spill into the fallback. |
+| Fallback words | Stale bank words from earlier context (`bread, soup, eggs` four times; `park, garden, grocery store`), so a fallback is effectively a false hint. |
+| Auto-hints (Step 3) | **1** in 3 min (`reason: filler`, "I think it's, um"). Letters were on screen **1.15 s after the transcript arrived** (prediction timed out, fallback shown). Stop speaking → hint ≈ silence wait + ~0.6 s STT + ~1.15 s ≈ **3 s**. The hint's `keywords` were stale (`coffee, cup, conversation` from minute 1). |
+| Missed stall (likely) | "Where exactly is it? Um, I think it's" ended a chunk with no auto-hint. The wearer found the word ("Outside by the food tables") ~3 s later. |
+| False hints | `park` (fallback, unrelated to the food-table answer); **`me` / `help`** (function words). "Park? Oh dear" was logged as `heard park`, but that was the wearer reading the hint aloud, not the hint helping. `me` was later marked `heard` from the partner's speech. |
+| Speaker loudness (T-316) | Single-speaker chunks separate: wearer **-12 to -14 dB**, partner **-20 to -26 dB** (e.g. "How about you? I'm from UW Madison…" -20; "Right now, it knows" -26). Mixed chunks read as the louder (wearer) level, so tagging needs **shorter chunks** to be useful. To confirm with Sarah's recollection of who said what. |
+| STT noise | Two quiet, short chunks (-24/-28 dB, < 0.5 s speech) came back as **Malayalam and Chinese** text, although batch STT sends `language_code=en` (`src/audio/scribe.ts`). They also fed the predictor. |
+| Lifecycle | The phone was in the background for 42 s (`lifecycle hidden` → `visible`); STT and hints kept working. |
+| Start of run | The partner says the first attempt was lost and something was "blank". That earlier session isn't in this export (to clarify). |
+
+### Proposed follow-ups (ORCH to assign)
+
+| # | Change | Why | Lane |
+|---|---|---|---|
+| F-1 | **Gemini billing (Tier 1)** or a second key, before any further device run | Daily quota exhausted at 7:09 AM | ORCH / Sam |
+| F-2 | Predictor `timeoutMs` 1200 → **~1800** | 32 % timeouts at a ~1020 ms typical model time | AI |
+| F-3 | In Step 3 auto-hints, **show nothing on a fallback** (taps may still show it) | Fallback words are stale, so they are the main false-hint source | AI / GLASS |
+| F-4 | **Filter suggestions**: drop pronouns/function words and multi-word phrases (`me`, `help`, `then`, `Did you`) | False hints | AI (prompt + post-filter) |
+| F-5 | **Drop junk chunks**: < 500 ms speech, or speech below ~-22 dB, or mostly non-Latin text | Hallucinated Malayalam/Chinese; partner fragments | AI (`src/audio`) |
+| F-6 | **Shorter batch chunks** (`segmentSilenceMs` 800 → ~500, lower `max`) so each chunk is one speaker, then tag wearer vs partner at ~-17 dB | Loudness separates single-speaker chunks by 6-12 dB | AI (R-2) |
+| F-7 | "Heard" should not count the wearer **reading the hint aloud** right after it appears, or partner speech | Inflates "helped" | AI / LOGIC |
+| F-8 | Refresh the stall `keywords` from the latest context | Stale `coffee, cup` | AI |
+
+Re-run the full protocol (10-minute tally, 10 timed taps, Practice) once F-1 is done.
+
+### Tests 2 and 3 (same build, 7:15-7:22 AM PT, still inside the quota block)
+
+Two more Conversation-mode exports (144 + 66 events). **Both ran almost entirely without Gemini**: test 2 got 2 model answers before its first 429 (7:16:15), and test 3 got its 429 on the second call. So every hint below is the **bank fallback**. The team's own remark in the transcript ("accuracy's gone down a lot … last night it was working pretty well") is this quota block, not a code regression.
+
+| Area | Measured |
+|---|---|
+| Stall detection | **8 auto-hints** (+1 skipped while candidates were showing). **4 were real wearer stalls** ending in "um": "pretty warm and, um", "I have two, um", "the other one, um", "I don't really like, um". 1 was plausible ("I was working on a"). **3 were false**: "to" (a 260 ms partner fragment at -24 dB), "So we", "if we upgrade to-". |
+| Speed without a model call | Bank hints appear **1-6 ms** after the auto-hint, which fires 0.2-1.5 s after the transcript. So the cost of stopping speaking → letters is **mostly the silence wait plus STT (~2-2.5 s)**. The predictor adds the rest when it runs. |
+| Hint quality | **0 helpful hints.** The fallback offered `phone`, `Maya`, `lisinopril` and `glasses` (sample personal-bank words) for "I have two, um" (sisters), "don't really like, um" (football) and the others. Showing a person's name or a medication at random is worse than showing nothing. |
+| Why the same words repeat | `rankFallback` adds +0.5 to any word **shown in the last 5 min** (`RECENT_MS`, `src/ai/predictor/fallback.ts`). And when the wearer reads a hint aloud, the word lands in the transcript tail. Both feed back, so `phone` and `glasses` won every later stall. |
+| False "heard" | The wearer reading the hint aloud ("Phone, bro", "Glasses", "Oh, it said the person's name, Maya") counted as `heard`. `heard phone` was also logged on a chunk with no "phone" in it ("It says lisinopril … signatories"), which looks like a matcher false positive (to check in `src/matching`). |
+| Speaker loudness (T-316) | Confirms test 1, with clearer data. **Partner alone: -24 to -30 dB** ("Hi, how are you?" -30; "Do you have any brothers or sisters?" -29; "And I miss it sometimes…" -26; "Like AI, CS stuff" -27). **Wearer alone: -9 to -15 dB** ("I have two, um" -12; "I have two siblings…" -12; "Last night I barely slept…" -13). A **-20 dB** threshold separates every single-speaker chunk in all three tests. Mixed chunks land in between (-14 to -19). |
+| STT noise | "OK啊" (-11 dB, 340 ms speech): a short, loud clip still came back partly Chinese, so a script filter is needed as well as a loudness one (F-5). There was one `no-speech` error (empty transcript, harmless). |
+
+### What this changes in the follow-ups
+- **F-1 (Gemini billing) is the top priority.** No useful device data is possible without it, and the demo would show `lisinopril` as a hint.
+- **F-3 is confirmed**: in auto mode, show **nothing** when the answer is a fallback. On a tap, show the fallback only if it scored on context, not just on recency.
+- **New, F-9**: drop the "shown recently" boost in `rankFallback`, or invert it (penalize words already shown), so one wrong word doesn't stick.
+- **New, F-10**: don't auto-hint on a function-word stall ("to", "So we") unless the chunk is the wearer's (≥ -20 dB) and ≥ 1 s of speech; keep "um"/filler stalls as they are.
+- **R-2 / F-6 are now low-risk**: the -20 dB split held on every single-speaker chunk across ~10 minutes of conversation.
+- **Quota budget**: prefetching on every chunk, including partner fragments and noise, spends quota for nothing. Skip prediction for chunks < 500 ms of speech or below -20 dB.
