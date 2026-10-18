@@ -1,96 +1,46 @@
-import {
-  waitForEvenAppBridge,
-  TextContainerProperty,
-  CreateStartUpPageContainer,
-  TextContainerUpgrade,
-  OsEventTypeList,
-} from '@evenrealities/even_hub_sdk'
-import { readFlags, readInitialMode } from './config'
-import { createMockContext, ConsoleUI } from './mocks'
-import { getMode } from './modes'
+import { waitForEvenAppBridge } from '@evenrealities/even_hub_sdk'
+import { readFlags } from './config'
+import { builtinBank, getImage } from './content'
+import { createBridgeKeyValue, createHubBridge, startApp } from './glasses'
+import { createGallery } from './glasses/gallery'
+import { MockPredictor, MockStt } from './mocks'
+import { modes } from './modes'
+import { mountCompanion } from './phone'
+import { createStore } from './store'
+
+const log = (event: string, data?: unknown) => console.log('[nudge]', event, data ?? '')
 
 const bridge = await waitForEvenAppBridge()
+const hub = createHubBridge(bridge, log)
+const flags = readFlags()
+// On-device word bank and sessions, persisted through the SDK's local storage
+// (debounced; the lifecycle flushes it when the phone page is hidden).
+const store = createStore(createBridgeKeyValue(hub), builtinBank())
 
-const mainText = new TextContainerProperty({
-  xPosition: 0,
-  yPosition: 0,
-  width: 576,
-  height: 288,
-  borderWidth: 0,
-  borderColor: 5,
-  paddingLength: 4,
-  containerID: 1,
-  containerName: 'main',
-  content: 'Hello Nudge\nTap to count · double-tap to exit.',
-  isEventCapture: 1,
-})
+// `?gallery=1`, or VITE_GALLERY=1 at build time for a packaged device build:
+// Step 1 becomes a walk through every Screen kind (dev check).
+const gallery = new URLSearchParams(typeof location === 'undefined' ? '' : location.search).has('gallery')
+  || (import.meta as ImportMeta & { env?: Record<string, unknown> }).env?.VITE_GALLERY === '1'
 
-const result = await bridge.createStartUpPageContainer(
-  new CreateStartUpPageContainer({
-    containerTotalNum: 1,
-    textObject: [mainText],
+// Real STT (T-104) and prediction (T-201) replace these mocks when they are wired.
+const { shell } = await startApp({
+  hub,
+  modes: gallery ? { ...modes, step1: createGallery() } : modes,
+  flags,
+  store,
+  images: getImage,
+  makeContext: ({ ui, leave }) => ({
+    ui,
+    leave,
+    stt: new MockStt(),
+    predictor: new MockPredictor(),
+    store,
+    now: Date.now,
+    log,
+    flags,
   }),
-)
-
-console.log('Page created:', result === 0 ? 'success' : `failed (${result})`)
-
-// Real STT, prediction and persistence replace these mocks in later tasks.
-// ConsoleUI leaves the SDK hello screen available for the device smoke test.
-const context = createMockContext({ ui: new ConsoleUI(), flags: readFlags(), now: Date.now })
-const mode = getMode(readInitialMode())
-await mode.enter(context)
-
-const cleanup = () => {
-  void mode.exit()
-  void context.stt.stop()
-}
-window.addEventListener('beforeunload', cleanup, { once: true })
-
-// Reads the event type out of one envelope.
-//
-// CLICK_EVENT is 0, and protobuf omits zero-value fields on the wire, so a
-// single tap arrives as an envelope whose `eventType` is `undefined`. The
-// default has to be resolved INSIDE the envelope check. Writing
-// `event.sysEvent?.eventType ?? OsEventTypeList.CLICK_EVENT` instead would
-// read CLICK on events that carry no `sysEvent` at all, so every scroll,
-// exit and audio frame would fire the tap handler.
-function eventTypeOf(envelope?: { eventType?: OsEventTypeList }): OsEventTypeList | null {
-  if (!envelope) return null
-  return envelope.eventType ?? OsEventTypeList.CLICK_EVENT
-}
-
-// Event routing, critical details:
-//   • Taps/double-taps/lifecycle come through `event.sysEvent`.
-//     Scroll gestures come through `event.textEvent`. Never mix them.
-//   • Double-tap → `shutDownPageContainer(1)` is a root-level check: it
-//     must fire no matter which envelope the event arrives in, so users
-//     can always exit the app.
-//   • Check DOUBLE_CLICK_EVENT before CLICK_EVENT.
-let taps = 0
-const unsubscribe = bridge.onEvenHubEvent(event => {
-  const sysType = eventTypeOf(event.sysEvent)
-  const textType = eventTypeOf(event.textEvent)
-
-  if (sysType === OsEventTypeList.DOUBLE_CLICK_EVENT || textType === OsEventTypeList.DOUBLE_CLICK_EVENT) {
-    bridge.shutDownPageContainer(1)
-    return
-  }
-
-  if (sysType === OsEventTypeList.CLICK_EVENT || textType === OsEventTypeList.CLICK_EVENT) {
-    taps += 1
-    console.log('[nudge] click event', { taps })
-    bridge.textContainerUpgrade(
-      new TextContainerUpgrade({
-        containerID: 1,
-        containerName: 'main',
-        content: `Taps: ${taps}\nTap to count · double-tap to exit.`,
-      }),
-    )
-    return
-  }
-
-  if (sysType === OsEventTypeList.SYSTEM_EXIT_EVENT || sysType === OsEventTypeList.ABNORMAL_EXIT_EVENT) {
-    cleanup()
-    unsubscribe()
-  }
+  log,
 })
+
+const root = document.getElementById('app')
+if (root) mountCompanion(root, shell)
