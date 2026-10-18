@@ -94,7 +94,7 @@ export const phoneThemeDark = {
     bgElevated: '#121814',
     bgSubtle: '#1a221c',
     text: '#eef5f0',
-    textMuted: '#b8d0c4',
+    textMuted: '#c8ddd2',
     /** Decorative only (borders, dividers) — not for essential copy. */
     textFaint: '#7a9488',
     border: '#2a3630',
