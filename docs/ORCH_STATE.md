@@ -2,7 +2,7 @@
 
 The orchestrator's single snapshot of where Nudge stands. **ORCH updates this after every gate (G1, G2, G3, final) and after any merge that changes a gate's readiness.** Detailed task cards live in `TASKS.md`, decisions in `PLAN.md` §13, contracts in `docs/CONTRACTS.md`.
 
-_Last updated: **Sun Oct 18, 2026, 6:00 AM PT (~H18)** by ORCH (aaravj9). **Running ~45 min behind the wake-up plan.** T-311 (#104) and T-315 + T-312 phone part (#103) merged; `app.json` 0.4.4. **Next: G3 re-run now.** G1 and G2 PASSED; G3 HELD._
+_Last updated: **Sun Oct 18, 2026, 6:20 AM PT** by ORCH (aaravj9). All T-311/T-312/T-313/T-315 code merged. **Next: G3 re-run (Sarah) with `VITE_STEP3=1 VITE_DEBUG=1 npm run pack` (0.4.4).** G1 and G2 PASSED; G3 HELD._
 
 ## Wake-up plan (3:45-7:00 AM build window, then ship by 10:00)
 
@@ -83,13 +83,13 @@ _Last updated: **Sun Oct 18, 2026, 6:00 AM PT (~H18)** by ORCH (aaravj9). **Runn
 
 | Item | Value |
 |---|---|
-| `integration` | after #105 (T-313) and this PR. typecheck, build, **793 tests**. Ready for the 0.4.4 G3 re-run pack |
+| `integration` | **`a08b135`** after #108, #109, #110 (+ this PR). typecheck, build, **797 tests**. **G3 re-run pack: `VITE_STEP3=1 VITE_DEBUG=1 npm run pack`** (0.4.4; the Debug tab has the session-log export). Final judge build: no `VITE_DEBUG` |
 | `main` | **`ae2294d`** (fast-forwarded at G2: the tested 0.4.2 code + D17 + D18; a plain `npm run pack` reproduces it byte-for-byte) |
 | Tags | `v0.1-step1` → `4b13180` (G1); **`v0.2-step2` → `ae2294d`** (G2); **`backup-g3-working` → `34e46db`** (the G3 run-1 build, 0.4.3 + `VITE_STEP3=1`; a backup, **not** a passed gate). Next: `v0.3-step3` on a G3 pass |
 | `app.json` version | **0.4.4** for the G3 re-run upload. 0.4.3 = G3 run 1 (`backup-g3-working`); 0.4.2 = G2 |
 | Contracts | **`CONTRACT_VERSION 4`**: v3 (`SttService.flush?`, letters-first candidates) + v4 (`Speaker`, `speaker?` on `Transcript`/`SpeechState`, T-314) |
 | Production `api/` | `https://nudge-seven-psi.vercel.app`, redeployed by Sam with the WebView origin. At 10:54 PM: `127.0.0.1:<any port>` preflight 204, **but `null` and `file://` also 204, so it's looser than intended**; tighten after #61 (see blockers) |
-| Open PRs | none (#88 may still be open: juannli, rebase or close) |
+| Open PRs | #111 (juannli): **hold, don't merge.** Flips pack defaults to Conversation; ORCH does it at decision B, after the G3 re-run |
 | Open issues | none (#73 closed by #76) |
 
 ## Gates
@@ -142,10 +142,10 @@ Legend: ✅ merged · 🟡 in progress / review · ⬜ todo · 🚦 gate.
 | T-305 | Stretch: head tilt (up/down only, D9) | GLASS | ⬜ only after G2 | — |
 | T-306 | 🚦 Gate G3 | ORCH + GLASS | **HELD** (run 1: works, too slow); re-run after T-311 | #100 |
 | T-311 | Early stall prediction (latency, free tier) | LOGIC (juannli, reassigned from Sam) | ✅ merged; device numbers from the G3 re-run | #104 |
-| T-312 | Launcher: Practice + Conversation | UI ✅ (phone Home) · GLASS label ⬜ · AI title ⬜ · ORCH flags ⬜ | 🟡 | #103 |
+| T-312 | Launcher: Practice + Conversation | UI ✅ #103 · launcher ✅ #109 · title ✅ #110 · ORCH flags ⬜ at decision B | 🟡 code done | #103, #109, #110 |
 | T-313 | Step 1 ignores short/background speech | LOGIC (juannli/Devin) | ✅ merged: match first (correct answers always count); ignores non-matching speech < 250 ms or `other` | #105 |
 | T-314 | Speaker tagging by loudness (cut-off 5:30) | AI (Sam) | ⬜ after T-311 | — |
-| T-315 | Lean pipeline log export | ORCH ✅ + UI ✅ (Home → Export session log) | ✅ merged. Move the card off Home (Debug tab or `?debug=1`) before the final build | #101, #103 |
+| T-315 | Lean pipeline log export | ORCH ✅ + UI ✅ (Debug tab; shown with `VITE_DEBUG=1` or `?debug`) | ✅ | #101, #103, #108 |
 | T-401 | Judge demo (in-companion Demo tab) | UI | ✅ | #40, #44, #47 |
 | T-402 | Beta final + lifecycle tests | GLASS | ⬜ | — |
 | T-403 | Paper design polish | UI | 🟡 partly done (tagline, focus rings, contrast, Devpost asset index, Home copy, preview captions, Words asset hint, Step 3 demo); #80 needs a rebase | #41→#44, #47, #64, #69, #71, #83, #80 |
@@ -187,6 +187,7 @@ ORCH infrastructure PRs: #2, #5, #6, #10, #12, #14, #15, #16, #19, #25, #27, #30
 | 3 | Gemini **free tier 15 req/min, daily cap unknown** | Suggestions fall back to bank-only under load | AI | Throttle (D11); check AI Studio → Rate limits before the demo; billing would remove it |
 | 4 | **Vercel Hobby** blocks Git deploys from non-members; only Sam can deploy | A deploy bottleneck | AI | D15: only `bash api/_deploy-prod.sh` (merged commits, auto-checks). A `vercel --prod` from a checkout caused the 9-minute 500 outage (05:07-05:16 UTC, issue #56) |
 | 5 | Single-device team (one G2) and minutes-long pack/upload cycles | Slow device iteration | GLASS | Simulator first; batch device checks; G1 and G2 back to back when possible |
+| 8 | **The repo is public** (it was private earlier) | Anyone can read the full history | ORCH | **Checked H18:** all 287 commits on every branch scanned for Google/ElevenLabs keys, `sutkn_` tokens, private keys and `.env`/`.vercel` files: **clean**. Keep secrets on Vercel only |
 | 7 | **Vercel Hobby deploy quota exhausted** (100 per 24 h, rolling; error `api-deployments-young-hobby-team-24h` on every PR since about #79). Cause: every branch push made a preview deploy | **Production keeps serving** (checked live), but Sam **can't redeploy `api/`** until slots free up. Each freed slot was being used by the next push | ORCH / Sam | `vercel.json` `git.deploymentEnabled: false` (this PR) stops preview deploys. `api/_deploy-prod.sh` writes its own `vercel.json`, so production deploys are unaffected. **Avoid `api/` changes before the demo**; if one is critical, Sam checks `vercel ls` for a free slot. Ignore the red "Vercel" status on PRs; `verify` is the check that counts |
 | 6 | Not yet seen on hardware: mic denial path, SDK storage persistence across restarts, multiple `onEvenHubEvent` listeners | Possible G1 failures | GLASS | G2_SMOKE A4, A7, B5 cover them explicitly |
 
@@ -236,6 +237,7 @@ There are no console logs on the device. Use the phone companion's **Preview** t
 
 | When | Change |
 |---|---|
+| Sun 6:20 AM | Merged #110 (Step 3 title Conversation), #109 (launcher titles; Step 2 hidden when Step 3 is on), #108 (Debug tab via `VITE_DEBUG=1`). #111 held for decision B. Repo is public: history scanned, no secrets |
 | Sun 6:05 AM | Merged #105 (T-313, after the match-first fix). Left: T-312 launcher label + Step 3 title, then the G3 re-run on 0.4.4 |
 | Sun 6:00 AM (H18) | Merged #103 (T-315 export + T-312 phone Home) and #104 (T-311 early stall prediction; juannli took it while Sam slept). `app.json` → 0.4.4. ~45 min behind plan: G3 re-run now, decide ~6:45, freeze 7:00-7:15 |
 | Sun 1:45 AM (H14) | Team break until 3:45. Added **Wake-up plan**: timeline, must/drop priorities, decision points A-C, messages to paste. Freeze moved to **7:00**, T-314 cut-off to **5:30**. Tagged **`backup-g3-working` → `34e46db`** (the G3 run-1 build; backup, not a gate) |
