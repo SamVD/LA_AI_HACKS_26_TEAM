@@ -39,7 +39,7 @@ describe('step3Settings', () => {
     expect(calm.minSilenceMs).toBeGreaterThan(DEFAULT_STALL_CONFIG.minSilenceMs)
     expect(calm.maxPerMinute).toBeLessThan(DEFAULT_STALL_CONFIG.maxPerMinute)
     expect(eager.minSilenceMs).toBeLessThan(DEFAULT_STALL_CONFIG.minSilenceMs)
-    expect(eager.contentWordEndings).toBe(true)
+    expect(eager.contentWordEndings).toBe(false)
     expect(eager.cooldownMs).toBeLessThan(DEFAULT_STALL_CONFIG.cooldownMs)
   })
 

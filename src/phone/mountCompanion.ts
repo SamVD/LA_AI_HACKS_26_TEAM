@@ -11,7 +11,12 @@ import { renderScreen } from './preview/renderScreen'
 import { extractKeywords } from '../ai/keywords'
 import { bindJudgeDemo } from './demo/bindJudgeDemo'
 import { MODE_HOME_LEAD, modeDisabledLead } from './modeCopy'
-import { formatStep1ItemLine, summarizeStep1Session } from './sessionSummary'
+import { formatBuildCapabilityLine } from './buildCapability'
+import {
+  formatStep1ItemLine,
+  formatStep1SessionHeadline,
+  summarizeStep1Session,
+} from './sessionSummary'
 import { describeWordAssetHint } from './words/wordAssetHint'
 import { createHintLog } from './sessionLog'
 import { readStep3Settings, writeStep3Settings, type Step3Sensitivity } from './step3Settings'
@@ -76,7 +81,11 @@ export function mountCompanion(
   panels.className = 'nudge-panels'
 
   const homePanel = document.createElement('section')
+  homePanel.id = 'nudge-panel-home'
+  homePanel.setAttribute('role', 'tabpanel')
   const demoPanel = document.createElement('section')
+  demoPanel.id = 'nudge-panel-demo'
+  demoPanel.setAttribute('role', 'tabpanel')
   demoPanel.className = 'nudge-demo-inline'
 
   // T-304: Step 3 controls and the hint session log. The log sees every screen
@@ -116,15 +125,27 @@ export function mountCompanion(
     paused: () => readStep3Settings().paused,
   })
   const previewPanel = document.createElement('section')
+  previewPanel.id = 'nudge-panel-preview'
+  previewPanel.setAttribute('role', 'tabpanel')
   const summaryPanel = document.createElement('section')
+  summaryPanel.id = 'nudge-panel-summary'
+  summaryPanel.setAttribute('role', 'tabpanel')
   const wordsPanel = document.createElement('section')
+  wordsPanel.id = 'nudge-panel-words'
+  wordsPanel.setAttribute('role', 'tabpanel')
   const debugPanel = document.createElement('section')
+  debugPanel.id = 'nudge-panel-debug'
+  debugPanel.setAttribute('role', 'tabpanel')
 
   const previewHost = document.createElement('div')
   previewHost.className = 'nudge-glasses-frame'
   previewHost.setAttribute('aria-live', 'polite')
   const previewKind = document.createElement('p')
   previewKind.className = 'nudge-preview-kind'
+  const previewLive = document.createElement('p')
+  previewLive.className = 'nudge-preview-live'
+  previewLive.hidden = true
+  previewLive.textContent = 'Live — following the glasses'
 
   const modeList = document.createElement('div')
   modeList.className = 'nudge-mode-list'
@@ -205,10 +226,19 @@ export function mountCompanion(
   }
 
   const refreshPreview = () => {
+    const live = Boolean(shell.activeMode() && followLive)
+    previewLive.hidden = !live
     void paintPreview(currentPreviewScreen())
   }
 
+  const buildCapability = document.createElement('p')
+  buildCapability.className = 'nudge-build-capability'
+
+  const step3InBuild = () => shell.modes().find(m => m.id === 'step3')?.enabled === true
+
   const refreshHome = () => {
+    buildCapability.textContent = formatBuildCapabilityLine(shell.modes())
+    step3Card.hidden = !step3InBuild()
     modeList.replaceChildren()
     const active = shell.activeMode()
     for (const mode of shell.modes()) {
@@ -269,12 +299,16 @@ export function mountCompanion(
     const latest = sessions[0]
     summaryBody.replaceChildren()
     if (!latest) {
-      summaryBody.textContent = 'No Step 1 sessions saved yet.'
+      const empty = document.createElement('p')
+      empty.className = 'nudge-summary-empty'
+      empty.textContent = 'No Step 1 sessions saved yet. Finish a Practice run on the G2 to see results here.'
+      summaryBody.append(empty)
       return
     }
     const stats = summarizeStep1Session(latest)
     const head = document.createElement('p')
-    head.textContent = `Solved ${stats.solved} · without help ${stats.solvedWithoutHelp}`
+    head.className = 'nudge-summary-headline'
+    head.textContent = formatStep1SessionHeadline(latest, stats)
     summaryBody.append(head)
     const list = document.createElement('ul')
     list.className = 'nudge-word-list'
@@ -439,6 +473,7 @@ export function mountCompanion(
     btn.dataset.tab = tab.id
     btn.textContent = tab.label
     btn.setAttribute('role', 'tab')
+    btn.setAttribute('aria-controls', `nudge-panel-${tab.id}`)
     btn.addEventListener('click', () => showTab(tab.id))
     tabBar.append(btn)
   }
@@ -489,12 +524,12 @@ export function mountCompanion(
   homeLead.className = 'nudge-home-lead'
   homeLead.textContent =
     'Start a mode for the glasses. This page stays calm and shows a live preview when a mode is running.'
-  homePanel.append(homeLead, judgeDemoCard, step3Card, modeList)
+  homePanel.append(buildCapability, homeLead, judgeDemoCard, step3Card, modeList)
   const previewLead = document.createElement('p')
   previewLead.className = 'nudge-preview-lead'
   previewLead.textContent =
     'Mirrors the glasses. Captions follow the cue ladder (no target word until level 3). Asset lines show loaded vs placeholder only.'
-  previewPanel.append(previewLead, previewHost, previewKind)
+  previewPanel.append(previewLead, previewLive, previewHost, previewKind)
   if (options.devPlaylist?.length) {
     const prev = document.createElement('button')
     prev.type = 'button'

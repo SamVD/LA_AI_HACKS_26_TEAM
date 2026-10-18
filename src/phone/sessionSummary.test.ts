@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import type { SessionRecord } from '../core/types'
-import { formatStep1ItemLine, summarizeStep1Session } from './sessionSummary'
+import {
+  formatSessionStartedAt,
+  formatStep1ItemLine,
+  formatStep1SessionHeadline,
+  summarizeStep1Session,
+} from './sessionSummary'
 
 describe('summarizeStep1Session', () => {
   it('counts solved items and cue levels defensively', () => {
@@ -35,6 +40,19 @@ describe('summarizeStep1Session', () => {
     expect(summary.solvedWithoutHelp).toBe(1)
     expect(formatStep1ItemLine(summary.items[0])).toBe('cup · not solved')
     expect(formatStep1ItemLine(summary.items[1])).toBe('fork · skipped')
-    expect(formatStep1ItemLine(summary.items[2])).toBe('spoon · cue 0')
+    expect(formatStep1ItemLine(summary.items[2])).toBe('spoon · solved without cues')
+  })
+
+  it('formats session headline and started-at fallback', () => {
+    const session: SessionRecord = {
+      mode: 'step1',
+      startedAt: 0,
+      items: [{ word: 'cup', solvedAtCue: 0 }],
+    }
+    const summary = summarizeStep1Session(session)
+    expect(formatSessionStartedAt(0)).toBe('Latest session')
+    expect(formatStep1SessionHeadline(session, summary)).toBe(
+      'Latest session · 1 solved · 1 without cues',
+    )
   })
 })
