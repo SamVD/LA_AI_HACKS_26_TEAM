@@ -10,6 +10,8 @@ describe('mouthKeyFor', () => {
     ['phone', 'lip-teeth'], ['photo', 'lip-teeth'], ['fish', 'lip-teeth'], ['fork', 'lip-teeth'], ['van', 'lip-teeth'], ['very', 'lip-teeth'],
     ['ball', 'lips-closed'], ['baby', 'lips-closed'], ['mom', 'lips-closed'], ['person', 'lips-closed'], ['medicine', 'lips-closed'], ['metformin', 'lips-closed'],
     ['apple', 'open'], ['after', 'open'], ['hour', 'open'], ['honest', 'open'], ['honor', 'open'], ['heir', 'open'],
+    // Silent-h compounds and derived forms keep the vowel onset (not the remainder's consonant).
+    ['hourglass', 'open'], ['hourly', 'open'], ['honestly', 'open'], ['heirloom', 'open'],
     ['water', 'rounded'], ['orange', 'rounded'], ['round', 'rounded'], ['write', 'rounded'], ['one', 'rounded'], ['once', 'rounded'],
     ['use', 'wide'], ['usual', 'wide'], ['university', 'wide'], ['Europe', 'wide'], ['yellow', 'wide'], ['eel', 'wide'],
     ['spoon', 'teeth-together'], ['city', 'teeth-together'], ['sun', 'teeth-together'], ['zebra', 'teeth-together'], ['psychology', 'teeth-together'], ['lisinopril', 'tongue-up'],

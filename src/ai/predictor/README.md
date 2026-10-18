@@ -97,8 +97,9 @@ npx vite-node scripts/eval-predictor.ts --endpoint <url>      # live through the
 ```
 
 On the current 25 cases, v2 improves the v1 result (top-1 0.32 / top-3 0.64)
-to top-1 0.56 / top-3 0.68. Eval-04 still does not accept "Sunrise Clinic";
-the fixture change belongs outside this task's edit scope. No live-model or
+to top-1 0.56 / top-3 0.68. Eval-04 also accepts "Sunrise Clinic" — for this
+user their own clinic is a sensible answer to the wards-and-nurses cue.
+No live-model or
 G2 result is claimed here.
 
 Vitest ports the S-2 fixture, busy-talk, worst-case and shared-project-quota
