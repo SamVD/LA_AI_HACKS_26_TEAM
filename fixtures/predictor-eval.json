@@ -55,7 +55,8 @@
       "intendedWord": "hospital",
       "acceptable": [
         "hospital",
-        "clinic"
+        "clinic",
+        "Sunrise Clinic"
       ],
       "inBank": false
     },
@@ -284,6 +285,7 @@
       "intendedWord": "stamp",
       "acceptable": [
         "stamp",
+        "stamps",
         "postage stamp"
       ],
       "inBank": false
