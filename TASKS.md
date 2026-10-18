@@ -13,7 +13,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 **Queue by lane (now):**
 - GLASS: T-204 and T-202 are merged. Next: **G1 now**: production passes the curl check (`integration` @ `4b13180`). Then **G2** (T-207 runbook) with a second person.
 - AI: Production redeployed from `integration` @ `4b13180`; `api/stt` (both token types) and `api/predict` are curl-checked. Deploys go through `bash api/_deploy-prod.sh` (#57). Standing by during G1/G2 to add the WebView origin. Next: **T-301 stall detector**.
-- LOGIC (Codex): T-201 (both parts) and T-303 are merged. Next: T-205 (mouth-shape resolver) and the eval-04 fixture fix; then help T-302 if AI is busy.
+- LOGIC (Codex): T-201 (both parts) and T-303 are merged; **T-205 merged with Devin** (PR #62). Next: the eval-04 fixture fix, then help T-302 if AI is busy.
 - UI (Cursor): T-206 and T-401 part 1 are merged. Next (lower priority than Step 2): T-401 part 2, the Demo entry inside `mountCompanion` so judges can reach it in the packaged app, with a cancellable replay.
 
 **Global rules for every task (also repeated in the builder prompt):**
@@ -312,11 +312,11 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
   - [ ] `step2Enabled` flag gates the whole mode.
 
 ### T-205 Mouth-shape resolver and asset expansion
-- **Owner:** LOGIC (Codex)
-- **Status:** IN PROGRESS: branch `logic/mouth-resolver` pushed without a PR; needs the 60-word table test and wiring into `resolveAssets` before review.
+- **Owner:** LOGIC (Devin)
+- **Status:** MERGED (PR #62): `mouthKeyFor` delegates to the `src/content/phonetics/` resolver; 67-case table test; 25 cue pictures added.
 - **Branch:** `logic/mouth-resolver`
 - **Depends on:** T-106
-- **Files it may EDIT:** `src/content/phonetics/**`
+- **Files it may EDIT:** `src/content/phonetics/**`, `src/content/index.ts`, `src/content/content.test.ts`
 - **Spec:** improve `mouthKey` resolution beyond initial-letter heuristics (digraphs, silent letters, per-entry `firstSound` override), with a table test of at least 60 words including names and medication names. Expand pictures for words the predictor commonly returns.
 - **Acceptance criteria:** table test passes; unknown words degrade to text-only (no crash).
 
