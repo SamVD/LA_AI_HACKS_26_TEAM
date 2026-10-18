@@ -8,6 +8,7 @@ import { buildPersonalEntry, isPersonalCategory, validatePracticeFrame } from '.
 import { ensurePreviewImages, renderPreviewOptions } from './preview/previewAssets'
 import { renderScreen } from './preview/renderScreen'
 import { bindJudgeDemo } from './demo/bindJudgeDemo'
+import { MODE_HOME_LEAD, modeDisabledLead } from './modeCopy'
 import { formatStep1ItemLine, summarizeStep1Session } from './sessionSummary'
 
 export type CompanionDebugState = {
@@ -168,10 +169,14 @@ export function mountCompanion(
       const title = document.createElement('h2')
       title.textContent = mode.title
       card.append(title)
+      const lead = document.createElement('p')
+      lead.className = 'nudge-mode-lead'
+      lead.textContent = mode.enabled ? MODE_HOME_LEAD[mode.id] : modeDisabledLead(mode.id)
+      card.append(lead)
       if (!mode.enabled) {
         const soon = document.createElement('p')
         soon.className = 'nudge-coming-soon'
-        soon.textContent = 'Coming soon'
+        soon.textContent = mode.id === 'step2' ? 'Step 2 off' : 'Coming soon'
         card.append(soon)
       }
       const row = document.createElement('div')
@@ -360,7 +365,7 @@ export function mountCompanion(
   judgeDemoCard.className = 'nudge-card nudge-home-demo'
   judgeDemoCard.innerHTML = `
     <h2>Judge demo</h2>
-    <p class="nudge-home-demo-lead">Scripted conversation stall for the booth — no second person required.</p>
+    <p class="nudge-home-demo-lead">Scripted stall replay on this page. Wear the G2 if you want the real touchpad; the preview mirrors the glasses.</p>
   `
   const openDemoBtn = document.createElement('button')
   openDemoBtn.type = 'button'
@@ -369,7 +374,11 @@ export function mountCompanion(
   openDemoBtn.addEventListener('click', () => showTab('demo'))
   judgeDemoCard.append(openDemoBtn)
 
-  homePanel.append(judgeDemoCard, modeList)
+  const homeLead = document.createElement('p')
+  homeLead.className = 'nudge-home-lead'
+  homeLead.textContent =
+    'Start a mode for the glasses. This page stays calm and shows a live preview when a mode is running.'
+  homePanel.append(homeLead, judgeDemoCard, modeList)
   previewPanel.append(previewHost, previewKind)
   if (options.devPlaylist?.length) {
     const prev = document.createElement('button')

@@ -3,6 +3,7 @@
 | Asset | Purpose |
 | --- | --- |
 | [`PAPER.md`](./PAPER.md) | Paper sponsor challenge notes |
+| [`DEVPOST_ASSETS.md`](./DEVPOST_ASSETS.md) | PNG + SVG index for Devpost / slides |
 | [`GLASSES_LAYOUTS.md`](./GLASSES_LAYOUTS.md) | Container specs + event capture (T-101) |
 | [`screens/`](./screens/) | 576×288 SVG wireframes |
 | `src/phone/theme/` | Tokens, CSS, demos |
