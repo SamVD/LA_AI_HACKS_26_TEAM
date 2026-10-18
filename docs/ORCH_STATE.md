@@ -2,7 +2,48 @@
 
 The orchestrator's single snapshot of where Nudge stands. **ORCH updates this after every gate (G1, G2, G3, final) and after any merge that changes a gate's readiness.** Detailed task cards live in `TASKS.md`, decisions in `PLAN.md` §13, contracts in `docs/CONTRACTS.md`.
 
-_Last updated: **Sun Oct 18, 2026, 7:55 AM PT** by ORCH (aaravj9). **G3 NOT PASSED → ship Practice + Assist (D20).** ⚠️ **Gemini's free daily quota is exhausted until 4:59 PM PT; it must be unblocked (billing) before the demo.** Four quick fixes merged; `app.json` 0.4.5 for the final build._
+_Last updated: **Sun Oct 18, 2026, 8:40 AM PT** by ORCH (aaravj9). **Gemini is back (0.95-1.22 s).** Next: **Conversation re-test G3b on 0.4.6 (Sarah), decision at 9:30 → final judge build 0.4.7.** Read "Conversation re-test" first. Video due 11:00 AM._
+
+## Conversation re-test (G3b, D21): today, decision at 9:30 AM
+
+**Why:** G3 ran with Gemini blocked (all hints were fallback words). Gemini is back as of 8:31 AM: 5 live calls took **0.95-1.22 s** with good answers, after one **2.06 s cold start**. **No new code**; the four quick fixes (#122) are already in.
+
+**Sarah: test build 0.4.6 (test only, never the judge build).** From a clean, up-to-date `integration`:
+```
+npm ci && npm test && VITE_STEP3=1 VITE_DEBUG=1 npm run pack
+```
+Check that `app.json` says **0.4.6**, upload, install from Me → Beta tester, and confirm the launcher shows **Practice / Conversation** and the phone has a **Debug** tab. Don't film the phone screen from this build (it has the Debug tab).
+
+**15-minute checklist (two people, partner about 1 m away, normal voices):**
+
+| Time | Test | How | Pass |
+|---|---|---|---|
+| 0-1 min | Warm-up | In Conversation, say a sentence and tap once (wakes Gemini from its cold start) | Letters appear |
+| 1-4 min | **A. Tap help** | 5 taps right after a hesitation ("…pour my tea into the, um" → tap). Stopwatch tap → first letters | **Median ≤ 2.5 s** and **≥ 3 of 5** show a fitting word within the top 3 (swipe to check) |
+| 4-12 min | **B. Auto-hints** | Natural chat with **6 planted stalls** spread out (e.g. "it's so warm and, um…", "I need to call my, um…", "pass me the, um…"), then **stay silent** about 3 s. No taps. Note each hint: **helped** (the intended word was in it), **false** (appeared when no word was needed), or **missed** (no hint within ~4 s of a planted stall) | **≥ 3 of 6 helped**, **≤ 2 false hints** in the 8 min, typical stall → letters **≤ 3 s**, no stream of repeated hints |
+| 12-13 min | C. Pause | Swipe on the blank display ("Auto-hints paused"), make a stall, swipe again | No hint while paused |
+| 13-14 min | D. Practice | 3 words: one correct, one wrong (it should move up a cue), one correct | Correct ✓; a wrong answer climbs the ladder |
+| 14-15 min | E. Log | Phone → **Debug** → **Export session log**; paste it with the tallies into a results PR (`docs/BETA_RESULTS.md`) | JSON exported |
+
+**G3b passes** if B passes **and** A passes, with no crash or freeze. C and D failing are bugs to note, not blockers.
+
+**Decision at 9:30 AM (ORCH, Aarav confirms):**
+- **Pass:** ORCH merges `.env.production` with `VITE_STEP3=1` and `app.json` **0.4.7**, and tags `v0.3-step3`. The judge build is **Practice + Conversation**; Conversation includes tap-for-help, so Assist's behavior is all there.
+- **Fail (or results not in by 9:30):** ORCH merges `app.json` **0.4.7** only. The judge build is **Practice + Assist** (D20).
+
+**Final judge build 0.4.7, either way (Sarah, right after the decision):**
+```
+npm ci && npm test && npm run pack
+```
+No flags: `.env.production` decides, and there's no `VITE_DEBUG`. Then:
+- upload **0.4.7 as the last upload**;
+- delete or disable 0.4.6 in the Even Hub portal if it allows;
+- on the phone, confirm Me → Beta tester shows **0.4.7**, the launcher is right, and there is **no Debug tab**;
+- run a 5-minute smoke: 1 Practice word, 1 tap help, plus 1 auto-hint if Conversation.
+
+The version history then reads: 0.4.5 Practice + Assist candidate, 0.4.6 G3b test, **0.4.7 judge build**.
+
+**Video (due 11:00 AM):** film the glasses from the 0.4.7 judge build, or the glasses-only view from 0.4.6. The phone screen only from 0.4.7. Before every take, do one warm-up tap.
 
 ## Wake-up plan (3:45-7:00 AM build window, then ship by 10:00)
 
@@ -86,7 +127,7 @@ _Last updated: **Sun Oct 18, 2026, 7:55 AM PT** by ORCH (aaravj9). **G3 NOT PASS
 | `integration` | **`24c8ea8`** after #116 (T-316). typecheck, build, **802 tests**. **G3 re-run pack verified:** `VITE_STEP3=1 VITE_DEBUG=1 npm run pack` → 0.4.4, batch STT, Step 3 + Debug tab, `stt.level` logging |
 | `main` | **`ae2294d`** (fast-forwarded at G2: the tested 0.4.2 code + D17 + D18; a plain `npm run pack` reproduces it byte-for-byte) |
 | Tags | `v0.1-step1` → `4b13180` (G1); **`v0.2-step2` → `ae2294d`** (G2); **`backup-g3-working` → `34e46db`** (the G3 run-1 build, 0.4.3 + `VITE_STEP3=1`; a backup, **not** a passed gate). Next: `v0.3-step3` on a G3 pass |
-| `app.json` version | **0.4.5** for the **final judge build** (Practice + Assist, no `VITE_DEBUG`). 0.4.4 = G3 re-run |
+| `app.json` version | **0.4.6** = the G3b Conversation **test** build (Step 3 + Debug). The **final judge build is 0.4.7** (after the 9:30 decision), uploaded last |
 | Contracts | **`CONTRACT_VERSION 4`**: v3 (`SttService.flush?`, letters-first candidates) + v4 (`Speaker`, `speaker?` on `Transcript`/`SpeechState`, T-314) |
 | Production `api/` | `https://nudge-seven-psi.vercel.app`, redeployed by Sam with the WebView origin. At 10:54 PM: `127.0.0.1:<any port>` preflight 204, **but `null` and `file://` also 204, so it's looser than intended**; tighten after #61 (see blockers) |
 | Open PRs | #121 (T-406 Devpost finish, juannli), #118 (screenshot). #111 **closed** (D20: no Conversation default) |
@@ -180,6 +221,7 @@ ORCH infrastructure PRs: #2, #5, #6, #10, #12, #14, #15, #16, #19, #25, #27, #30
 | D16 | G1 passes; mic-denied (A4) accepted via unit tests, since the device can't trigger it; A4 reworded; A3/A5/A7 run at G2 |
 | D17 | Packaged builds default to batch rolling STT and Step 2 on (`.env.production`); realtime stays in the code until `wss://` works on the device |
 | D18 | G2 passes on function; latency is a known issue (T-208); ladder request scoped to letters-first (T-209), no tilt left/right (D9 stands) |
+| D21 | Fair Conversation re-test (G3b) on 0.4.6 with Gemini back; 9:30 decision; final judge build 0.4.7 (pass: Practice + Conversation; fail: Practice + Assist) |
 | D20 | G3 not passed → ship Practice + Assist; four quick fixes; unblock Gemini via billing before the demo |
 | D19 | G3 held: Step 3 works but ~3-4 s per hint. Free tier; T-311 early stall prediction first, then T-312/T-313, T-314 only if stable by 5:30, T-315 log export; tallied re-run; freeze **7:00** (moved from 06:00 for the 1:45-3:45 break) |
 
@@ -192,7 +234,7 @@ ORCH infrastructure PRs: #2, #5, #6, #10, #12, #14, #15, #16, #19, #25, #27, #30
 | 3 | Gemini **free tier 15 req/min, daily cap unknown** | Suggestions fall back to bank-only under load | AI | Throttle (D11); check AI Studio → Rate limits before the demo; billing would remove it |
 | 4 | **Vercel Hobby** blocks Git deploys from non-members; only Sam can deploy | A deploy bottleneck | AI | D15: only `bash api/_deploy-prod.sh` (merged commits, auto-checks). A `vercel --prod` from a checkout caused the 9-minute 500 outage (05:07-05:16 UTC, issue #56) |
 | 5 | Single-device team (one G2) and minutes-long pack/upload cycles | Slow device iteration | GLASS | Simulator first; batch device checks; G1 and G2 back to back when possible |
-| 9 | ⚠️ **Gemini free daily quota exhausted** (7:09 AM, blocked until 4:59 PM PT) | Every suggestion is the bank fallback, so the demo shows wrong words | Aarav / Sam | **Enable billing on the existing Google AI Studio project** (no key change, no redeploy; a few cents). Fallbacks if impossible: a teammate's own Gemini key needs a Vercel env change + redeploy (deploy quota?); switching provider (StepFun) needs a server change + deploy + prompt re-check (not recommended at this stage) |
+| 9 | ~~Gemini free daily quota exhausted~~ **Resolved 8:31 AM:** live `/api/predict` answers again (5 calls 0.95-1.22 s; the first, cold, 2.06 s) | Warm up with one tap before tests and demo takes | Aarav / Sam | Done |
 | 8 | **The repo is public** (it was private earlier) | Anyone can read the full history | ORCH | **Checked H18:** all 287 commits on every branch scanned for Google/ElevenLabs keys, `sutkn_` tokens, private keys and `.env`/`.vercel` files: **clean**. Keep secrets on Vercel only |
 | 7 | **Vercel Hobby deploy quota exhausted** (100 per 24 h, rolling; error `api-deployments-young-hobby-team-24h` on every PR since about #79). Cause: every branch push made a preview deploy | **Production keeps serving** (checked live), but Sam **can't redeploy `api/`** until slots free up. Each freed slot was being used by the next push | ORCH / Sam | `vercel.json` `git.deploymentEnabled: false` (this PR) stops preview deploys. `api/_deploy-prod.sh` writes its own `vercel.json`, so production deploys are unaffected. **Avoid `api/` changes before the demo**; if one is critical, Sam checks `vercel ls` for a free slot. Ignore the red "Vercel" status on PRs; `verify` is the check that counts |
 | 6 | Not yet seen on hardware: mic denial path, SDK storage persistence across restarts, multiple `onEvenHubEvent` listeners | Possible G1 failures | GLASS | G2_SMOKE A4, A7, B5 cover them explicitly |
@@ -243,6 +285,7 @@ There are no console logs on the device. Use the phone companion's **Preview** t
 
 | When | Change |
 |---|---|
+| Sun 8:40 AM | Gemini back (billing): live predict 0.95-1.22 s. **D21:** one fair Conversation re-test (G3b) on **0.4.6** (`VITE_STEP3=1 VITE_DEBUG=1`), 15-min checklist with pass criteria, decision at 9:30, **final judge build 0.4.7** uploaded last. `app.json` → 0.4.6 |
 | Sun 8:25 AM | Merged #129 (T-317 StepFun spike: **FAIL**, reasoning model, p50 6.6 s). T-318 cancelled; #124 closed. Merged #121 (T-406), #128 (gallery). **No open PRs.** Left: Gemini billing, 0.4.5 final build + check, video, Devpost FILLs, submit |
 | Sun 8:20 AM | Merged #121 (T-406: field map, What we learned, local judge demo, team, Practice · Assist screenshot, shoot plan). System-map diagram added to the Devpost gallery order. No open PRs; waiting on T-317 (Sam, local) |
 | Sun 8:15 AM | System map (Sam's, updated to the 0.4.5 judge build by ORCH) added: `docs/design/system-map.html` + `system-map-diagram.png` / `system-map.png` for the Devpost gallery. The investor deck stays out of the repo |
