@@ -1,0 +1,66 @@
+.nudge-demo-page {
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: var(--nudge-space-4);
+}
+
+.nudge-demo-header h1 {
+  margin: 0 0 var(--nudge-space-3);
+  font-size: var(--nudge-font-display);
+}
+
+.nudge-demo-lead {
+  margin: 0;
+  font-size: var(--nudge-font-md);
+  color: var(--nudge-text-muted);
+  line-height: var(--nudge-font-lg);
+}
+
+.nudge-demo-steps {
+  margin: var(--nudge-space-5) 0;
+  padding: var(--nudge-space-5);
+  font-size: var(--nudge-font-md);
+  line-height: 1.55;
+}
+
+.nudge-demo-steps li {
+  margin-bottom: var(--nudge-space-3);
+}
+
+.nudge-demo-cue {
+  margin: 0 0 var(--nudge-space-4);
+  padding: var(--nudge-space-4);
+  font-size: var(--nudge-font-md);
+  color: var(--nudge-text);
+  background: var(--nudge-accent-soft);
+  border-radius: var(--nudge-radius-md);
+  border: 1px solid var(--nudge-border);
+}
+
+.nudge-demo-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--nudge-space-3);
+  margin-bottom: var(--nudge-space-5);
+}
+
+.nudge-demo-status {
+  margin: var(--nudge-space-3) 0 var(--nudge-space-5);
+  font-size: var(--nudge-font-md);
+  color: var(--nudge-success);
+}
+
+.nudge-demo-transcript,
+.nudge-demo-suggestions {
+  margin-bottom: var(--nudge-space-5);
+}
+
+.nudge-demo-transcript h2,
+.nudge-demo-suggestions h2 {
+  margin: 0 0 var(--nudge-space-3);
+  font-size: var(--nudge-font-lg);
+}
+
+.nudge-demo-list {
+  max-height: 10rem;
+}
