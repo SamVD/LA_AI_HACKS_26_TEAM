@@ -14,8 +14,8 @@ Targets with no picture skip the picture level. Spaces and hyphens stay
 visible in the mask. SELECT preserves the current recording, so an answer is
 graded at the cue level visible when its transcript arrives. NEXT skips and
 PREV is ignored. A correct answer displays feedback for 1500 ms; an incorrect
-answer displays feedback for 1200 ms before another attempt. Three incorrect
-answers at the full-word cue end that item. Silence advances the cue ladder,
+answer displays feedback for 1200 ms before retrying one cue level higher.
+Three incorrect answers at the full-word cue end that item. Silence advances the cue ladder,
 and silence at the full-word cue ends the item unsolved.
 
 An item's `attempts` counts nonempty speech answers (including the successful

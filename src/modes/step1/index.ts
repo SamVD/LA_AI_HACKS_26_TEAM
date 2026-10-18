@@ -297,6 +297,7 @@ class Practice {
       if (await this.show({ kind: 'feedback', ok: false, word: transcript.text }, token)) {
         this.later(1200, token, async () => {
           if (exhausted) { await this.nextItem(); return }
+          this.escalate()
           this.phase = 'active'
           if (await this.showCurrent(token)) this.run(() => this.listen(token))
         })
