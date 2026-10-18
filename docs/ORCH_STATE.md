@@ -2,28 +2,28 @@
 
 The orchestrator's single snapshot of where Nudge stands. **ORCH updates this after every gate (G1, G2, G3, final) and after any merge that changes a gate's readiness.** Detailed task cards live in `TASKS.md`, decisions in `PLAN.md` §13, contracts in `docs/CONTRACTS.md`.
 
-_Last updated: **Sat Oct 17, 2026, 11:15 PM PT (hackathon hour ~H11:15 of 24)** by ORCH (aaravj9). **G1 PASSED.**_
+_Last updated: **Sat Oct 17, 2026, 11:30 PM PT (hackathon hour ~H11:30 of 24)** by ORCH (aaravj9). **G1 PASSED. `integration` `82e487d` is ready for the G2 pack.**_
 
 ## Snapshot
 
 | Item | Value |
 |---|---|
-| `integration` | after PRs #68, #70, #65 (+ this update). CI green: typecheck, 630 tests, build, ownership |
+| `integration` | **`82e487d`** after #76, #69, #71, #75 (+ this update). Audited as one scratch merge: typecheck, **701 tests**, build; none touch Step 2 or shared runtime code. **Sarah packs G2 from here** |
 | `main` | **`4b13180`** (fast-forwarded at G1; the build Sarah tested) |
 | Tags | **`v0.1-step1` → `4b13180`** (G1). Next: `v0.2-step2` at G2, `v0.3-step3` at G3 |
 | `app.json` version | **0.4.0** for the G2 build (0.3.0 was the G1 upload). Bump again for any re-upload (D10) |
 | Contracts | `CONTRACT_VERSION 2` |
 | Production `api/` | `https://nudge-seven-psi.vercel.app`, redeployed by Sam with the WebView origin. At 10:54 PM: `127.0.0.1:<any port>` preflight 204, **but `null` and `file://` also 204, so it's looser than intended**; tighten after #61 (see blockers) |
-| Open PRs | #69 (UI preview captions): changes requested (leaks the word at L1/L2) |
-| Open issues | #73: T-108 Step 1 auto-escalate after a wrong answer (juannli) |
+| Open PRs | #78 (T-302 Step 3, Sam): **draft**, CI red until Sam pushes the one-line test change the new `ai/step3-mode` grant allows. Not in the G2 build |
+| Open issues | none (#73 closed by #76) |
 
 ## Gates
 
 | Gate | What it proves | Status | Blocker / next action |
 |---|---|---|---|
 | **G1: Step 1 on the real G2** | Practice: 10 prompts, cue ladder, √/× feedback, lock/resume, mic denial, exit | ✅ **PASSED (H11:15, #68)**: real speech graded on the G2; lock, exit, B5, B6 pass; A4 accepted via unit tests (D16). Tagged `v0.1-step1` | Done. A3/A5/A7 carried to G2 |
-| **G2: Step 2 in a live conversation** | Help tap → good suggestion in ≤ ~1.5 s on most attempts; Step 1 regression | **READY TO RUN.** Code complete and wired; production live | Sarah + a second person run T-207 (`VITE_STEP2=1 npm run pack`, version above 0.3.0); include A3/A5/A7. Risk: `wss://` whitelist → batch fallback |
-| **G3: Step 3 ambient hints** | Auto-hints after a stall, no false-hint spam in a 10-minute soak | **Not started** (T-301 and T-302 TODO; T-303 merged) | After G2. Ships flag-off unless it passes (PLAN §2) |
+| **G2: Step 2 in a live conversation** | Help tap → good suggestion in ≤ ~1.5 s on most attempts; Step 1 regression | **READY TO RUN from `82e487d`.** Code complete and wired; production live; `app.json` 0.4.0 | Sarah + a second person run T-207 (`VITE_STEP2=1 npm run pack`); include A3/A5/A7 and the T-108 Step 1 check. Risk: `wss://` whitelist → batch fallback |
+| **G3: Step 3 ambient hints** | Auto-hints after a stall, no false-hint spam in a 10-minute soak | **In progress**: T-301 merged (#75), T-302 in draft review (#78), T-303 merged | After G2. Ships flag-off unless it passes (PLAN §2) |
 | **Final** | Beta `.ehpk` + Devpost by **H22 (10 AM Sunday)** | Not started (T-402, T-404, T-405) | Demo assets (T-401) are done |
 
 ## Every task
@@ -45,7 +45,7 @@ Legend: ✅ merged · 🟡 in progress / review · ⬜ todo · 🚦 gate.
 | T-101 | Glasses renderer, input, shell, lifecycle | GLASS | ✅ **passed on the real G2** | #29, #38 |
 | T-102 | Step 1 Practice mode | LOGIC | ✅ | #34 |
 | T-103 | Fuzzy matcher | LOGIC | ✅ | #21 |
-| T-108 | Step 1 auto-escalate after a wrong answer (G1 finding) | LOGIC (Devin) | ⬜ READY (issue #73) | — |
+| T-108 | Step 1 auto-escalate after a wrong answer (G1 finding) | LOGIC (Devin) | ✅ (device check during G2) | #76 |
 | T-104 | Glasses mic, VAD, utterance STT, `api/stt` | AI (Sam) | ✅ wired, hosted; WebView origin support | #33, #37, #50, #61 |
 | T-105 | Phone companion v1 + preview | UI | ✅ | #11, #18 |
 | T-106 | Assets, content API, store | LOGIC | ✅ (40 PNGs verified in a browser) | #22, #28 |
@@ -56,16 +56,16 @@ Legend: ✅ merged · 🟡 in progress / review · ⬜ todo · 🚦 gate.
 | T-204 | Step 2 Assist mode | GLASS | ✅ | #43 |
 | T-205 | Mouth-shape resolver + 25 pictures | LOGIC (Devin) | ✅ | #62, #70 |
 | T-206 | Companion v2 (personal words, debug) | UI | ✅ (Debug tab dev-only until the shell exposes transcripts) | #24, #36, #48 |
-| T-207 | 🚦 Gate G2 | ORCH + GLASS | **READY TO RUN** | — |
-| T-301 | Stall detector | AI | ⬜ | — |
-| T-302 | Step 3 mode | AI | ⬜ | — |
+| T-207 | 🚦 Gate G2 | ORCH + GLASS | **READY TO RUN** from `82e487d` | — |
+| T-301 | Stall detector | AI (Sam) | ✅ 0 false hints on fixtures, recall 11/12 | #75 |
+| T-302 | Step 3 mode | AI (Sam) | 🟡 draft; grant added; 2 ORCH decisions proposed (pause gesture, key words) | #78 |
 | T-303 | Keyword extractor | LOGIC | ✅ | #52 |
 | T-304 | Companion v3 (Step 3 settings, log) | UI | ⬜ | — |
 | T-305 | Stretch: head tilt (up/down only, D9) | GLASS | ⬜ only after G2 | — |
 | T-306 | 🚦 Gate G3 | ORCH | ⬜ | — |
 | T-401 | Judge demo (in-companion Demo tab) | UI | ✅ | #40, #44, #47 |
 | T-402 | Beta final + lifecycle tests | GLASS | ⬜ | — |
-| T-403 | Paper design polish | UI | 🟡 partly done (tagline, focus rings, contrast, Devpost asset index, Home copy) | #41→#44, #47, #64 |
+| T-403 | Paper design polish | UI | 🟡 partly done (tagline, focus rings, contrast, Devpost asset index, Home copy, preview captions, Words asset hint) | #41→#44, #47, #64, #69, #71 |
 | T-404 | Devpost + demo script | ORCH | ⬜ | — |
 | T-405 | Final audit + submission | ORCH | ⬜ | — |
 
@@ -124,10 +124,10 @@ There are no console logs on the device. Use the phone companion's **Preview** t
 
 | Person | Now | Then |
 |---|---|---|
-| **Sarah (GLASS)** | **Run G2** (TASKS T-207) with a second person; include A3/A5/A7; ask ORCH for the version bump | T-305 only if time allows |
-| **Sam (AI)** | **Tighten `STT_ALLOWED_ORIGINS`** to `localhost:5173` + `127.0.0.1:*` and redeploy (`api/_deploy-prod.sh`); support Sarah's G1 re-test | **T-301** stall detector (tune on T-007 fixtures), then T-302 Step 3 mode |
-| **juannli (LOGIC via Devin + UI)** | **T-108** auto-escalate (issue #73); fix #69's caption leak | T-304 after T-301; final T-403 polish |
-| **Aarav (ORCH)** | Bump `app.json` for the G2 build; record G2; on a pass make `step2Enabled` the default, fast-forward `main`, tag `v0.2-step2` | T-404 Devpost + demo script |
+| **Sarah (GLASS)** | **Pack G2 from `integration` `82e487d`** (`VITE_STEP2=1 npm run pack`, 0.4.0) and run T-207 with a second person; include A3/A5/A7 and a Step 1 pass for T-108 | T-305 only if time allows |
+| **Sam (AI)** | **Tighten `STT_ALLOWED_ORIGINS`** to `localhost:5173` + `127.0.0.1:*` and redeploy (`api/_deploy-prod.sh`); be on call for G2 (Vercel log) | #78: push the `foundation.test.ts` line (grant is in), mark ready |
+| **juannli (LOGIC via Devin + UI)** | **T-304** companion v3 (T-301 is merged; the Step 3 log can show #78's key-word logs) | Final T-403 polish; #71 nit (stale hint after submit) |
+| **Aarav (ORCH)** | Record G2; on a pass make `step2Enabled` the default, fast-forward `main`, tag `v0.2-step2`; audit #78 when ready | T-404 Devpost + demo script |
 
 ## Loose ends (non-blocking)
 
@@ -142,13 +142,14 @@ There are no console logs on the device. Use the phone companion's **Preview** t
 
 - **Device workflow:** packaged Beta only. `npm run pack` → upload at hub.evenrealities.com → Me → Beta tester. URLs come from `.env.production`. Gate flags at pack time (`VITE_STEP2=1`, `VITE_STEP3=1`). Checklists: `docs/G2_SMOKE.md`; results: `docs/BETA_RESULTS.md`.
 - **Hosting:** Vercel `la-hacks-team/nudge`, region `iad1`. Env (set on Vercel only): `ELEVENLABS_API_KEY`, `GEMINI_API_KEY`, `STT_ALLOWED_ORIGINS` (also used by `api/predict`). Deploy: `bash api/_deploy-prod.sh [ref]` (AI lane).
-- **Ownership:** `OWNERS.json` lanes + `branchGrants`; CI `check-ownership` on every PR. Active grants: `glass/renderer`, `logic/step1-mode`, `glass/step2-mode`, `glass/audio-rolling`, `logic/predictor-v2`, `logic/foundation`, `glass/scaffold`.
+- **Ownership:** `OWNERS.json` lanes + `branchGrants`; CI `check-ownership` on every PR. Active grants: `ai/step3-mode`, `glass/renderer`, `logic/step1-mode`, `glass/step2-mode`, `glass/audio-rolling`, `logic/predictor-v2`, `logic/foundation`, `glass/scaffold`.
 - **Builder prompts:** `docs/prompts/phase0-builder-prompts.md`, `docs/prompts/phase1-builder-prompts.md`.
 
 ## Update log
 
 | When | Change |
 |---|---|
+| Sat 11:30 PM (H11:30) | Pre-G2 sweep of every open PR and branch. Merged #76 (T-108; juannli merged it), #69 (leak fixed), #71, #75 (T-301). #73 closed. #78 (T-302) reviewed as a draft; `ai/step3-mode` grant added. **`integration` `82e487d` ready for the G2 pack** |
 | Sat 10:30 PM (H10:30) | First version. Step 1 and Step 2 code complete; production `api/` healthy; G1 ready to run |
 | Sat 11:15 PM (H11:15) | **G1 PASSED** (#68). `main` → `4b13180`, tag `v0.1-step1`. D16 (A4 via unit tests; G2_SMOKE A4 reworded). Merged #70, #65; #69 changes requested; T-108 filed (#73). G2 ready to run |
 | Sat 11:00 PM (H11) | G1 origin root cause confirmed from the Vercel log (`http://127.0.0.1:61976`), fixed on Vercel + #61. Merged #62 (T-205), #64 (T-403 assets). #63 closed. LOGIC tool → Devin. Open: tighten production origins |

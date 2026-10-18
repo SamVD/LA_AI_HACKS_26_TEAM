@@ -75,6 +75,9 @@
     }
   },
   "branchGrants": {
+    "ai/step3-mode": [
+      "src/mocks/foundation.test.ts"
+    ],
     "logic/predictor-v2": [
       "src/modes/step2/index.ts",
       "src/modes/step2/step2.test.ts",
