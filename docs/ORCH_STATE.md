@@ -2,7 +2,7 @@
 
 The orchestrator's single snapshot of where Nudge stands. **ORCH updates this after every gate (G1, G2, G3, final) and after any merge that changes a gate's readiness.** Detailed task cards live in `TASKS.md`, decisions in `PLAN.md` §13, contracts in `docs/CONTRACTS.md`.
 
-_Last updated: **Sun Oct 18, 2026, 6:35 AM PT** by ORCH (aaravj9). Sarah is up. **Next: T-316 (log-only speaker levels, ~20 min), then the G3 re-run with `VITE_STEP3=1 VITE_DEBUG=1 npm run pack` (0.4.4).** T-314 on hold until G3 data. G1 and G2 PASSED; G3 HELD._
+_Last updated: **Sun Oct 18, 2026, 6:50 AM PT** by ORCH (aaravj9). **All code for the G3 re-run is merged (`24c8ea8`). Sarah packs now: `VITE_STEP3=1 VITE_DEBUG=1 npm run pack` (0.4.4).** G1 and G2 PASSED; G3 HELD until the re-run._
 
 ## Wake-up plan (3:45-7:00 AM build window, then ship by 10:00)
 
@@ -83,7 +83,7 @@ _Last updated: **Sun Oct 18, 2026, 6:35 AM PT** by ORCH (aaravj9). Sarah is up. 
 
 | Item | Value |
 |---|---|
-| `integration` | **`a08b135`** after #108, #109, #110 (+ this PR). typecheck, build, **797 tests**. **G3 re-run pack: `VITE_STEP3=1 VITE_DEBUG=1 npm run pack`** (0.4.4; the Debug tab has the session-log export). Final judge build: no `VITE_DEBUG` |
+| `integration` | **`24c8ea8`** after #116 (T-316). typecheck, build, **802 tests**. **G3 re-run pack verified:** `VITE_STEP3=1 VITE_DEBUG=1 npm run pack` → 0.4.4, batch STT, Step 3 + Debug tab, `stt.level` logging |
 | `main` | **`ae2294d`** (fast-forwarded at G2: the tested 0.4.2 code + D17 + D18; a plain `npm run pack` reproduces it byte-for-byte) |
 | Tags | `v0.1-step1` → `4b13180` (G1); **`v0.2-step2` → `ae2294d`** (G2); **`backup-g3-working` → `34e46db`** (the G3 run-1 build, 0.4.3 + `VITE_STEP3=1`; a backup, **not** a passed gate). Next: `v0.3-step3` on a G3 pass |
 | `app.json` version | **0.4.4** for the G3 re-run upload. 0.4.3 = G3 run 1 (`backup-g3-working`); 0.4.2 = G2 |
@@ -145,7 +145,7 @@ Legend: ✅ merged · 🟡 in progress / review · ⬜ todo · 🚦 gate.
 | T-312 | Launcher: Practice + Conversation | UI ✅ #103 · launcher ✅ #109 · title ✅ #110 · ORCH flags ⬜ at decision B | 🟡 code done | #103, #109, #110 |
 | T-313 | Step 1 ignores short/background speech | LOGIC (juannli/Devin) | ✅ merged: match first (correct answers always count); ignores non-matching speech < 250 ms or `other` | #105 |
 | T-314 | Speaker tagging by loudness | AI | ⏸ ON HOLD: measure first (T-316), decide after the G3 re-run with data | — |
-| T-316 | Speaker loudness logging (measure-only; `stt.level` per utterance) | juannli (grant `logic/speaker-levels`) | ⬜ READY, ~20 min, **in the G3 re-run build** | — |
+| T-316 | Speaker loudness logging (measure-only; `stt.level` per utterance) | juannli | ✅ merged; data comes from the G3 re-run log export | #116 |
 | T-315 | Lean pipeline log export | ORCH ✅ + UI ✅ (Debug tab; shown with `VITE_DEBUG=1` or `?debug`) | ✅ | #101, #103, #108 |
 | T-401 | Judge demo (in-companion Demo tab) | UI | ✅ | #40, #44, #47 |
 | T-402 | Beta final + lifecycle tests | GLASS | ⬜ | — |
@@ -238,6 +238,7 @@ There are no console logs on the device. Use the phone companion's **Preview** t
 
 | When | Change |
 |---|---|
+| Sun 6:50 AM | Merged #116 (T-316 `stt.level` logging, no behavior change). G3 re-run build verified from `24c8ea8` |
 | Sun 6:35 AM | Decided: **measure before building T-314.** New T-316 (log-only `stt.level {speechDb, peakDb, floorDb, speechMs, text}` per utterance), grant `logic/speaker-levels`, goes into the G3 re-run build; the runbook adds a speaker-labelling step (4b). T-314 on hold |
 | Sun 6:30 AM | T-404 drafts merged (#113, `docs/DEVPOST.md`, `docs/DEMO_SCRIPT.md`); ORCH fact-check fixes applied (T-314 not built, SVG preview, v3 gallery, 55 pictures, D16 mic advice, `c_p`, 797 tests) |
 | Sun 6:20 AM | Merged #110 (Step 3 title Conversation), #109 (launcher titles; Step 2 hidden when Step 3 is on), #108 (Debug tab via `VITE_DEBUG=1`). #111 held for decision B. Repo is public: history scanned, no secrets |

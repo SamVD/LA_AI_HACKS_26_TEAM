@@ -516,7 +516,7 @@ Order and cut-offs: see `docs/ORCH_STATE.md` → **Wake-up plan**. In short: MUS
 
 ### T-316 Speaker loudness logging (measure-only, before T-314)
 - **Owner:** juannli (Claude), filling in for the AI lane while Sam is away
-- **Status:** READY. **Goes into the G3 re-run build.** Time-box: about 20 minutes
+- **Status:** MERGED (PR #116). In the G3 re-run build.
 - **Branch:** `logic/speaker-levels` (OWNERS grant: `src/audio/stt.ts`, `src/audio/vad.ts` and their tests)
 - **Why:** T-314 (gate stalls on the wearer's speech by loudness) needs a threshold, but we have **no data** on how loud the partner is on the glasses mic. Building the gating blind risks tagging the wearer as `other`, which would silence Step 3 and make Step 1 (T-313) ignore the wearer. So measure first; decide T-314 after G3.
 - **Spec (logging only, no behavior change):**
