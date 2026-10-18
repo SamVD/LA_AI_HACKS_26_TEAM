@@ -1,0 +1,344 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "eval-01",
+      "shape": "clean-stall",
+      "transcriptTail": "I have just made tea and I need something to drink from. Please pass me the",
+      "stalledAfter": "pass me the",
+      "n": 3,
+      "intendedWord": "cup",
+      "acceptable": [
+        "cup",
+        "mug",
+        "glass"
+      ],
+      "inBank": true
+    },
+    {
+      "id": "eval-02",
+      "shape": "clean-stall",
+      "transcriptTail": "The cereal is in my bowl and it looks dry. Could you pour me some",
+      "stalledAfter": "pour me some",
+      "n": 3,
+      "intendedWord": "milk",
+      "acceptable": [
+        "milk",
+        "water"
+      ],
+      "inBank": true
+    },
+    {
+      "id": "eval-03",
+      "shape": "clean-stall",
+      "transcriptTail": "I want to borrow a new book this afternoon. We could walk to the",
+      "stalledAfter": "walk to the",
+      "n": 3,
+      "intendedWord": "library",
+      "acceptable": [
+        "library",
+        "bookshop"
+      ],
+      "inBank": true,
+      "place": {
+        "lat": 34.0689,
+        "lon": -118.4452,
+        "label": "Community library"
+      }
+    },
+    {
+      "id": "eval-04",
+      "shape": "clean-stall",
+      "transcriptTail": "My appointment is in the big building with wards and nurses. Please drive me to the",
+      "stalledAfter": "drive me to the",
+      "n": 3,
+      "intendedWord": "hospital",
+      "acceptable": [
+        "hospital",
+        "clinic"
+      ],
+      "inBank": false
+    },
+    {
+      "id": "eval-05",
+      "shape": "filler-stall",
+      "transcriptTail": "After breakfast I read the sample bottle label starting with lisi. I am looking for my, um, my",
+      "stalledAfter": "um, my",
+      "n": 3,
+      "intendedWord": "lisinopril",
+      "acceptable": [
+        "lisinopril",
+        "metformin"
+      ],
+      "inBank": true
+    },
+    {
+      "id": "eval-06",
+      "shape": "filler-stall",
+      "transcriptTail": "I need to ring my daughter this evening but cannot find it. Where is my, uh, my",
+      "stalledAfter": "uh, my",
+      "n": 3,
+      "intendedWord": "phone",
+      "acceptable": [
+        "phone",
+        "telephone"
+      ],
+      "inBank": true
+    },
+    {
+      "id": "eval-07",
+      "shape": "filler-stall",
+      "transcriptTail": "My hands are wet after washing them in the sink. Could you bring the, um, the",
+      "stalledAfter": "um, the",
+      "n": 3,
+      "intendedWord": "towel",
+      "acceptable": [
+        "towel",
+        "cloth"
+      ],
+      "inBank": true
+    },
+    {
+      "id": "eval-08",
+      "shape": "filler-stall",
+      "transcriptTail": "I have the prescription ready and want to collect it today. We need to go to the, uh",
+      "stalledAfter": "go to the, uh",
+      "n": 3,
+      "intendedWord": "pharmacy",
+      "acceptable": [
+        "pharmacy",
+        "chemist"
+      ],
+      "inBank": true,
+      "place": {
+        "lat": 34.0689,
+        "lon": -118.4452,
+        "label": "Neighborhood pharmacy"
+      }
+    },
+    {
+      "id": "eval-09",
+      "shape": "near-synonym-1",
+      "transcriptTail": "I want tea in a glass, no, the one with a handle and a saucer, my",
+      "stalledAfter": "a saucer, my",
+      "n": 3,
+      "intendedWord": "cup",
+      "acceptable": [
+        "cup",
+        "teacup",
+        "mug"
+      ],
+      "inBank": true
+    },
+    {
+      "id": "eval-10",
+      "shape": "near-synonym-1",
+      "transcriptTail": "Please pass the newspaper, no, the story with a hard cover and lots of pages, the",
+      "stalledAfter": "of pages, the",
+      "n": 3,
+      "intendedWord": "book",
+      "acceptable": [
+        "book",
+        "novel"
+      ],
+      "inBank": true
+    },
+    {
+      "id": "eval-11",
+      "shape": "near-synonym-1",
+      "transcriptTail": "I want to sit on the sofa, no, the seat for just one with armrests, the",
+      "stalledAfter": "with armrests, the",
+      "n": 3,
+      "intendedWord": "armchair",
+      "acceptable": [
+        "armchair",
+        "chair"
+      ],
+      "inBank": false
+    },
+    {
+      "id": "eval-12",
+      "shape": "near-synonym-1",
+      "transcriptTail": "We should go to the shop, no, where we borrow books and return them later, the",
+      "stalledAfter": "return them later, the",
+      "n": 3,
+      "intendedWord": "library",
+      "acceptable": [
+        "library",
+        "bookmobile"
+      ],
+      "inBank": true
+    },
+    {
+      "id": "eval-13",
+      "shape": "near-synonym-2",
+      "transcriptTail": "The soup is too hot to drink. Bring a fork, no, not a fork, the",
+      "stalledAfter": "not a fork, the",
+      "n": 3,
+      "intendedWord": "spoon",
+      "acceptable": [
+        "spoon",
+        "ladle"
+      ],
+      "inBank": true
+    },
+    {
+      "id": "eval-14",
+      "shape": "near-synonym-2",
+      "transcriptTail": "I want to slice the loaf. Pass the spoon, no, the sharp one for cutting, the",
+      "stalledAfter": "one for cutting, the",
+      "n": 3,
+      "intendedWord": "knife",
+      "acceptable": [
+        "knife",
+        "bread knife"
+      ],
+      "inBank": true,
+      "place": {
+        "lat": 34.0689,
+        "lon": -118.4452,
+        "label": "Home kitchen"
+      }
+    },
+    {
+      "id": "eval-15",
+      "shape": "near-synonym-2",
+      "transcriptTail": "I need the car door open. Where is my phone, no, the things that unlock it, the",
+      "stalledAfter": "unlock it, the",
+      "n": 3,
+      "intendedWord": "keys",
+      "acceptable": [
+        "keys",
+        "car keys"
+      ],
+      "inBank": true
+    },
+    {
+      "id": "eval-16",
+      "shape": "known-name",
+      "transcriptTail": "I went to the park last Sunday with my daughter. We had a nice walk with",
+      "stalledAfter": "nice walk with",
+      "n": 3,
+      "intendedWord": "Maya",
+      "acceptable": [
+        "Maya"
+      ],
+      "inBank": true
+    },
+    {
+      "id": "eval-17",
+      "shape": "known-name",
+      "transcriptTail": "The fictional doctor is expecting us at Sunrise Clinic tomorrow morning. My appointment is with",
+      "stalledAfter": "appointment is with",
+      "n": 3,
+      "intendedWord": "Dr. Velrin",
+      "acceptable": [
+        "Dr. Velrin"
+      ],
+      "inBank": true
+    },
+    {
+      "id": "eval-18",
+      "shape": "known-name",
+      "transcriptTail": "The neighbor from our sample story came over to help with the garden. His name is",
+      "stalledAfter": "His name is",
+      "n": 3,
+      "intendedWord": "Nilo",
+      "acceptable": [
+        "Nilo"
+      ],
+      "inBank": true
+    },
+    {
+      "id": "eval-19",
+      "shape": "not-in-bank",
+      "transcriptTail": "The car keeps making a rattling noise. I need the person who repairs engines, the",
+      "stalledAfter": "repairs engines, the",
+      "n": 3,
+      "intendedWord": "mechanic",
+      "acceptable": [
+        "mechanic",
+        "technician"
+      ],
+      "inBank": false
+    },
+    {
+      "id": "eval-20",
+      "shape": "not-in-bank",
+      "transcriptTail": "Rain is falling outside and I want to stay dry on my walk. Please bring my",
+      "stalledAfter": "Please bring my",
+      "n": 3,
+      "intendedWord": "umbrella",
+      "acceptable": [
+        "umbrella",
+        "raincoat"
+      ],
+      "inBank": false
+    },
+    {
+      "id": "eval-21",
+      "shape": "not-in-bank",
+      "transcriptTail": "There is a letter ready to mail and I need the sticky thing for the envelope, a",
+      "stalledAfter": "for the envelope, a",
+      "n": 3,
+      "intendedWord": "stamp",
+      "acceptable": [
+        "stamp",
+        "postage stamp"
+      ],
+      "inBank": false
+    },
+    {
+      "id": "eval-22",
+      "shape": "circumlocution",
+      "transcriptTail": "The bread is on the board. I need the sharp thing you use to cut it, the",
+      "stalledAfter": "cut it, the",
+      "n": 3,
+      "intendedWord": "knife",
+      "acceptable": [
+        "knife",
+        "slicer"
+      ],
+      "inBank": true
+    },
+    {
+      "id": "eval-23",
+      "shape": "circumlocution",
+      "transcriptTail": "I cannot read this small print. Please bring the things that sit on my nose, my",
+      "stalledAfter": "on my nose, my",
+      "n": 3,
+      "intendedWord": "glasses",
+      "acceptable": [
+        "glasses",
+        "spectacles"
+      ],
+      "inBank": true
+    },
+    {
+      "id": "eval-24",
+      "shape": "near-miss-sound",
+      "transcriptTail": "I would love some tea after the walk. Can I have a cop, no, a cuh",
+      "stalledAfter": "no, a cuh",
+      "n": 3,
+      "intendedWord": "cup",
+      "acceptable": [
+        "cup",
+        "mug"
+      ],
+      "inBank": true
+    },
+    {
+      "id": "eval-25",
+      "shape": "near-miss-sound",
+      "transcriptTail": "The soup is ready and I want something to eat with. Please bring a spoo, a",
+      "stalledAfter": "a spoo, a",
+      "n": 3,
+      "intendedWord": "spoon",
+      "acceptable": [
+        "spoon",
+        "soupspoon"
+      ],
+      "inBank": true
+    }
+  ]
+}

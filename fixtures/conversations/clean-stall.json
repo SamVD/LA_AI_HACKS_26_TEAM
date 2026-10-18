@@ -1,0 +1,135 @@
+{
+  "id": "clean-stall",
+  "description": "Breakfast, user wants the tea cup. Synthetic two-person talk: user 0-3s, caregiver 5-7s, user 9-18s, caregiver 21-23.5s, user 26-28s. Complete-sentence pauses and caregiver turns are negative examples.",
+  "events": [
+    {
+      "tMs": 0,
+      "type": "speech",
+      "speaking": true
+    },
+    {
+      "tMs": 1200,
+      "type": "transcript",
+      "text": "The tea is ready and",
+      "isFinal": false,
+      "tStartMs": 0
+    },
+    {
+      "tMs": 3000,
+      "type": "transcript",
+      "text": "The tea is ready and the table is set.",
+      "isFinal": true,
+      "tStartMs": 0
+    },
+    {
+      "tMs": 3100,
+      "type": "speech",
+      "speaking": false
+    },
+    {
+      "tMs": 5000,
+      "type": "speech",
+      "speaking": true
+    },
+    {
+      "tMs": 7000,
+      "type": "transcript",
+      "text": "What would you like me to bring over?",
+      "isFinal": true,
+      "tStartMs": 5000
+    },
+    {
+      "tMs": 7100,
+      "type": "speech",
+      "speaking": false
+    },
+    {
+      "tMs": 9000,
+      "type": "speech",
+      "speaking": true
+    },
+    {
+      "tMs": 10500,
+      "type": "transcript",
+      "text": "I would like my tea now.",
+      "isFinal": false,
+      "tStartMs": 9000
+    },
+    {
+      "tMs": 12500,
+      "type": "transcript",
+      "text": "I would like my tea now. Please pass me the",
+      "isFinal": true,
+      "tStartMs": 9000
+    },
+    {
+      "tMs": 12600,
+      "type": "speech",
+      "speaking": false
+    },
+    {
+      "tMs": 16000,
+      "type": "speech",
+      "speaking": true
+    },
+    {
+      "tMs": 18000,
+      "type": "transcript",
+      "text": "cup. That was the word I wanted.",
+      "isFinal": true,
+      "tStartMs": 16000
+    },
+    {
+      "tMs": 18100,
+      "type": "speech",
+      "speaking": false
+    },
+    {
+      "tMs": 21000,
+      "type": "speech",
+      "speaking": true
+    },
+    {
+      "tMs": 23500,
+      "type": "transcript",
+      "text": "Of course. I understand what you mean now.",
+      "isFinal": true,
+      "tStartMs": 21000
+    },
+    {
+      "tMs": 23600,
+      "type": "speech",
+      "speaking": false
+    },
+    {
+      "tMs": 26000,
+      "type": "speech",
+      "speaking": true
+    },
+    {
+      "tMs": 28000,
+      "type": "transcript",
+      "text": "Thank you. We can carry on with our day.",
+      "isFinal": true,
+      "tStartMs": 26000
+    },
+    {
+      "tMs": 28100,
+      "type": "speech",
+      "speaking": false
+    }
+  ],
+  "stalls": [
+    {
+      "tMs": 15000,
+      "stalledAfter": "pass me the",
+      "intendedWord": "cup",
+      "expectedTop3": [
+        "cup",
+        "tea",
+        "water"
+      ],
+      "inBank": true
+    }
+  ]
+}
