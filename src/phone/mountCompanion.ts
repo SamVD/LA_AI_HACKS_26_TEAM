@@ -7,7 +7,9 @@ import { applyPhoneTheme, watchThemePreference } from './theme/applyTheme'
 import { buildPersonalEntry, isPersonalCategory, validatePracticeFrame } from './personalWord'
 import { ensurePreviewImages, renderPreviewOptions } from './preview/previewAssets'
 import { renderScreen } from './preview/renderScreen'
+import { extractKeywords } from '../ai/keywords'
 import { bindJudgeDemo } from './demo/bindJudgeDemo'
+import { MODE_HOME_LEAD, modeDisabledLead } from './modeCopy'
 import { formatStep1ItemLine, summarizeStep1Session } from './sessionSummary'
 
 export type CompanionDebugState = {
@@ -127,6 +129,8 @@ export function mountCompanion(
   debugTranscript.className = 'nudge-debug-block'
   const debugSuggestions = document.createElement('div')
   debugSuggestions.className = 'nudge-debug-block'
+  const debugKeywords = document.createElement('div')
+  debugKeywords.className = 'nudge-debug-block'
 
   const playlistRow = document.createElement('div')
   playlistRow.className = 'nudge-playlist-row'
@@ -168,10 +172,14 @@ export function mountCompanion(
       const title = document.createElement('h2')
       title.textContent = mode.title
       card.append(title)
+      const lead = document.createElement('p')
+      lead.className = 'nudge-mode-lead'
+      lead.textContent = mode.enabled ? MODE_HOME_LEAD[mode.id] : modeDisabledLead(mode.id)
+      card.append(lead)
       if (!mode.enabled) {
         const soon = document.createElement('p')
         soon.className = 'nudge-coming-soon'
-        soon.textContent = 'Coming soon'
+        soon.textContent = mode.id === 'step2' ? 'Step 2 off' : 'Coming soon'
         card.append(soon)
       }
       const row = document.createElement('div')
@@ -271,6 +279,37 @@ export function mountCompanion(
   }
 
   const refreshDebug = (state: CompanionDebugState) => {
+    void (async () => {
+      debugKeywords.replaceChildren()
+      const kHead = document.createElement('h2')
+      kHead.textContent = 'Keywords (T-303 preview)'
+      debugKeywords.append(kHead)
+      const finals = state.transcripts.filter(t => t.isFinal && !t.error)
+      if (!finals.length) {
+        const empty = document.createElement('p')
+        empty.className = 'nudge-debug-empty'
+        empty.textContent = 'Final transcript lines needed for keyword extraction.'
+        debugKeywords.append(empty)
+        return
+      }
+      const bank = await shell.store.getBank()
+      const items = extractKeywords(finals, bank, { n: 8 })
+      if (!items.length) {
+        const empty = document.createElement('p')
+        empty.className = 'nudge-debug-empty'
+        empty.textContent = 'No keywords matched yet.'
+        debugKeywords.append(empty)
+        return
+      }
+      const kList = document.createElement('ul')
+      kList.className = 'nudge-word-list nudge-debug-list'
+      for (const item of items) {
+        const li = document.createElement('li')
+        li.textContent = `${item.word} · ${item.kind} · ${item.source}`
+        kList.append(li)
+      }
+      debugKeywords.append(kList)
+    })()
     debugTranscript.replaceChildren()
     const tHead = document.createElement('h2')
     tHead.textContent = 'Live transcript'
@@ -360,7 +399,7 @@ export function mountCompanion(
   judgeDemoCard.className = 'nudge-card nudge-home-demo'
   judgeDemoCard.innerHTML = `
     <h2>Judge demo</h2>
-    <p class="nudge-home-demo-lead">Scripted conversation stall for the booth — no second person required.</p>
+    <p class="nudge-home-demo-lead">Scripted stall replay on this page. Wear the G2 if you want the real touchpad; the preview mirrors the glasses.</p>
   `
   const openDemoBtn = document.createElement('button')
   openDemoBtn.type = 'button'
@@ -369,7 +408,11 @@ export function mountCompanion(
   openDemoBtn.addEventListener('click', () => showTab('demo'))
   judgeDemoCard.append(openDemoBtn)
 
-  homePanel.append(judgeDemoCard, modeList)
+  const homeLead = document.createElement('p')
+  homeLead.className = 'nudge-home-lead'
+  homeLead.textContent =
+    'Start a mode for the glasses. This page stays calm and shows a live preview when a mode is running.'
+  homePanel.append(homeLead, judgeDemoCard, modeList)
   previewPanel.append(previewHost, previewKind)
   if (options.devPlaylist?.length) {
     const prev = document.createElement('button')
@@ -406,7 +449,7 @@ export function mountCompanion(
   }
   summaryPanel.append(summaryBody)
   wordsPanel.append(wordForm, wordBankBody)
-  debugPanel.append(debugTranscript, debugSuggestions)
+  debugPanel.append(debugTranscript, debugKeywords, debugSuggestions)
 
   panels.append(homePanel, demoPanel, previewPanel, summaryPanel, wordsPanel, debugPanel)
 

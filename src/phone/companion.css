@@ -77,6 +77,18 @@ a.nudge-btn {
   margin-bottom: var(--nudge-space-2);
 }
 
+.nudge-home-lead,
+.nudge-mode-lead {
+  margin: 0 0 var(--nudge-space-3);
+  font-size: var(--nudge-font-md);
+  color: var(--nudge-text-muted);
+  line-height: 1.45;
+}
+
+.nudge-mode-lead {
+  margin-bottom: var(--nudge-space-4);
+}
+
 .nudge-coming-soon {
   margin: 0;
   color: var(--nudge-text-muted);
