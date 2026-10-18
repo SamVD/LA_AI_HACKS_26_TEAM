@@ -78,6 +78,12 @@
     }
   },
   "branchGrants": {
+    "logic/speaker-levels": [
+      "src/audio/stt.ts",
+      "src/audio/stt.test.ts",
+      "src/audio/vad.ts",
+      "src/audio/vad.test.ts"
+    ],
     "ai/stall-prefetch": [
       "src/ai/predictor/throttle.ts",
       "src/ai/predictor/throttle.test.ts",
