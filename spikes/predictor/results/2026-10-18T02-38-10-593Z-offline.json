@@ -1,0 +1,730 @@
+{
+  "at": "2026-10-18T02:38:10.594Z",
+  "promptVersion": 1,
+  "timeoutMs": 1200,
+  "reps": 0,
+  "cases": 25,
+  "bankSize": 38,
+  "summary": {
+    "none | fallback": {
+      "n": 25,
+      "top1": 0.28,
+      "top3": 0.6,
+      "intendedTop3": 0.6,
+      "top3At1200": 0.6,
+      "p50": null,
+      "p95": null,
+      "ttfbP50": null,
+      "jsonValid": 1,
+      "itemsDropped": 0,
+      "errors": 0,
+      "over1200": 0
+    }
+  },
+  "spread": {
+    "none | fallback | rep 0": {
+      "n": 25,
+      "top1": 0.28,
+      "top3": 0.6,
+      "intendedTop3": 0.6,
+      "top3At1200": 0.6,
+      "p50": null,
+      "p95": null,
+      "ttfbP50": null,
+      "jsonValid": 1,
+      "itemsDropped": 0,
+      "errors": 0,
+      "over1200": 0
+    }
+  },
+  "byShape": {
+    "none | fallback | clean-stall": {
+      "n": 4,
+      "top1": 0,
+      "top3": 0.75
+    },
+    "none | fallback | filler-stall": {
+      "n": 4,
+      "top1": 0.25,
+      "top3": 0.25
+    },
+    "none | fallback | near-synonym-1": {
+      "n": 4,
+      "top1": 0.5,
+      "top3": 0.75
+    },
+    "none | fallback | near-synonym-2": {
+      "n": 3,
+      "top1": 0.333,
+      "top3": 0.333
+    },
+    "none | fallback | known-name": {
+      "n": 3,
+      "top1": 0,
+      "top3": 1
+    },
+    "none | fallback | not-in-bank": {
+      "n": 3,
+      "top1": 0,
+      "top3": 0
+    },
+    "none | fallback | circumlocution": {
+      "n": 2,
+      "top1": 1,
+      "top3": 1
+    },
+    "none | fallback | near-miss-sound": {
+      "n": 2,
+      "top1": 0.5,
+      "top3": 1
+    }
+  },
+  "worstMisses": {
+    "none | fallback": [
+      {
+        "id": "eval-04",
+        "rep": 0,
+        "shape": "clean-stall",
+        "intended": "hospital",
+        "suggestions": [
+          "Sunrise Clinic:0.22",
+          "Dr. Velrin:0.15",
+          "kitchen:0.07"
+        ]
+      },
+      {
+        "id": "eval-05",
+        "rep": 0,
+        "shape": "filler-stall",
+        "intended": "lisinopril",
+        "suggestions": [
+          "glasses:0.15",
+          "book:0.15",
+          "bread:0.15"
+        ]
+      },
+      {
+        "id": "eval-06",
+        "rep": 0,
+        "shape": "filler-stall",
+        "intended": "phone",
+        "suggestions": [
+          "Maya:0.15",
+          "metformin:0.15"
+        ]
+      },
+      {
+        "id": "eval-07",
+        "rep": 0,
+        "shape": "filler-stall",
+        "intended": "towel",
+        "suggestions": [
+          "kitchen:0.05",
+          "bathroom:0.05",
+          "pharmacy:0.05"
+        ]
+      },
+      {
+        "id": "eval-11",
+        "rep": 0,
+        "shape": "near-synonym-1",
+        "intended": "armchair",
+        "suggestions": [
+          "kitchen:0.05",
+          "bathroom:0.05",
+          "pharmacy:0.05"
+        ]
+      }
+    ]
+  },
+  "rows": [
+    {
+      "model": "none",
+      "config": "fallback",
+      "rep": 0,
+      "id": "eval-01",
+      "shape": "clean-stall",
+      "inBank": true,
+      "intended": "cup",
+      "httpOk": true,
+      "totalMs": null,
+      "ttfbMs": null,
+      "jsonValid": true,
+      "valid": true,
+      "dropped": 0,
+      "suggestions": [
+        "tea:0.38",
+        "cup:0.30",
+        "water:0.15"
+      ],
+      "top1": false,
+      "top3": true,
+      "intendedTop3": true,
+      "top3At1200": true
+    },
+    {
+      "model": "none",
+      "config": "fallback",
+      "rep": 0,
+      "id": "eval-02",
+      "shape": "clean-stall",
+      "inBank": true,
+      "intended": "milk",
+      "httpOk": true,
+      "totalMs": null,
+      "ttfbMs": null,
+      "jsonValid": true,
+      "valid": true,
+      "dropped": 0,
+      "suggestions": [
+        "towel:0.15",
+        "milk:0.15",
+        "soup:0.15"
+      ],
+      "top1": false,
+      "top3": true,
+      "intendedTop3": true,
+      "top3At1200": true
+    },
+    {
+      "model": "none",
+      "config": "fallback",
+      "rep": 0,
+      "id": "eval-03",
+      "shape": "clean-stall",
+      "inBank": true,
+      "intended": "library",
+      "httpOk": true,
+      "totalMs": null,
+      "ttfbMs": null,
+      "jsonValid": true,
+      "valid": true,
+      "dropped": 0,
+      "suggestions": [
+        "book:0.26",
+        "park:0.22",
+        "library:0.22"
+      ],
+      "top1": false,
+      "top3": true,
+      "intendedTop3": true,
+      "top3At1200": true
+    },
+    {
+      "model": "none",
+      "config": "fallback",
+      "rep": 0,
+      "id": "eval-04",
+      "shape": "clean-stall",
+      "inBank": false,
+      "intended": "hospital",
+      "httpOk": true,
+      "totalMs": null,
+      "ttfbMs": null,
+      "jsonValid": true,
+      "valid": true,
+      "dropped": 0,
+      "suggestions": [
+        "Sunrise Clinic:0.22",
+        "Dr. Velrin:0.15",
+        "kitchen:0.07"
+      ],
+      "top1": false,
+      "top3": false,
+      "intendedTop3": false,
+      "top3At1200": false
+    },
+    {
+      "model": "none",
+      "config": "fallback",
+      "rep": 0,
+      "id": "eval-05",
+      "shape": "filler-stall",
+      "inBank": true,
+      "intended": "lisinopril",
+      "httpOk": true,
+      "totalMs": null,
+      "ttfbMs": null,
+      "jsonValid": true,
+      "valid": true,
+      "dropped": 0,
+      "suggestions": [
+        "glasses:0.15",
+        "book:0.15",
+        "bread:0.15"
+      ],
+      "top1": false,
+      "top3": false,
+      "intendedTop3": false,
+      "top3At1200": false
+    },
+    {
+      "model": "none",
+      "config": "fallback",
+      "rep": 0,
+      "id": "eval-06",
+      "shape": "filler-stall",
+      "inBank": true,
+      "intended": "phone",
+      "httpOk": true,
+      "totalMs": null,
+      "ttfbMs": null,
+      "jsonValid": true,
+      "valid": true,
+      "dropped": 0,
+      "suggestions": [
+        "Maya:0.15",
+        "metformin:0.15"
+      ],
+      "top1": false,
+      "top3": false,
+      "intendedTop3": false,
+      "top3At1200": false
+    },
+    {
+      "model": "none",
+      "config": "fallback",
+      "rep": 0,
+      "id": "eval-07",
+      "shape": "filler-stall",
+      "inBank": true,
+      "intended": "towel",
+      "httpOk": true,
+      "totalMs": null,
+      "ttfbMs": null,
+      "jsonValid": true,
+      "valid": true,
+      "dropped": 0,
+      "suggestions": [
+        "kitchen:0.05",
+        "bathroom:0.05",
+        "pharmacy:0.05"
+      ],
+      "top1": false,
+      "top3": false,
+      "intendedTop3": false,
+      "top3At1200": false
+    },
+    {
+      "model": "none",
+      "config": "fallback",
+      "rep": 0,
+      "id": "eval-08",
+      "shape": "filler-stall",
+      "inBank": true,
+      "intended": "pharmacy",
+      "httpOk": true,
+      "totalMs": null,
+      "ttfbMs": null,
+      "jsonValid": true,
+      "valid": true,
+      "dropped": 0,
+      "suggestions": [
+        "pharmacy:0.22",
+        "kitchen:0.07",
+        "bathroom:0.07"
+      ],
+      "top1": true,
+      "top3": true,
+      "intendedTop3": true,
+      "top3At1200": true
+    },
+    {
+      "model": "none",
+      "config": "fallback",
+      "rep": 0,
+      "id": "eval-09",
+      "shape": "near-synonym-1",
+      "inBank": true,
+      "intended": "cup",
+      "httpOk": true,
+      "totalMs": null,
+      "ttfbMs": null,
+      "jsonValid": true,
+      "valid": true,
+      "dropped": 0,
+      "suggestions": [
+        "tea:0.22",
+        "cup:0.15"
+      ],
+      "top1": false,
+      "top3": true,
+      "intendedTop3": true,
+      "top3At1200": true
+    },
+    {
+      "model": "none",
+      "config": "fallback",
+      "rep": 0,
+      "id": "eval-10",
+      "shape": "near-synonym-1",
+      "inBank": true,
+      "intended": "book",
+      "httpOk": true,
+      "totalMs": null,
+      "ttfbMs": null,
+      "jsonValid": true,
+      "valid": true,
+      "dropped": 0,
+      "suggestions": [
+        "book:0.15"
+      ],
+      "top1": true,
+      "top3": true,
+      "intendedTop3": true,
+      "top3At1200": true
+    },
+    {
+      "model": "none",
+      "config": "fallback",
+      "rep": 0,
+      "id": "eval-11",
+      "shape": "near-synonym-1",
+      "inBank": false,
+      "intended": "armchair",
+      "httpOk": true,
+      "totalMs": null,
+      "ttfbMs": null,
+      "jsonValid": true,
+      "valid": true,
+      "dropped": 0,
+      "suggestions": [
+        "kitchen:0.05",
+        "bathroom:0.05",
+        "pharmacy:0.05"
+      ],
+      "top1": false,
+      "top3": false,
+      "intendedTop3": false,
+      "top3At1200": false
+    },
+    {
+      "model": "none",
+      "config": "fallback",
+      "rep": 0,
+      "id": "eval-12",
+      "shape": "near-synonym-1",
+      "inBank": true,
+      "intended": "library",
+      "httpOk": true,
+      "totalMs": null,
+      "ttfbMs": null,
+      "jsonValid": true,
+      "valid": true,
+      "dropped": 0,
+      "suggestions": [
+        "library:0.30"
+      ],
+      "top1": true,
+      "top3": true,
+      "intendedTop3": true,
+      "top3At1200": true
+    },
+    {
+      "model": "none",
+      "config": "fallback",
+      "rep": 0,
+      "id": "eval-13",
+      "shape": "near-synonym-2",
+      "inBank": true,
+      "intended": "spoon",
+      "httpOk": true,
+      "totalMs": null,
+      "ttfbMs": null,
+      "jsonValid": true,
+      "valid": true,
+      "dropped": 0,
+      "suggestions": [
+        "tea:0.30",
+        "fork:0.22",
+        "soup:0.22"
+      ],
+      "top1": false,
+      "top3": false,
+      "intendedTop3": false,
+      "top3At1200": false
+    },
+    {
+      "model": "none",
+      "config": "fallback",
+      "rep": 0,
+      "id": "eval-14",
+      "shape": "near-synonym-2",
+      "inBank": true,
+      "intended": "knife",
+      "httpOk": true,
+      "totalMs": null,
+      "ttfbMs": null,
+      "jsonValid": true,
+      "valid": true,
+      "dropped": 0,
+      "suggestions": [
+        "spoon:0.26",
+        "soup:0.15",
+        "cup:0.04"
+      ],
+      "top1": false,
+      "top3": false,
+      "intendedTop3": false,
+      "top3At1200": false
+    },
+    {
+      "model": "none",
+      "config": "fallback",
+      "rep": 0,
+      "id": "eval-15",
+      "shape": "near-synonym-2",
+      "inBank": true,
+      "intended": "keys",
+      "httpOk": true,
+      "totalMs": null,
+      "ttfbMs": null,
+      "jsonValid": true,
+      "valid": true,
+      "dropped": 0,
+      "suggestions": [
+        "keys:0.45",
+        "phone:0.22"
+      ],
+      "top1": true,
+      "top3": true,
+      "intendedTop3": true,
+      "top3At1200": true
+    },
+    {
+      "model": "none",
+      "config": "fallback",
+      "rep": 0,
+      "id": "eval-16",
+      "shape": "known-name",
+      "inBank": true,
+      "intended": "Maya",
+      "httpOk": true,
+      "totalMs": null,
+      "ttfbMs": null,
+      "jsonValid": true,
+      "valid": true,
+      "dropped": 0,
+      "suggestions": [
+        "park:0.38",
+        "Maya:0.15"
+      ],
+      "top1": false,
+      "top3": true,
+      "intendedTop3": true,
+      "top3At1200": true
+    },
+    {
+      "model": "none",
+      "config": "fallback",
+      "rep": 0,
+      "id": "eval-17",
+      "shape": "known-name",
+      "inBank": true,
+      "intended": "Dr. Velrin",
+      "httpOk": true,
+      "totalMs": null,
+      "ttfbMs": null,
+      "jsonValid": true,
+      "valid": true,
+      "dropped": 0,
+      "suggestions": [
+        "Sunrise Clinic:0.60",
+        "Dr. Velrin:0.30",
+        "toothbrush:0.15"
+      ],
+      "top1": false,
+      "top3": true,
+      "intendedTop3": true,
+      "top3At1200": true
+    },
+    {
+      "model": "none",
+      "config": "fallback",
+      "rep": 0,
+      "id": "eval-18",
+      "shape": "known-name",
+      "inBank": true,
+      "intended": "Nilo",
+      "httpOk": true,
+      "totalMs": null,
+      "ttfbMs": null,
+      "jsonValid": true,
+      "valid": true,
+      "dropped": 0,
+      "suggestions": [
+        "garden:0.22",
+        "Nilo:0.15"
+      ],
+      "top1": false,
+      "top3": true,
+      "intendedTop3": true,
+      "top3At1200": true
+    },
+    {
+      "model": "none",
+      "config": "fallback",
+      "rep": 0,
+      "id": "eval-19",
+      "shape": "not-in-bank",
+      "inBank": false,
+      "intended": "mechanic",
+      "httpOk": true,
+      "totalMs": null,
+      "ttfbMs": null,
+      "jsonValid": true,
+      "valid": true,
+      "dropped": 0,
+      "suggestions": [
+        "keys:0.15"
+      ],
+      "top1": false,
+      "top3": false,
+      "intendedTop3": false,
+      "top3At1200": false
+    },
+    {
+      "model": "none",
+      "config": "fallback",
+      "rep": 0,
+      "id": "eval-20",
+      "shape": "not-in-bank",
+      "inBank": false,
+      "intended": "umbrella",
+      "httpOk": true,
+      "totalMs": null,
+      "ttfbMs": null,
+      "jsonValid": true,
+      "valid": true,
+      "dropped": 0,
+      "suggestions": [
+        "park:0.30",
+        "towel:0.15",
+        "garden:0.15"
+      ],
+      "top1": false,
+      "top3": false,
+      "intendedTop3": false,
+      "top3At1200": false
+    },
+    {
+      "model": "none",
+      "config": "fallback",
+      "rep": 0,
+      "id": "eval-21",
+      "shape": "not-in-bank",
+      "inBank": false,
+      "intended": "stamp",
+      "httpOk": true,
+      "totalMs": null,
+      "ttfbMs": null,
+      "jsonValid": true,
+      "valid": true,
+      "dropped": 0,
+      "suggestions": [
+        "kitchen:0.05",
+        "bathroom:0.05",
+        "pharmacy:0.05"
+      ],
+      "top1": false,
+      "top3": false,
+      "intendedTop3": false,
+      "top3At1200": false
+    },
+    {
+      "model": "none",
+      "config": "fallback",
+      "rep": 0,
+      "id": "eval-22",
+      "shape": "circumlocution",
+      "inBank": true,
+      "intended": "knife",
+      "httpOk": true,
+      "totalMs": null,
+      "ttfbMs": null,
+      "jsonValid": true,
+      "valid": true,
+      "dropped": 0,
+      "suggestions": [
+        "knife:0.30",
+        "bread:0.22"
+      ],
+      "top1": true,
+      "top3": true,
+      "intendedTop3": true,
+      "top3At1200": true
+    },
+    {
+      "model": "none",
+      "config": "fallback",
+      "rep": 0,
+      "id": "eval-23",
+      "shape": "circumlocution",
+      "inBank": true,
+      "intended": "glasses",
+      "httpOk": true,
+      "totalMs": null,
+      "ttfbMs": null,
+      "jsonValid": true,
+      "valid": true,
+      "dropped": 0,
+      "suggestions": [
+        "glasses:0.15",
+        "book:0.15",
+        "library:0.15"
+      ],
+      "top1": true,
+      "top3": true,
+      "intendedTop3": true,
+      "top3At1200": true
+    },
+    {
+      "model": "none",
+      "config": "fallback",
+      "rep": 0,
+      "id": "eval-24",
+      "shape": "near-miss-sound",
+      "inBank": true,
+      "intended": "cup",
+      "httpOk": true,
+      "totalMs": null,
+      "ttfbMs": null,
+      "jsonValid": true,
+      "valid": true,
+      "dropped": 0,
+      "suggestions": [
+        "tea:0.22",
+        "cup:0.15",
+        "park:0.15"
+      ],
+      "top1": false,
+      "top3": true,
+      "intendedTop3": true,
+      "top3At1200": true
+    },
+    {
+      "model": "none",
+      "config": "fallback",
+      "rep": 0,
+      "id": "eval-25",
+      "shape": "near-miss-sound",
+      "inBank": true,
+      "intended": "spoon",
+      "httpOk": true,
+      "totalMs": null,
+      "ttfbMs": null,
+      "jsonValid": true,
+      "valid": true,
+      "dropped": 0,
+      "suggestions": [
+        "spoon:0.30",
+        "soup:0.22",
+        "fork:0.15"
+      ],
+      "top1": true,
+      "top3": true,
+      "intendedTop3": true,
+      "top3At1200": true
+    }
+  ]
+}
