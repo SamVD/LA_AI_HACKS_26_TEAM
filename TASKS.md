@@ -352,7 +352,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ### T-208 Step 2 latency: flush the batch segment on a help tap (G2 finding)
 - **Owner:** AI (Sam)
-- **Status:** READY
+- **Status:** MERGED (PR #96). Sim: median tap → candidates ≈ 1.49 s (6 taps). Device tally (10 taps) on the 0.4.3 pack.
 - **Branch:** `ai/flush-on-tap` (OWNERS grant: `src/modes/step2/index.ts`, `src/modes/step2/step2.test.ts`)
 - **Depends on:** CONTRACT_VERSION 3 (`SttService.flush?`), D17
 - **Files it may EDIT:** `src/audio/**`, plus the grant above
@@ -366,7 +366,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ### T-209 Steps 2-3: letters-first hint ladder (G2 change request, scoped by D18)
 - **Owner:** GLASS (Sarah)
-- **Status:** READY (start on `src/glasses/**`; touch `src/modes/step2/**` after T-208 merges)
+- **Status:** IN_PROGRESS. Part 1 MERGED (PR #95: `revealWord` + candidates layout). Part 2 (`src/modes/step2/`, drop `withAssets`) unblocked now that T-208 is merged.
 - **Branch:** `glass/letters-ladder`
 - **Depends on:** CONTRACT_VERSION 3 (`candidates` levels), T-208 for `src/modes/step2/index.ts`
 - **Files it may EDIT:** `src/glasses/**`, `src/modes/step2/**`
@@ -386,7 +386,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ### T-210 Phone preview + judge demo: letters-first candidates
 - **Owner:** UI (juannli)
-- **Status:** READY after T-209 merges (the shape is fixed by CONTRACT v3, so work can start against the contract)
+- **Status:** CHANGES_REQUESTED (PR #93): import `revealWord` from `src/glasses/ladder.ts` instead of a second implementation.
 - **Branch:** `ui/letters-preview`
 - **Files it may EDIT:** `src/phone/**`
 - **Spec:** `renderScreen`/`previewCaption` show candidates as L1 `s _ _ _ _`, L2 `s u n _ _`, L3 `sunny` (no picture or mouth line for candidates). The judge demo's help screen and copy match ("a tap shows the first letter").
