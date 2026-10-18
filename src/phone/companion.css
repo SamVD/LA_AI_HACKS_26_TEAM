@@ -99,10 +99,19 @@ a.nudge-btn {
   margin-top: var(--nudge-space-4);
 }
 
+.nudge-preview-lead {
+  margin: 0 0 var(--nudge-space-4);
+  font-size: var(--nudge-font-md);
+  color: var(--nudge-text-muted);
+  line-height: 1.45;
+}
+
 .nudge-preview-kind {
   margin: var(--nudge-space-3) 0 0;
   font-size: var(--nudge-font-sm);
   color: var(--nudge-text-muted);
+  line-height: 1.45;
+  word-break: break-word;
 }
 
 .nudge-playlist-row {
@@ -191,6 +200,10 @@ a.nudge-btn {
 .nudge-form-hint--static {
   margin: 0 0 var(--nudge-space-4);
   color: var(--nudge-text-muted);
+}
+
+.nudge-word-asset-hint {
+  overflow-wrap: anywhere;
 }
 
 .nudge-word-row {

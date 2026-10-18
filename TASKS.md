@@ -1,6 +1,6 @@
 # Nudge Task Board
 
-_Last updated: Sat Oct 17, 2026 (about H11:15) by ORCH. **G1 PASSED: `main` = `v0.1-step1` = `4b13180`.** **Current snapshot of every task, PR, decision and blocker: `docs/ORCH_STATE.md`.** Decisions D1-D16: `PLAN.md` Section 13. Contracts: CONTRACT_VERSION 2 (`src/core/types.ts`, `docs/CONTRACTS.md`). Phase 1 builder prompts: `docs/prompts/phase1-builder-prompts.md`._
+_Last updated: Sat Oct 17, 2026 (about H11:30) by ORCH. **G1 PASSED: `main` = `v0.1-step1` = `4b13180`.** **Current snapshot of every task, PR, decision and blocker: `docs/ORCH_STATE.md`.** Decisions D1-D16: `PLAN.md` Section 13. Contracts: CONTRACT_VERSION 2 (`src/core/types.ts`, `docs/CONTRACTS.md`). Phase 1 builder prompts: `docs/prompts/phase1-builder-prompts.md`._
 
 Single source of truth for who is doing what. Read `PLAN.md` first for architecture, contracts, ownership, and git rules.
 
@@ -263,7 +263,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ### T-108 Step 1: auto-escalate the cue after a wrong answer (G1 UX finding)
 - **Owner:** LOGIC (Devin)
-- **Status:** READY (issue #73)
+- **Status:** MERGED (PR #76). Remaining AC: Step 1 regression on the device, run inside the G2 session (T-207).
 - **Branch:** `logic/step1-auto-escalate`
 - **Depends on:** T-102
 - **Files it may EDIT:** `src/modes/step1/**`
@@ -340,7 +340,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ### T-207 Gate G2: audit, integrate, smoke, tag
 - **Owner:** ORCH
-- **Status:** **READY NOW** (G1 passed). All Step 2 code is merged and wired; production `api/` is live. Include G2_SMOKE A3, A5 and A7 (not reported at G1).
+- **Status:** **READY NOW**: pack from `integration` at or after `82e487d` (`app.json` 0.4.0). All Step 2 code is merged and wired; production `api/` is live. Include G2_SMOKE A3, A5 and A7 (not reported at G1), plus a Step 1 pass to check T-108 (a wrong answer now moves up one cue).
 - **Spec:** audit, merge in dependency order, run `docs/G2_SMOKE.md` plus a live two-person conversation test, fast-forward `main`, tag `v0.2-step2`, upload Beta. **Decision:** enable `step2Enabled` by default.
 - **Acceptance criteria (gate):** in a 5-minute live conversation, the user can ask for help and get at least one correct or acceptable suggestion within about 1.5 s on most attempts; Step 1 still passes its smoke test (regression).
 - **G2 runbook (GLASS runs it with a second person, ORCH records it):**
@@ -358,7 +358,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ### T-301 Stall detector
 - **Owner:** AI
-- **Status:** TODO
+- **Status:** MERGED (PR #75). 0 false hints on the T-007 fixtures in all 4 variants, recall 11/12; `minSilenceMs` 1500 to be tuned in the G3 soak. Not wired into any mode until T-302.
 - **Branch:** `ai/stall`
 - **Depends on:** T-202, T-007
 - **Files it may EDIT:** `src/ai/stall/**`
@@ -367,7 +367,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ### T-302 Step 3 mode
 - **Owner:** AI
-- **Status:** TODO
+- **Status:** IN_REVIEW (draft PR #78). ORCH added the `ai/step3-mode` grant for `src/mocks/foundation.test.ts`; Sam pushes the one-line test change, then marks it ready. Not for the G2 build.
 - **Branch:** `ai/step3-mode`
 - **Depends on:** T-301, T-204
 - **Files it may EDIT:** `src/modes/step3/**`
@@ -426,7 +426,7 @@ No new features after H18. Only fixes, packaging, polish, and the story.
 
 ### T-403 Design polish (Paper challenge)
 - **Owner:** UI (Cursor)
-- **Status:** PARTLY DONE (PRs #44, #47, #64: tagline, focus rings, contrast, in-app demo CTA, Devpost asset index, Home copy). Final polish pass before H18.
+- **Status:** PARTLY DONE (PRs #44, #47, #64, #69 preview captions, #71 Words asset hint: tagline, focus rings, contrast, in-app demo CTA, Devpost asset index, Home copy). Final polish pass before H18.
 - **Branch:** `ui/polish`
 - **Files it may EDIT:** `src/phone/**` (excluding `src/phone/demo/`, owned by T-401), `docs/design/**`
 - **Spec:** one polish pass per the Paper brief (design fundamentals, ease of use, personal craft).
