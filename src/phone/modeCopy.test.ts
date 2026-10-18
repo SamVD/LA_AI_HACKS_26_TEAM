@@ -6,5 +6,7 @@ describe('modeCopy', () => {
     expect(MODE_HOME_LEAD.step1).toContain('Practice')
     expect(MODE_HOME_LEAD.step2).toContain('blank')
     expect(modeDisabledLead('step2')).toContain('Beta')
+    expect(MODE_HOME_LEAD.step3).toContain('auto-hint')
+    expect(modeDisabledLead('step3')).toContain('VITE_STEP3')
   })
 })

@@ -39,15 +39,20 @@ async function paint(host: JudgeDemoCallbacks, screen: Screen, note?: string) {
   host.onPreviewSvg(renderScreen(screen, renderPreviewOptions()), note ? `${caption} · ${note}` : caption)
 }
 
+/** Step 2: user taps for help. Step 3: hint appears on the blank display after a pause. */
+export type JudgeDemoHintTrigger = 'tap' | 'auto'
+
 export type RunJudgeDemoOptions = {
   stallIndex?: number
   speed?: number
   signal?: AbortSignal
+  /** Step 2 tap-for-help vs Step 3 auto-hint after silence. */
+  hintTrigger?: JudgeDemoHintTrigger
   /** T-304: when true at the stall, the demo shows the paused state instead of a hint. */
   paused?: () => boolean
 }
 
-/** Replay fixture transcripts up to the first stall, then show Step 2-style candidates. */
+/** Replay fixture transcripts up to the first stall, then show help candidates. */
 export async function runJudgeDemo(
   fixture: ConversationFixture,
   host: JudgeDemoCallbacks,
@@ -87,6 +92,7 @@ export async function runJudgeDemo(
   }
 
   await delay(400 * speed, signal)
+  const hintTrigger = opts.hintTrigger ?? 'auto'
   host.onState({
     phase: 'stalled',
     transcripts: [...transcripts],
@@ -95,11 +101,32 @@ export async function runJudgeDemo(
 
   const items = suggestionsForStall(stall)
   const paused = opts.paused?.() === true
-  const helpScreen: Screen = paused
-    ? { kind: 'status', text: 'Hints paused — resume Step 3 to see suggestions.' }
-    : { kind: 'candidates', level: 1, index: 0, items }
-  host.onState({ phase: 'help', transcripts: [...transcripts], suggestions: paused ? [] : items })
-  await paint(host, helpScreen, paused ? 'hints paused' : 'after help tap')
+
+  if (paused) {
+    const helpScreen: Screen = {
+      kind: 'status',
+      text: 'Hints paused — resume Step 3 to see suggestions.',
+    }
+    host.onState({ phase: 'help', transcripts: [...transcripts], suggestions: [] })
+    await paint(host, helpScreen, 'hints paused')
+    return
+  }
+
+  if (hintTrigger === 'tap') {
+    await paint(host, { kind: 'status', text: 'Tap SELECT on the touchpad for help.' }, 'stall')
+    await delay(500 * speed, signal)
+  } else {
+    await paint(host, { kind: 'blank' }, 'stall — listening')
+    await delay(700 * speed, signal)
+  }
+
+  const helpScreen: Screen = { kind: 'candidates', level: 1, index: 0, items }
+  host.onState({ phase: 'help', transcripts: [...transcripts], suggestions: items })
+  await paint(
+    host,
+    helpScreen,
+    hintTrigger === 'tap' ? 'after help tap' : 'after auto-hint',
+  )
 }
 
 export function stallCueLine(): string {
