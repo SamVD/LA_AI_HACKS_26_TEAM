@@ -342,7 +342,7 @@
     },
     {
       "id": "eval-26",
-      "shape": "noisy-stt",
+      "shape": "near-miss-sound",
       "transcriptTail": "I need to return these books before they are late. Please walk me to the libary, the",
       "stalledAfter": "the",
       "n": 3,
@@ -355,7 +355,7 @@
     },
     {
       "id": "eval-27",
-      "shape": "noisy-stt",
+      "shape": "near-miss-sound",
       "transcriptTail": "Sarah tried to call twice and left a voicemail. Hand me my fone, my",
       "stalledAfter": "my",
       "n": 3,
@@ -368,7 +368,7 @@
     },
     {
       "id": "eval-28",
-      "shape": "noisy-stt",
+      "shape": "near-miss-sound",
       "transcriptTail": "The toast is ready but I am out of slices. Get me the bredd, the",
       "stalledAfter": "the",
       "n": 3,
@@ -380,7 +380,7 @@
     },
     {
       "id": "eval-29",
-      "shape": "ambiguous-name",
+      "shape": "known-name",
       "transcriptTail": "Both grandchildren are coming over this afternoon. We are going to the park with",
       "stalledAfter": "with",
       "n": 3,
@@ -393,7 +393,7 @@
     },
     {
       "id": "eval-30",
-      "shape": "ambiguous-place",
+      "shape": "known-name",
       "transcriptTail": "I will be out all morning, so we can meet at",
       "stalledAfter": "meet at",
       "n": 3,
@@ -406,7 +406,7 @@
     },
     {
       "id": "eval-31",
-      "shape": "long-tail",
+      "shape": "clean-stall",
       "transcriptTail": "This morning I woke up late, rushed through breakfast without eating, grabbed my coat from the hook by the door, checked that every window upstairs and down was shut, and then patted my pockets for my wallet and my",
       "stalledAfter": "my",
       "n": 3,

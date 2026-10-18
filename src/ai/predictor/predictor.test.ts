@@ -154,7 +154,7 @@ describe('bank-only fallback (Section 7)', () => {
 
   it('improves the v1 baseline on the eval fixtures', async () => {
     const { summary } = await runEval((evalFixture as { cases: EvalCase[] }).cases, bank, async r => rankFallback(r))
-    expect(summary.n).toBe(25)
+    expect(summary.n).toBe(31)
     expect(summary.top1).toBeGreaterThan(0.32)
     expect(summary.top3).toBeGreaterThanOrEqual(0.64)
   })
