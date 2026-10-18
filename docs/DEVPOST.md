@@ -115,6 +115,7 @@ Honest table. A judge should be able to trust every "real".
 - **It can't tell who is talking.** The glasses mic hears the conversation partner too. Step 3 can mistake the partner's pause for the wearer's stall. A loudness-based speaker tag (T-314) is designed (an optional `speaker` field is already in the contract) but **not built**.
 - **Free-tier Gemini** is capped at 15 requests/minute. We throttle (prefetch ≤12/min, 3/min reserved for taps) and fall back to bank-only suggestions under load. Billing would remove the cap.
 - **English only**, and the word bank is a 38-word starter set.
+- **We don't classify paraphasia types.** Step 1 grades strictly (right word or not), and Gemini reasons about sound-alike and same-category errors in conversation, but Nudge does not label an error as phonological, semantic or a neologism. Telling those apart reliably from speech-to-text output, on atypical speech we haven't tested clinically, would be overclaiming.
 - **Speech-to-text can still mishear** short or unclear words; Step 1 may show × for a word that was said.
 - **One device tested.** One pair of G2 glasses, a small number of testers, venue Wi-Fi.
 
@@ -123,8 +124,9 @@ Honest table. A judge should be able to trust every "real".
 1. Test with speech-language pathologists and people with aphasia, and tune cue timing to the person.
 2. Real speaker separation (wearer vs partner) so auto-hints only fire on the wearer's stalls.
 3. Realtime STT once packaged apps can open `wss://`; that removes about a second.
-4. Steps 4–5 from the original sheet: flag mumbled words and show the corrected one; suggest missing filler words and sentence completions from the person's own recorded speech.
-5. Caregiver and clinician export of session logs (test builds already export a raw pipeline log from a Debug tab).
+4. Paraphasia-aware feedback: start with "close miss" cues for phonological errors in Step 1 (using the matcher's existing result), then semantic errors and neologisms once we can validate them with clinicians.
+5. Steps 4–5 from the original sheet: flag mumbled words and show the corrected one; suggest missing filler words and sentence completions from the person's own recorded speech.
+6. Caregiver and clinician export of session logs (test builds already export a raw pipeline log from a Debug tab).
 
 ## Built with
 
