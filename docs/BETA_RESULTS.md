@@ -269,3 +269,27 @@ Other notes: 5 of 23 predictor calls timed out (including the cold start), and a
 | D. Practice | Works (fragment attempts: issue 3 above) |
 
 Recommendation: **Conversation meets D21** → judge build 0.4.7 with `VITE_STEP3=1`. Before or right after 0.4.7, if possible: `timeoutMs` → ~1800 (F-2) and strip `sample` bank entries.
+
+## 0.4.8 feature check (Sarah, Sun Oct 18, 9:40-9:44 AM PT): blocked, ElevenLabs out of credits
+
+**Build:** `integration` @ `09114bc`, v0.4.8, `VITE_STEP3=1 VITE_IMU=1 VITE_SPEAKER_GATE=1 VITE_DEBUG=1`. Data: one Debug export (72 events, about 4 min, Conversation started 3 times).
+
+**Result: no feature could be tested.** No suggestions appeared, but the speaker gate is not the cause:
+
+| Evidence | What it means |
+|---|---|
+| **Every** transcription failed: 19 × `stt.error` `scribe http 401`, plus 2 × `stt.no-audio` | No transcript at all, so nothing for the gate, the stall detector or the predictor to act on |
+| `stage: "scribe"`, not `"token"` | Our token server works; ElevenLabs rejected the call itself |
+| `predictor.fallback` `http 400` on taps | The predict request had an empty transcript (a side effect, not a separate bug) |
+| `imu.on ok: true` | Tilt switched on, but couldn't be tried: tilt only arms while suggestions are showing, and none showed |
+
+**Root cause, confirmed at 9:47 AM:** I minted a token from `/api/stt/token` (HTTP 200) and sent Scribe 0.5 s of silence. ElevenLabs answered **401 `quota_exceeded`: "This request exceeds your quota of 10000. You have 0 credits remaining."** The ElevenLabs account behind `ELEVENLABS_API_KEY` is out of credits.
+
+**This affects every build, including the 0.4.7 judge build.** Without credits, Practice can't hear answers and Conversation gets no transcript, so the demo video and judging can't work.
+
+### Needed now (ORCH / Sam: account owner)
+1. **Restore ElevenLabs credits**: upgrade or top up the plan, or put a funded key in Vercel's `ELEVENLABS_API_KEY` and redeploy `api/`.
+2. To confirm: a Practice word on any build is heard, or the Debug log shows `stt.utterance` instead of `scribe http 401`.
+3. Then re-run this 12-minute check on 0.4.8 (tilt, speaker gate) unchanged.
+
+The speaker gate and tilt are **untested**, not failed.
