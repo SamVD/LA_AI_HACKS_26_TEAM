@@ -264,6 +264,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 ### T-201 Predictor implementation
 - **Owner:** LOGIC (Codex)
 - **Status:** PART 1 MERGED (PR #31): `createPredictor` (api/predict client, Section 6 validation, v1 fallback, eval script). **Part 2 READY, after T-102** (branch `logic/predictor-v2`): fallback v2 (§7, R0-R4) and the throttle (§10, D11), per the PR #31 review. `dropSamples` default stays false (D13).
+  - **Throttle bug to avoid (found in T-204, PR #43):** `spikes/predictor/throttle.mjs` caches a prefetch only when it is non-empty, so when the model returns `[]` it **re-prefetches the same request every `minGapMs`** (wasted quota, and the next segment's prefetch is delayed, so taps miss the cache). Track `fetchedSeq`, the newest request a call finished for regardless of its result, and stop arming when `fetchedSeq === latestSeq`. Port the regression test "does not re-fetch a request that came back empty" from `src/modes/step2/step2.test.ts`. When part 2 merges, T-204 swaps its import to `src/ai/predictor` and deletes `src/modes/step2/throttle.ts`.
 - **Branch:** `logic/predictor`
 - **Depends on:** T-001 (`PREDICTOR_PROMPT.md`), S-2, T-004. Develop against `MockPredictor` and a stubbed fetch until T-203's proxy merges; do not wait on it.
 - **Files it may EDIT:** `src/ai/predictor/**`, `scripts/eval-predictor.*`
@@ -297,7 +298,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ### T-204 Step 2 mode
 - **Owner:** GLASS
-- **Status:** READY on mocks (T-101 merged). Use a local throttle stub (`onFinal`/`onHelp`) until T-201 part 2 merges; real STT/predictor plug in with T-202/T-203.
+- **Status:** APPROVED (PR #43). Waiting on the `src/mocks/foundation.test.ts` update (branch grant #45), then merge. Acceptance 3 (real services, two-person conversation on the G2) is G2-gate work.
 - **Branch:** `glass/step2-mode`
 - **Depends on:** T-101, T-201 (mock first), T-202 (mock first)
 - **Files it may EDIT:** `src/modes/step2/**`
@@ -397,7 +398,7 @@ No new features after H18. Only fixes, packaging, polish, and the story.
 
 ### T-401 Demo mode and judge flow
 - **Owner:** UI (Cursor)
-- **Status:** PART 1 MERGED (PR #40): laptop demo page with a scripted stall. Part 2: a Demo entry inside `mountCompanion` (reachable in the packaged app), with a cancellable replay.
+- **Status:** MERGED: part 1 (PR #40) and part 2 (PR #44): Demo tab inside the companion, cancellable replay, no outbound link. #41 closed as superseded.
 - **Branch:** `ui/demo-mode`
 - **Files it may EDIT:** `src/phone/demo/**`
 - **Spec:** a "Demo" entry on the phone page with a scripted stall so a judge can try Steps 2-3 without needing a second person to hold a conversation. Plan the hand-off: judges are told to put the G2 on and try it.
@@ -440,6 +441,7 @@ No new features after H18. Only fixes, packaging, polish, and the story.
 - H7: T-004 fixtures merged (PR #9). Follow-up filed as T-007.
 - H7: T-006 design tokens and glasses layouts merged (PR #7, after one round of changes).
 - H7: T-002 device checks done (PR #13, `docs/BETA_RESULTS.md`). QR prototype mode is broken on Even's side, so device testing uses packaged Beta builds; README and `docs/G2_SMOKE.md` updated.
+- H10: T-401 part 2 + T-403 polish merged (PR #44); #41 closed (superseded). T-204 (PR #43) approved, pending the foundation-test update. The reference-throttle `[]` re-prefetch bug is recorded on T-201 part 2.
 - H10: T-202 reassigned AI → GLASS (grant for `glass/audio-rolling`). Grant for `glass/step2-mode` to update `src/mocks/foundation.test.ts` (it asserts the old Step 2 stub). Vercel project `nudge` exists, but its Git deployments are blocked (team membership); hosting is the G1 blocker.
 - H9:45: **T-102 merged (PR #34): all Step 1 code is in.** T-101 passed on the real G2 (PR #38). T-401 part 1 merged (PR #40). `app.json` 0.3.0 for the G1 build; G1 runbook in T-107. **G1 is blocked only on hosting `api/stt`.** T-204, T-202 and T-203 READY.
 - H9: PR #36 (dev-shell test + playlist) merged. T-102 (PR #34): changes requested (rebase off duplicated commits; verified `main.test.ts` patch; mic-stop fix). `docs/G2_SMOKE.md` gains B5 (touchpad while the mic is open: two SDK event listeners) and B6 (mic across items).
