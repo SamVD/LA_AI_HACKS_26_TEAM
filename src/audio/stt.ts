@@ -30,7 +30,7 @@ export interface ElevenLabsSttOptions {
   firstAudioTimeoutMs?: number
 }
 
-type EndReason = 'silence' | 'max' | 'no-audio' | 'cancelled'
+type EndReason = 'silence' | 'max' | 'flush' | 'no-audio' | 'cancelled'
 
 interface Utterance {
   endSilenceMs: number
@@ -103,6 +103,19 @@ export class ElevenLabsStt implements SttService {
   /** For the rolling transcript (T-202). */
   emitTranscript(t: Transcript): void {
     for (const cb of [...this.transcripts]) cb(t)
+  }
+
+  /**
+   * End the utterance being recorded now, as if the speaker had paused, so it is
+   * transcribed without waiting for `endSilenceMs` (T-208: a help tap right after
+   * "um, um"). Returns false, and does nothing, when no utterance is recording or it
+   * has not heard speech yet. Unlike a cancel, the audio is kept and sent.
+   */
+  endUtterance(): boolean {
+    const u = this.active
+    if (!u?.vad?.heardSpeech) return false
+    u.finish('flush')
+    return true
   }
 
   async transcribeUtterance(opts: UtteranceOptions): Promise<Transcript> {

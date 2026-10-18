@@ -18,6 +18,10 @@ export interface Step2Options {
 
 const MAX_FINALS = 20
 const MAX_ITEMS = 3
+/** T-208: a help tap waits at most this long for the segment being spoken to be transcribed. */
+const FLUSH_CAP_MS = 1200
+/** ...and skips the flush when a final arrived this recently (nothing new to wait for). */
+const FRESH_FINAL_MS = 300
 
 type Phase = 'idle' | 'loading' | 'help' | 'empty' | 'off'
 
@@ -30,6 +34,7 @@ export function createStep2(options: Step2Options = {}): Mode {
   let throttle: ThrottledPredictor | null = null
   let bank: WordEntry[] = []
   let finals: string[] = []
+  let lastFinalAt: number | null = null
   let phase: Phase = 'idle'
   let items: Suggestion[] = []
   let index = 0
@@ -66,6 +71,15 @@ export function createStep2(options: Step2Options = {}): Mode {
     const mine = ++generation
     const tapAt = c.now()
     phase = 'loading'
+    // T-208: with batch STT (D17) the newest words are only transcribed after a pause, so
+    // end the segment now and let its final land in `finals` before building the request.
+    if (c.stt.flush && (lastFinalAt === null || tapAt - lastFinalAt >= FRESH_FINAL_MS)) {
+      let cap: ReturnType<typeof setTimeout> | undefined
+      await Promise.race([c.stt.flush(), new Promise<void>(resolve => { cap = setTimeout(resolve, FLUSH_CAP_MS) })])
+      clearTimeout(cap)
+      if (mine !== generation || ctx !== c) return
+      c.log('step2 flush', { ms: c.now() - tapAt })
+    }
     const found = await throttle.onHelp(buildRequest(finals, bank))
     if (mine !== generation || ctx !== c) return
     const ms = c.now() - tapAt
@@ -122,6 +136,7 @@ export function createStep2(options: Step2Options = {}): Mode {
     }
     if (t.isFinal && t.text.trim()) {
       finals = [...finals, t.text.trim()].slice(-MAX_FINALS)
+      lastFinalAt = ctx.now()
       throttle?.onFinal(buildRequest(finals, bank))
     }
   }
@@ -132,6 +147,7 @@ export function createStep2(options: Step2Options = {}): Mode {
     async enter(c) {
       ctx = c
       finals = []
+      lastFinalAt = null
       items = []
       phase = 'idle'
       subs = [c.ui.onIntent(onIntent)]
