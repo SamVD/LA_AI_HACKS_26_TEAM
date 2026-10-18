@@ -155,3 +155,39 @@ The risk is only the launcher text and a flag. Step 1's and Step 3's code paths 
 | R-7 | **End-to-end UX review**: Claude runs every flow in the simulator against the conversation fixtures, plus a device pass, and writes a prioritized UX report; each fix becomes a card | GLASS (Claude) | None: review only |
 
 Order suggestion: **R-1 first** (it measures everything else), R-6 and R-3/R-4 in parallel, then R-2 and R-5 with R-1's data, R-7 last before the demo freeze.
+
+## G3 re-run on 0.4.4 (Sarah + partner, Sun Oct 18, 7:06-7:09 AM PT)
+
+**Build:** `integration` @ `0467898`, v0.4.4, `VITE_STEP3=1 VITE_DEBUG=1` (batch STT, Step 2 on). Data: the phone Debug tab export (96 events, Conversation mode only). No audio stored.
+
+**The run stopped after ~3 minutes: Gemini's daily free quota ran out.** At 7:09:11 `api/predict` returned **429** with `blockedUntil` = **4:59:59 PM PT** (midnight UTC), so every hint after that is the bank fallback. The 10-minute tally, the 10 timed taps and the Practice check were **not done**. Until billing is on (R-3) or the quota resets, predictions don't work on any device.
+
+### What the log shows
+
+| Area | Measured |
+|---|---|
+| Batch STT | 22 transcript chunks; `sttMs` 367-1392, typically ~550 ms. Chunks are long (up to 14.9 s, one hit the `max` cap) and often **contain both people**. |
+| Predictor | 22 calls: **14 model** (915-1083 ms, typically ~1020 ms), **7 timeout** (32 %), 1 rate-limited. The client timeout is **1200 ms** (`src/ai/predictor/service.ts`), barely above the model's typical time, so a third of calls spill into the fallback. |
+| Fallback words | Stale bank words from earlier context (`bread, soup, eggs` four times; `park, garden, grocery store`), so a fallback is effectively a false hint. |
+| Auto-hints (Step 3) | **1** in 3 min (`reason: filler`, "I think it's, um"). Letters were on screen **1.15 s after the transcript arrived** (prediction timed out, fallback shown). Stop speaking → hint ≈ silence wait + ~0.6 s STT + ~1.15 s ≈ **3 s**. The hint's `keywords` were stale (`coffee, cup, conversation` from minute 1). |
+| Missed stall (likely) | "Where exactly is it? Um, I think it's" ended a chunk with no auto-hint. The wearer found the word ("Outside by the food tables") ~3 s later. |
+| False hints | `park` (fallback, unrelated to the food-table answer); **`me` / `help`** (function words). "Park? Oh dear" was logged as `heard park`, but that was the wearer reading the hint aloud, not the hint helping. `me` was later marked `heard` from the partner's speech. |
+| Speaker loudness (T-316) | Single-speaker chunks separate: wearer **-12 to -14 dB**, partner **-20 to -26 dB** (e.g. "How about you? I'm from UW Madison…" -20; "Right now, it knows" -26). Mixed chunks read as the louder (wearer) level, so tagging needs **shorter chunks** to be useful. To confirm with Sarah's recollection of who said what. |
+| STT noise | Two quiet, short chunks (-24/-28 dB, < 0.5 s speech) came back as **Malayalam and Chinese** text, although batch STT sends `language_code=en` (`src/audio/scribe.ts`). They also fed the predictor. |
+| Lifecycle | The phone was in the background for 42 s (`lifecycle hidden` → `visible`); STT and hints kept working. |
+| Start of run | The partner says the first attempt was lost and something was "blank". That earlier session isn't in this export (to clarify). |
+
+### Proposed follow-ups (ORCH to assign)
+
+| # | Change | Why | Lane |
+|---|---|---|---|
+| F-1 | **Gemini billing (Tier 1)** or a second key, before any further device run | Daily quota exhausted at 7:09 AM | ORCH / Sam |
+| F-2 | Predictor `timeoutMs` 1200 → **~1800** | 32 % timeouts at a ~1020 ms typical model time | AI |
+| F-3 | In Step 3 auto-hints, **show nothing on a fallback** (taps may still show it) | Fallback words are stale, so they are the main false-hint source | AI / GLASS |
+| F-4 | **Filter suggestions**: drop pronouns/function words and multi-word phrases (`me`, `help`, `then`, `Did you`) | False hints | AI (prompt + post-filter) |
+| F-5 | **Drop junk chunks**: < 500 ms speech, or speech below ~-22 dB, or mostly non-Latin text | Hallucinated Malayalam/Chinese; partner fragments | AI (`src/audio`) |
+| F-6 | **Shorter batch chunks** (`segmentSilenceMs` 800 → ~500, lower `max`) so each chunk is one speaker, then tag wearer vs partner at ~-17 dB | Loudness separates single-speaker chunks by 6-12 dB | AI (R-2) |
+| F-7 | "Heard" should not count the wearer **reading the hint aloud** right after it appears, or partner speech | Inflates "helped" | AI / LOGIC |
+| F-8 | Refresh the stall `keywords` from the latest context | Stale `coffee, cup` | AI |
+
+Re-run the full protocol (10-minute tally, 10 timed taps, Practice) once F-1 is done.
