@@ -1,7 +1,7 @@
-import type { GlassesUI, Intent, Screen } from '../core/types'
-import { MockUI } from '../mocks/ui'
+import type { GlassesUI, Intent, Screen } from '../../core/types'
+import { MockUI } from '../../mocks/ui'
 
-/** `GlassesUI` that records screens in a `MockUI` and mirrors them to the phone preview. */
+/** Recording `GlassesUI` for the dev shell (feeds `AppShell.onScreen`). */
 export class PreviewUI implements GlassesUI {
   private readonly inner = new MockUI()
 

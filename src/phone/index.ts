@@ -1,4 +1,3 @@
-export { mountCompanion } from './mountCompanion'
-export { renderScreenPreview } from './renderScreenPreview'
-export { PreviewUI } from './previewUi'
-export { previewPlaylist, PREVIEW_SCREEN_KINDS, playlistCoversAllKinds } from './previewPlaylist'
+export { mountCompanion, type CompanionMountOptions } from './mountCompanion'
+export { renderScreen, type RenderScreenOptions } from './preview/renderScreen'
+export { summarizeStep1Session, type Step1SessionSummary } from './sessionSummary'

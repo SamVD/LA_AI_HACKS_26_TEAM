@@ -1,189 +1,287 @@
 import './theme/tokens.css'
 import './companion.css'
-import type { Mode, ModeContext, ModeId } from '../core/types'
-import { readFlags } from '../config'
-import { getMode } from '../modes'
-import { createMockContext } from '../mocks'
-import wordBank from '../content/words.json'
+import type { AppShell, Screen, WordCategory, WordEntry } from '../core/types'
 import { applyPhoneTheme, watchThemePreference } from './theme/applyTheme'
-import { previewPlaylist } from './previewPlaylist'
-import { PreviewUI } from './previewUi'
-import { renderScreenPreview } from './renderScreenPreview'
+import { renderScreen } from './preview/renderScreen'
+import { summarizeStep1Session } from './sessionSummary'
 
-type ActiveSession = {
-  mode: Mode
-  context: ModeContext
-  startedAt: number
+export type CompanionMountOptions = {
+  /** Dev harness: cycle fixture screens when no mode is active. */
+  devPlaylist?: Screen[]
 }
 
-export function mountCompanion(root: HTMLElement): () => void {
+type TabId = 'home' | 'preview' | 'summary' | 'words'
+
+function isPersonalEntry(entry: WordEntry): boolean {
+  return (
+    entry.category === 'person' ||
+    entry.category === 'medication' ||
+    entry.tags.includes('sample')
+  )
+}
+
+function groupBank(entries: WordEntry[]): Map<WordCategory, WordEntry[]> {
+  const map = new Map<WordCategory, WordEntry[]>()
+  for (const entry of entries) {
+    const list = map.get(entry.category) ?? []
+    list.push(entry)
+    map.set(entry.category, list)
+  }
+  return map
+}
+
+export function mountCompanion(
+  root: HTMLElement,
+  shell: AppShell,
+  options: CompanionMountOptions = {},
+): () => void {
   applyPhoneTheme()
   const unwatchTheme = watchThemePreference()
   root.className = 'nudge-phone nudge-demo-shell'
   root.replaceChildren()
 
+  let activeTab: TabId = 'home'
   let playlistIndex = 0
-  let active: ActiveSession | undefined
+  let followLive = true
+
+  const tabBar = document.createElement('nav')
+  tabBar.className = 'nudge-tabs'
+  tabBar.setAttribute('role', 'tablist')
+
+  const panels = document.createElement('div')
+  panels.className = 'nudge-panels'
+
+  const homePanel = document.createElement('section')
+  const previewPanel = document.createElement('section')
+  const summaryPanel = document.createElement('section')
+  const wordsPanel = document.createElement('section')
 
   const previewHost = document.createElement('div')
   previewHost.className = 'nudge-glasses-frame'
   previewHost.setAttribute('aria-live', 'polite')
+  const previewKind = document.createElement('p')
+  previewKind.className = 'nudge-preview-kind'
 
-  const sessionBody = document.createElement('p')
-  sessionBody.style.color = 'var(--nudge-text-muted)'
-  sessionBody.style.margin = '0'
+  const modeList = document.createElement('div')
+  modeList.className = 'nudge-mode-list'
 
-  const wordList = document.createElement('ul')
-  wordList.className = 'nudge-word-list'
+  const summaryBody = document.createElement('div')
+  summaryBody.className = 'nudge-summary-body'
 
-  const flags = readFlags()
+  const wordBankBody = document.createElement('div')
+  wordBankBody.className = 'nudge-word-bank'
 
-  const setPreview = (screen: typeof previewPlaylist[number]) => {
-    previewHost.innerHTML = renderScreenPreview(screen)
-  }
+  const playlistRow = document.createElement('div')
+  playlistRow.className = 'nudge-playlist-row'
+  playlistRow.hidden = !options.devPlaylist?.length
 
-  const updateSessionSummary = () => {
-    if (!active) {
-      sessionBody.textContent = 'No session running. Start Step 1 to exercise mocks.'
+  const setPreviewSvg = (screen: Screen | null) => {
+    if (!screen) {
+      previewHost.innerHTML = ''
+      previewKind.textContent = 'No screen yet'
       return
     }
-    const last = active.context.ui instanceof PreviewUI ? active.context.ui.screens.at(-1) : undefined
-    const label = last?.kind === 'status' && 'text' in last ? last.text : last?.kind ?? '—'
-    sessionBody.textContent = `Mode ${active.mode.id} · ${active.context.ui instanceof PreviewUI ? active.context.ui.screens.length : 0} screens · latest: ${label}`
+    previewHost.innerHTML = renderScreen(screen)
+    previewKind.textContent = `Screen: ${screen.kind}`
   }
 
-  const stopSession = async () => {
-    if (!active) return
-    await active.mode.exit()
-    await active.context.stt.stop()
-    active = undefined
-    updateSessionSummary()
+  const refreshPreview = () => {
+    if (shell.activeMode() && followLive) {
+      setPreviewSvg(shell.lastScreen())
+      return
+    }
+    if (options.devPlaylist?.length && !shell.activeMode()) {
+      setPreviewSvg(options.devPlaylist[playlistIndex])
+      return
+    }
+    setPreviewSvg(shell.lastScreen())
   }
 
-  const startMode = async (id: ModeId) => {
-    await stopSession()
-    const previewUi = new PreviewUI(screen => {
-      setPreview(screen)
-      updateSessionSummary()
+  const refreshHome = () => {
+    modeList.replaceChildren()
+    const active = shell.activeMode()
+    for (const mode of shell.modes()) {
+      const card = document.createElement('article')
+      card.className = 'nudge-card nudge-mode-card'
+      const title = document.createElement('h2')
+      title.textContent = mode.title
+      card.append(title)
+      if (!mode.enabled) {
+        const soon = document.createElement('p')
+        soon.className = 'nudge-coming-soon'
+        soon.textContent = 'Coming soon'
+        card.append(soon)
+      }
+      const row = document.createElement('div')
+      row.className = 'nudge-mode-actions'
+      if (active === mode.id) {
+        const stop = document.createElement('button')
+        stop.type = 'button'
+        stop.className = 'nudge-btn'
+        stop.textContent = 'Stop'
+        stop.addEventListener('click', () => {
+          void shell.leaveMode().then(() => {
+            followLive = true
+            refreshHome()
+            refreshPreview()
+            if (activeTab === 'summary') void refreshSummary()
+          })
+        })
+        row.append(stop)
+      } else if (mode.enabled) {
+        const start = document.createElement('button')
+        start.type = 'button'
+        start.className = 'nudge-btn'
+        start.textContent = 'Start'
+        start.addEventListener('click', () => {
+          void shell.startMode(mode.id).then(() => {
+            followLive = true
+            activeTab = 'preview'
+            showTab('preview')
+            refreshHome()
+            refreshPreview()
+          })
+        })
+        row.append(start)
+      }
+      card.append(row)
+      modeList.append(card)
+    }
+  }
+
+  const refreshSummary = async () => {
+    const sessions = await shell.store.getSessions('step1')
+    const latest = sessions[0]
+    summaryBody.replaceChildren()
+    if (!latest) {
+      summaryBody.textContent = 'No Step 1 sessions saved yet.'
+      return
+    }
+    const stats = summarizeStep1Session(latest)
+    const head = document.createElement('p')
+    head.textContent = `Solved ${stats.solved} · without help ${stats.solvedWithoutHelp}`
+    summaryBody.append(head)
+    const list = document.createElement('ul')
+    list.className = 'nudge-word-list'
+    for (const item of stats.items) {
+      const li = document.createElement('li')
+      li.textContent = `${item.word} · cue ${item.solvedAtCue}`
+      list.append(li)
+    }
+    summaryBody.append(list)
+  }
+
+  const refreshWords = async () => {
+    const bank = await shell.store.getBank()
+    const grouped = groupBank(bank)
+    wordBankBody.replaceChildren()
+    for (const [category, entries] of grouped) {
+      const section = document.createElement('section')
+      section.className = 'nudge-card'
+      const h = document.createElement('h2')
+      h.textContent = category
+      section.append(h)
+      const ul = document.createElement('ul')
+      ul.className = 'nudge-word-list'
+      for (const entry of entries.sort((a, b) => a.word.localeCompare(b.word))) {
+        const li = document.createElement('li')
+        const personal = isPersonalEntry(entry) ? ' · Personal' : ''
+        li.textContent = `${entry.word}${personal}`
+        ul.append(li)
+      }
+      section.append(ul)
+      wordBankBody.append(section)
+    }
+  }
+
+  const showTab = (id: TabId) => {
+    activeTab = id
+    for (const btn of tabBar.querySelectorAll<HTMLButtonElement>('[data-tab]')) {
+      const selected = btn.dataset.tab === id
+      btn.setAttribute('aria-selected', selected ? 'true' : 'false')
+      btn.classList.toggle('nudge-tab--active', selected)
+    }
+    homePanel.hidden = id !== 'home'
+    previewPanel.hidden = id !== 'preview'
+    summaryPanel.hidden = id !== 'summary'
+    wordsPanel.hidden = id !== 'words'
+    if (id === 'summary') void refreshSummary()
+    if (id === 'words') void refreshWords()
+  }
+
+  for (const tab of [
+    { id: 'home' as TabId, label: 'Home' },
+    { id: 'preview' as TabId, label: 'Preview' },
+    { id: 'summary' as TabId, label: 'Step 1' },
+    { id: 'words' as TabId, label: 'Words' },
+  ]) {
+    const btn = document.createElement('button')
+    btn.type = 'button'
+    btn.className = 'nudge-tab'
+    btn.dataset.tab = tab.id
+    btn.textContent = tab.label
+    btn.setAttribute('role', 'tab')
+    btn.addEventListener('click', () => showTab(tab.id))
+    tabBar.append(btn)
+  }
+
+  homePanel.append(modeList)
+  previewPanel.append(previewHost, previewKind)
+  if (options.devPlaylist?.length) {
+    const prev = document.createElement('button')
+    prev.type = 'button'
+    prev.className = 'nudge-btn nudge-btn--ghost'
+    prev.textContent = 'Playlist previous'
+    const next = document.createElement('button')
+    next.type = 'button'
+    next.className = 'nudge-btn nudge-btn--ghost'
+    next.textContent = 'Playlist next'
+    const label = document.createElement('span')
+    label.className = 'nudge-playlist-label'
+    const updateLabel = () => {
+      label.textContent = `${playlistIndex + 1}/${options.devPlaylist!.length}`
+    }
+    prev.addEventListener('click', () => {
+      if (shell.activeMode()) return
+      followLive = false
+      playlistIndex =
+        (playlistIndex - 1 + options.devPlaylist!.length) % options.devPlaylist!.length
+      refreshPreview()
+      updateLabel()
     })
-    const context = createMockContext({
-      ui: previewUi,
-      flags: { ...readFlags(), mockServices: true },
+    next.addEventListener('click', () => {
+      if (shell.activeMode()) return
+      followLive = false
+      playlistIndex = (playlistIndex + 1) % options.devPlaylist!.length
+      refreshPreview()
+      updateLabel()
     })
-    const mode = getMode(id)
-    active = { mode, context, startedAt: context.now() }
-    await mode.enter(context)
-    updateSessionSummary()
+    updateLabel()
+    playlistRow.append(prev, next, label)
+    previewPanel.append(playlistRow)
   }
+  summaryPanel.append(summaryBody)
+  wordsPanel.append(wordBankBody)
 
-  setPreview(previewPlaylist[playlistIndex])
-
-  for (const entry of wordBank) {
-    const li = document.createElement('li')
-    li.textContent = `${entry.word} · ${entry.category}`
-    wordList.appendChild(li)
-  }
+  panels.append(homePanel, previewPanel, summaryPanel, wordsPanel)
 
   const header = document.createElement('header')
   header.className = 'nudge-card'
-  header.style.marginBottom = 'var(--nudge-space-4)'
-  header.innerHTML = `
-    <h1>Nudge companion</h1>
-    <p style="margin: var(--nudge-space-3) 0 0; color: var(--nudge-text-muted);">
-      Phone preview for caregivers. Glasses use the Even SDK path in <code>main.ts</code>.
-    </p>
-  `
-  root.append(header)
+  header.innerHTML = `<h1>Nudge</h1>`
+  root.append(header, tabBar, panels)
 
-  const previewCard = document.createElement('section')
-  previewCard.className = 'nudge-card'
-  previewCard.innerHTML = `<h2>Screen preview</h2>`
-  const previewControls = document.createElement('div')
-  previewControls.style.cssText =
-    'display:flex;flex-wrap:wrap;gap:0.75rem;margin:var(--nudge-space-4) 0;align-items:center;'
-  const prevBtn = document.createElement('button')
-  prevBtn.type = 'button'
-  prevBtn.className = 'nudge-btn nudge-btn--ghost'
-  prevBtn.textContent = 'Previous screen'
-  const nextBtn = document.createElement('button')
-  nextBtn.type = 'button'
-  nextBtn.className = 'nudge-btn nudge-btn--ghost'
-  nextBtn.textContent = 'Next screen'
-  const playlistLabel = document.createElement('span')
-  playlistLabel.style.color = 'var(--nudge-text-muted)'
-  previewControls.append(prevBtn, nextBtn, playlistLabel)
-  previewCard.append(previewControls, previewHost)
-
-  const launcher = document.createElement('section')
-  launcher.className = 'nudge-card'
-  launcher.style.marginTop = 'var(--nudge-space-4)'
-  launcher.innerHTML = `<h2>Practice modes</h2>`
-  const launcherRow = document.createElement('div')
-  launcherRow.style.cssText = 'display:flex;flex-direction:column;gap:0.75rem;margin-top:var(--nudge-space-4);'
-  const step1Btn = document.createElement('button')
-  step1Btn.type = 'button'
-  step1Btn.className = 'nudge-btn'
-  step1Btn.textContent = 'Start Step 1'
-  const step2Btn = document.createElement('button')
-  step2Btn.type = 'button'
-  step2Btn.className = 'nudge-btn nudge-btn--ghost'
-  step2Btn.textContent = 'Start Step 2'
-  step2Btn.disabled = !flags.step2Enabled
-  const step3Btn = document.createElement('button')
-  step3Btn.type = 'button'
-  step3Btn.className = 'nudge-btn nudge-btn--ghost'
-  step3Btn.textContent = 'Start Step 3'
-  step3Btn.disabled = !flags.step3Enabled
-  const stopBtn = document.createElement('button')
-  stopBtn.type = 'button'
-  stopBtn.className = 'nudge-btn nudge-btn--ghost'
-  stopBtn.textContent = 'Stop session'
-  launcherRow.append(step1Btn, step2Btn, step3Btn, stopBtn)
-  launcher.append(launcherRow)
-
-  const sessionCard = document.createElement('section')
-  sessionCard.className = 'nudge-card'
-  sessionCard.style.marginTop = 'var(--nudge-space-4)'
-  sessionCard.innerHTML = `<h2>Session</h2>`
-  sessionCard.append(sessionBody)
-
-  const bankCard = document.createElement('section')
-  bankCard.className = 'nudge-card'
-  bankCard.style.marginTop = 'var(--nudge-space-4)'
-  bankCard.innerHTML = `<h2>Word bank</h2><p style="color:var(--nudge-text-muted);margin:0 0 var(--nudge-space-3);">Read-only seed list (${wordBank.length} words)</p>`
-  bankCard.append(wordList)
-
-  root.append(previewCard, launcher, sessionCard, bankCard)
-
-  const onUnload = () => void stopSession()
-  window.addEventListener('beforeunload', onUnload)
-
-  const refreshPlaylistLabel = () => {
-    const screen = previewPlaylist[playlistIndex]
-    playlistLabel.textContent = `${playlistIndex + 1}/${previewPlaylist.length} · ${screen.kind}`
-  }
-  refreshPlaylistLabel()
-  updateSessionSummary()
-
-  prevBtn.addEventListener('click', () => {
-    playlistIndex = (playlistIndex - 1 + previewPlaylist.length) % previewPlaylist.length
-    setPreview(previewPlaylist[playlistIndex])
-    refreshPlaylistLabel()
-  })
-  nextBtn.addEventListener('click', () => {
-    playlistIndex = (playlistIndex + 1) % previewPlaylist.length
-    setPreview(previewPlaylist[playlistIndex])
-    refreshPlaylistLabel()
+  const unsubScreen = shell.onScreen(() => {
+    if (shell.activeMode()) followLive = true
+    if (activeTab === 'preview') refreshPreview()
   })
 
-  step1Btn.addEventListener('click', () => void startMode('step1'))
-  step2Btn.addEventListener('click', () => void startMode('step2'))
-  step3Btn.addEventListener('click', () => void startMode('step3'))
-  stopBtn.addEventListener('click', () => void stopSession())
+  showTab('home')
+  refreshHome()
+  refreshPreview()
+  void refreshWords()
 
   return () => {
-    window.removeEventListener('beforeunload', onUnload)
-    void stopSession()
+    unsubScreen()
     unwatchTheme()
     root.replaceChildren()
     root.className = ''
