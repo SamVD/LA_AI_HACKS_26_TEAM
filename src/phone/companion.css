@@ -77,6 +77,23 @@ a.nudge-btn {
   margin-bottom: var(--nudge-space-2);
 }
 
+.nudge-step3 {
+  margin-top: var(--nudge-space-4);
+  padding-top: var(--nudge-space-4);
+  border-top: 1px solid var(--nudge-border);
+}
+
+.nudge-step3-summary {
+  cursor: pointer;
+  font-size: var(--nudge-font-md);
+  font-weight: 600;
+  margin-bottom: var(--nudge-space-2);
+}
+
+.nudge-step3[open] .nudge-step3-summary {
+  margin-bottom: var(--nudge-space-3);
+}
+
 .nudge-build-capability {
   margin: 0 0 var(--nudge-space-3);
   font-size: var(--nudge-font-sm);

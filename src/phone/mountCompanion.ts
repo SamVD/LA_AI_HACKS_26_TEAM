@@ -10,13 +10,8 @@ import { ensurePreviewImages, renderPreviewOptions } from './preview/previewAsse
 import { renderScreen } from './preview/renderScreen'
 import { extractKeywords } from '../ai/keywords'
 import { bindJudgeDemo } from './demo/bindJudgeDemo'
-import { MODE_HOME_LEAD, modeDisabledLead } from './modeCopy'
+import { MODE_HOME_LEAD } from './modeCopy'
 import { formatBuildCapabilityLine } from './buildCapability'
-import {
-  formatStep1ItemLine,
-  formatStep1SessionHeadline,
-  summarizeStep1Session,
-} from './sessionSummary'
 import { describeWordAssetHint } from './words/wordAssetHint'
 import { createHintLog } from './sessionLog'
 import { readStep3Settings, writeStep3Settings, type Step3Sensitivity } from './step3Settings'
@@ -40,7 +35,7 @@ export type CompanionMountOptions = {
   debug?: CompanionDebugSource
 }
 
-type TabId = 'home' | 'demo' | 'preview' | 'summary' | 'words' | 'debug'
+type TabId = 'home' | 'demo' | 'preview' | 'words' | 'debug'
 
 const builtinIds = new Set(builtinBank().map(entry => entry.id))
 
@@ -137,9 +132,6 @@ export function mountCompanion(
   const previewPanel = document.createElement('section')
   previewPanel.id = 'nudge-panel-preview'
   previewPanel.setAttribute('role', 'tabpanel')
-  const summaryPanel = document.createElement('section')
-  summaryPanel.id = 'nudge-panel-summary'
-  summaryPanel.setAttribute('role', 'tabpanel')
   const wordsPanel = document.createElement('section')
   wordsPanel.id = 'nudge-panel-words'
   wordsPanel.setAttribute('role', 'tabpanel')
@@ -160,16 +152,13 @@ export function mountCompanion(
   const modeList = document.createElement('div')
   modeList.className = 'nudge-mode-list'
 
-  const summaryBody = document.createElement('div')
-  summaryBody.className = 'nudge-summary-body'
-
   const wordBankBody = document.createElement('div')
   wordBankBody.className = 'nudge-word-bank'
 
   const wordForm = document.createElement('form')
   wordForm.className = 'nudge-word-form nudge-card'
   wordForm.innerHTML = `
-    <h2>Add personal word</h2>
+    <h2>Add a word</h2>
     <label class="nudge-field">
       <span>Word</span>
       <input name="word" type="text" required autocomplete="off" class="nudge-input" />
@@ -192,7 +181,7 @@ export function mountCompanion(
       <span>Practice sentence (optional)</span>
       <input name="practice" type="text" maxlength="55" placeholder="My daughter is called ____." class="nudge-input" />
     </label>
-    <p class="nudge-form-hint nudge-form-hint--static">For Step 1 only: one ____ blank, max 55 characters. Leave empty to skip practice.</p>
+    <p class="nudge-form-hint nudge-form-hint--static">Optional. Used in Practice: one ____ blank, up to 55 characters.</p>
     <button type="submit" class="nudge-btn">Save word</button>
     <p class="nudge-form-hint" data-form-hint hidden></p>
   `
@@ -249,10 +238,12 @@ export function mountCompanion(
   const refreshHome = () => {
     buildCapability.textContent = formatBuildCapabilityLine(shell.modes())
     step3Card.hidden = !step3InBuild()
+    if (step3Card.parentElement) step3Card.remove()
     modeList.replaceChildren()
     const active = shell.activeMode()
     for (const mode of shell.modes()) {
       if (mode.id === 'step2' && step3InBuild()) continue
+      if (!mode.enabled) continue
       const card = document.createElement('article')
       card.className = 'nudge-card nudge-mode-card'
       const title = document.createElement('h2')
@@ -260,14 +251,8 @@ export function mountCompanion(
       card.append(title)
       const lead = document.createElement('p')
       lead.className = 'nudge-mode-lead'
-      lead.textContent = mode.enabled ? MODE_HOME_LEAD[mode.id] : modeDisabledLead(mode.id)
+      lead.textContent = MODE_HOME_LEAD[mode.id]
       card.append(lead)
-      if (!mode.enabled) {
-        const soon = document.createElement('p')
-        soon.className = 'nudge-coming-soon'
-        soon.textContent = mode.id === 'step2' ? 'Step 2 off' : 'Coming soon'
-        card.append(soon)
-      }
       const row = document.createElement('div')
       row.className = 'nudge-mode-actions'
       if (active === mode.id) {
@@ -280,7 +265,6 @@ export function mountCompanion(
             followLive = true
             refreshHome()
             refreshPreview()
-            if (activeTab === 'summary') void refreshSummary()
           })
         })
         row.append(stop)
@@ -301,34 +285,11 @@ export function mountCompanion(
         row.append(start)
       }
       card.append(row)
+      if (mode.id === 'step3' && step3InBuild()) {
+        card.append(step3Card)
+      }
       modeList.append(card)
     }
-  }
-
-  const refreshSummary = async () => {
-    const sessions = await shell.store.getSessions('step1')
-    const latest = sessions[0]
-    summaryBody.replaceChildren()
-    if (!latest) {
-      const empty = document.createElement('p')
-      empty.className = 'nudge-summary-empty'
-      empty.textContent = 'No Step 1 sessions saved yet. Finish a Practice run on the G2 to see results here.'
-      summaryBody.append(empty)
-      return
-    }
-    const stats = summarizeStep1Session(latest)
-    const head = document.createElement('p')
-    head.className = 'nudge-summary-headline'
-    head.textContent = formatStep1SessionHeadline(latest, stats)
-    summaryBody.append(head)
-    const list = document.createElement('ul')
-    list.className = 'nudge-word-list'
-    for (const item of stats.items) {
-      const li = document.createElement('li')
-      li.textContent = formatStep1ItemLine(item)
-      list.append(li)
-    }
-    summaryBody.append(list)
   }
 
   const refreshWords = async () => {
@@ -456,10 +417,8 @@ export function mountCompanion(
     homePanel.hidden = id !== 'home'
     demoPanel.hidden = id !== 'demo'
     previewPanel.hidden = id !== 'preview'
-    summaryPanel.hidden = id !== 'summary'
     wordsPanel.hidden = id !== 'words'
     debugPanel.hidden = id !== 'debug'
-    if (id === 'summary') void refreshSummary()
     if (id === 'words') {
       void refreshWords()
       void refreshWordAssetHint()
@@ -473,10 +432,9 @@ export function mountCompanion(
 
   const tabs: Array<{ id: TabId; label: string }> = [
     { id: 'home', label: 'Home' },
-    { id: 'demo', label: 'Demo' },
     { id: 'preview', label: 'Preview' },
-    { id: 'summary', label: 'Step 1' },
-    { id: 'words', label: 'Words' },
+    { id: 'words', label: 'Word Bank' },
+    { id: 'demo', label: 'Demo' },
   ]
   if (showDebugTab) tabs.push({ id: 'debug', label: 'Debug' })
 
@@ -492,25 +450,12 @@ export function mountCompanion(
     tabBar.append(btn)
   }
 
-  const judgeDemoCard = document.createElement('section')
-  judgeDemoCard.className = 'nudge-card nudge-home-demo'
-  judgeDemoCard.innerHTML = `
-    <h2>Judge demo</h2>
-    <p class="nudge-home-demo-lead">Scripted stall replay on this page. Wear the G2 if you want the real touchpad; the preview mirrors the glasses.</p>
-  `
-  const openDemoBtn = document.createElement('button')
-  openDemoBtn.type = 'button'
-  openDemoBtn.className = 'nudge-btn nudge-btn--ghost'
-  openDemoBtn.textContent = 'Open judge demo'
-  openDemoBtn.addEventListener('click', () => showTab('demo'))
-  judgeDemoCard.append(openDemoBtn)
-
-  const step3Card = document.createElement('section')
-  step3Card.className = 'nudge-card nudge-step3'
-  step3Card.innerHTML = `
-    <h2>Step 3 hints</h2>
-    <p class="nudge-home-demo-lead">Ambient hints after a pause. Sensitivity maps to the stall thresholds; pausing silences new hints (the demo shows it too).</p>
-  `
+  const step3Card = document.createElement('details')
+  step3Card.className = 'nudge-step3'
+  const step3Summary = document.createElement('summary')
+  step3Summary.className = 'nudge-step3-summary'
+  step3Summary.textContent = 'Hint settings'
+  step3Card.append(step3Summary)
   const sensRow = document.createElement('div')
   sensRow.className = 'nudge-mode-actions'
   for (const [id, label] of [['calm', 'Calm'], ['balanced', 'Balanced'], ['eager', 'Eager']] as Array<[Step3Sensitivity, string]>) {
@@ -534,16 +479,11 @@ export function mountCompanion(
   logList.className = 'nudge-word-list nudge-debug-list'
   step3Card.append(sensRow, logList)
 
-  const homeLead = document.createElement('p')
-  homeLead.className = 'nudge-home-lead'
-  homeLead.textContent =
-    'Start a mode for the glasses. This page stays calm and shows a live preview when a mode is running.'
-
   const sessionLogCard = document.createElement('section')
   sessionLogCard.className = 'nudge-card nudge-session-log'
   sessionLogCard.innerHTML = `
     <h2>Session log</h2>
-    <p class="nudge-home-demo-lead">Pipeline events from this glasses session (STT, help taps, auto-hints). Export and paste into the G3 results PR.</p>
+    <p class="nudge-home-demo-lead">Pipeline events from this glasses session (STT, help taps, auto-hints).</p>
   `
   const sessionLogCount = document.createElement('p')
   sessionLogCount.className = 'nudge-session-log-count'
@@ -574,11 +514,10 @@ export function mountCompanion(
   })
   sessionLogCard.append(sessionLogCount, exportLogBtn, sessionLogStatus)
 
-  homePanel.append(buildCapability, homeLead, judgeDemoCard, step3Card, modeList)
+  homePanel.append(modeList)
   const previewLead = document.createElement('p')
   previewLead.className = 'nudge-preview-lead'
-  previewLead.textContent =
-    'Mirrors the glasses. Step 2 and 3 candidates are letters-first (not pictures or mouth shapes). Captions follow the cue ladder; asset lines show loaded vs placeholder only.'
+  previewLead.textContent = 'Mirrors the glasses.'
   previewPanel.append(previewLead, previewLive, previewHost, previewKind)
   if (options.devPlaylist?.length) {
     const prev = document.createElement('button')
@@ -613,14 +552,13 @@ export function mountCompanion(
     playlistRow.append(prev, next, label)
     previewPanel.append(playlistRow)
   }
-  summaryPanel.append(summaryBody)
   wordsPanel.append(wordForm, wordBankBody)
   if (showDebugTab) {
-    debugPanel.append(sessionLogCard)
+    debugPanel.append(buildCapability, sessionLogCard)
     if (options.debug) debugPanel.append(debugTranscript, debugKeywords, debugSuggestions)
   }
 
-  panels.append(homePanel, demoPanel, previewPanel, summaryPanel, wordsPanel, debugPanel)
+  panels.append(homePanel, demoPanel, previewPanel, wordsPanel, debugPanel)
 
   const formHint = wordForm.querySelector<HTMLParagraphElement>('[data-form-hint]')!
   const assetHint = wordForm.querySelector<HTMLParagraphElement>('[data-asset-hint]')!
@@ -709,7 +647,7 @@ export function mountCompanion(
   header.className = 'nudge-card'
   header.innerHTML = `
     <h1>Nudge</h1>
-    <p class="nudge-tagline">Quiet word-finding help on the glasses. This page stays calm.</p>
+    <p class="nudge-tagline">Word-finding help on your glasses.</p>
   `
   root.append(header, tabBar, panels)
 
