@@ -366,7 +366,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ### T-209 Steps 2-3: letters-first hint ladder (G2 change request, scoped by D18)
 - **Owner:** GLASS (Sarah)
-- **Status:** IN_PROGRESS. Part 1 MERGED (PR #95: `revealWord` + candidates layout). Part 2 (`src/modes/step2/`, drop `withAssets`) unblocked now that T-208 is merged.
+- **Status:** MERGED (PRs #95, #98). Device check in the G3 pack (0.4.3).
 - **Branch:** `glass/letters-ladder`
 - **Depends on:** CONTRACT_VERSION 3 (`candidates` levels), T-208 for `src/modes/step2/index.ts`
 - **Files it may EDIT:** `src/glasses/**`, `src/modes/step2/**`
@@ -386,7 +386,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ### T-210 Phone preview + judge demo: letters-first candidates
 - **Owner:** UI (juannli)
-- **Status:** CHANGES_REQUESTED (PR #93): import `revealWord` from `src/glasses/ladder.ts` instead of a second implementation.
+- **Status:** CHANGES_REQUESTED (PR #93): still has its own `candidateLetters.ts`; must import `revealWord`. Not needed for the G3 pack (phone preview only).
 - **Branch:** `ui/letters-preview`
 - **Files it may EDIT:** `src/phone/**`
 - **Spec:** `renderScreen`/`previewCaption` show candidates as L1 `s _ _ _ _`, L2 `s u n _ _`, L3 `sunny` (no picture or mouth line for candidates). The judge demo's help screen and copy match ("a tap shows the first letter").
@@ -445,7 +445,15 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ### T-306 Gate G3: audit, soak, decide, tag
 - **Owner:** ORCH
+- **Status:** **READY TO RUN** from `integration` at or after `a34bc50` (T-208 + T-209 in; `app.json` 0.4.3).
 - **Spec:** audit; 10-minute live soak; count false hints per minute; decide whether `step3Enabled` ships default ON; tag `v0.3-step3` (or keep `v0.2` as the ship candidate); upload Beta.
+- **G3 runbook (GLASS with a second person, ORCH records it; one 0.4.3 upload covers all of it):**
+  1. Clean `integration`: `npm ci && npm run typecheck && npm test`, then **`VITE_STEP3=1 npm run pack`**. `.env.production` already sets batch STT and Step 2 (D17). Verified: it packs, and the bundle has `VITE_STEP3:"1"`. Upload; install 0.4.3 from Me → Beta tester.
+  2. **T-208 latency tally (Step 2):** 10 help taps right after a hesitation ("…my, um"); stopwatch tap → first letters; record each time. Target: median ≤ ~1.5-2 s.
+  3. **T-209 ladder (Step 2):** tap → `s _ _ _ _`, tap → `s u n _ _`, tap → word; swipe → next suggestion at L1; no picture or mouth shape.
+  4. **G3 soak (Step 3):** a 10-minute natural two-person conversation with planted word-finding pauses ("pass me the, um…"). Count hints that **helped**, **false hints** (appeared when no word was needed) and **missed** stalls; note the phone Home card's sensitivity (default Balanced). Also check the swipe-on-blank pause toggle and the phone card's Pause.
+  5. Step 1 quick regression (2-3 items).
+  6. Record in `docs/BETA_RESULTS.md`. ORCH decides: Step 3 ships default ON only with about ≤ 1 false hint per 5 minutes and at least some helped hints; otherwise it ships flag-off (PLAN §2) and the demo uses Step 2.
 
 ---
 
