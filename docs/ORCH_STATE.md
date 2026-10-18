@@ -151,7 +151,7 @@ Legend: ✅ merged · 🟡 in progress / review · ⬜ todo · 🚦 gate.
 | T-402 | Beta final + lifecycle tests | GLASS | ⬜ | — |
 | T-403 | Paper design polish | UI | 🟡 partly done (tagline, focus rings, contrast, Devpost asset index, Home copy, preview captions, Words asset hint, Step 3 demo); #80 needs a rebase | #41→#44, #47, #64, #69, #71, #83, #80 |
 | T-404 | Devpost + demo script | ORCH | 🟡 drafts merged (#113, #114). Non-G3 finishing moved to **T-406** (juannli); ORCH fills the G3-dependent `[FILL]`s after the decision | #113, #114 |
-| T-406 | Finish Devpost (team, What we learned, local demo steps, screenshot, field map, video prep) | UI (juannli + Claude) | ⬜ READY, PR by 8:15 (grant `ui/devpost-finish`) | — |
+| T-406 | Finish Devpost (team, What we learned, local demo steps, screenshot, field map, video prep) | UI (juannli + Claude) | ✅ merged (#121); left: Devpost handles + the G3/final-build `[FILL]`s (ORCH) | #121 |
 | T-317 | StepFun predictor spike, Phase A (local; `spikes/stepfun/**` only) | AI (Sam) | ⬜ READY; **results by 8:45 AM or stop**; pass = top-3 ≥ 0.90, JSON ≥ 95%, p50 ≤ 1.2 s | — |
 | T-318 | StepFun in `api/predict` behind `PREDICT_PROVIDER` (default Gemini, auto-fallback), Phase B | AI (Sam) | ⛔ blocked on T-317 PASS; **cut-off 9:30 AM** | — |
 | T-405 | Final audit + submission | ORCH | ⬜ | — |
@@ -243,6 +243,7 @@ There are no console logs on the device. Use the phone companion's **Preview** t
 
 | When | Change |
 |---|---|
+| Sun 8:20 AM | Merged #121 (T-406: field map, What we learned, local judge demo, team, Practice · Assist screenshot, shoot plan). System-map diagram added to the Devpost gallery order. No open PRs; waiting on T-317 (Sam, local) |
 | Sun 8:15 AM | System map (Sam's, updated to the 0.4.5 judge build by ORCH) added: `docs/design/system-map.html` + `system-map-diagram.png` / `system-map.png` for the Devpost gallery. The investor deck stays out of the repo |
 | Sun 8:10 AM | Sam's anomia-evidence brief (issue #125) added as reference: `docs/research/ANOMIA_EVIDENCE.md`. Not a task; Sarah reads it after the final build |
 | Sun 8:00 AM | New **T-317** (StepFun spike, Phase A, local, Sam; results by 8:45) and **T-318** (StepFun behind `PREDICT_PROVIDER` in `api/predict`, Phase B, blocked on T-317; cut-off 9:30). `spikes/stepfun/**` → AI lane. Priority stays: Gemini billing, 0.4.5 build, video, Devpost |

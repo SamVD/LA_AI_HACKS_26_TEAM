@@ -174,10 +174,11 @@ TypeScript, Vite, Even Hub SDK (`@evenrealities/even_hub_sdk`, SDK 0.0.12), Even
   then open `http://localhost:5173/src/phone/demo/` and tap **Play Step 2 (tap for help)**. The page replays a scripted conversation ("…pour my tea into the ___") and mirrors the glasses preview: `c _ _`, then more letters, then `cup`. It is scripted, with no mic or Gemini, and the page says so.
 - **Demo video (2–3 min):** **[FILL: link]**; shot list in [`DEMO_SCRIPT.md`](./DEMO_SCRIPT.md)
 - **Screens and design notes:** [`docs/design/DEVPOST_ASSETS.md`](./design/DEVPOST_ASSETS.md), [`docs/design/PAPER.md`](./design/PAPER.md)
+- **System map:** [`docs/design/system-map.html`](./design/system-map.html) (image: `system-map-diagram.png`)
 
 ## Gallery images (from `src/glasses/screenshots/`)
 
-Suggested order: `15-phone-companion.png` (final build: Practice · Assist), `00-launcher.png`, `01-prompt.png`, `03b-cue-L1-picture.png`, `04-cue-L2.png`, `06-feedback-ok.png`, `16-candidates-v3-L1.png` (`s _ _ _ _`), `17-candidates-v3-L2.png` (`s u n _ _`), `18-candidates-v3-L3.png` (`sunny`). Don't use `08`-`10`/`08b`: they show the old picture and mouth-shape hints that Steps 2-3 no longer use. Add a photo of the real G2 in use if one exists; it is worth more than any screenshot.
+Suggested order: `15-phone-companion.png` (final build: Practice · Assist), **`docs/design/system-map-diagram.png`** (how it works: glasses → phone → cloud), `00-launcher.png`, `01-prompt.png`, `03b-cue-L1-picture.png`, `04-cue-L2.png`, `06-feedback-ok.png`, `16-candidates-v3-L1.png` (`s _ _ _ _`), `17-candidates-v3-L2.png` (`s u n _ _`), `18-candidates-v3-L3.png` (`sunny`). Don't use `08`-`10`/`08b`: they show the old picture and mouth-shape hints that Steps 2-3 no longer use. Add a photo of the real G2 in use if one exists; it is worth more than any screenshot.
 
 ## Team
 
