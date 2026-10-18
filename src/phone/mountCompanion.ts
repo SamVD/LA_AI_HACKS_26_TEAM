@@ -3,7 +3,7 @@ import './companion.css'
 import { builtinBank } from '../content'
 import type { AppShell, Screen, Suggestion, Transcript, Unsubscribe, WordCategory, WordEntry } from '../core/types'
 import { applyPhoneTheme, watchThemePreference } from './theme/applyTheme'
-import { buildPersonalEntry, isPersonalCategory } from './personalWord'
+import { buildPersonalEntry, isPersonalCategory, validatePracticeFrame } from './personalWord'
 import { ensurePreviewImages, renderPreviewOptions } from './preview/previewAssets'
 import { renderScreen } from './preview/renderScreen'
 import { formatStep1ItemLine, summarizeStep1Session } from './sessionSummary'
@@ -109,6 +109,11 @@ export function mountCompanion(
       <span>Tags (comma-separated)</span>
       <input name="tags" type="text" placeholder="daughter, morning" class="nudge-input" />
     </label>
+    <label class="nudge-field">
+      <span>Practice sentence (optional)</span>
+      <input name="practice" type="text" maxlength="55" placeholder="My daughter is called ____." class="nudge-input" />
+    </label>
+    <p class="nudge-form-hint nudge-form-hint--static">For Step 1 only: one ____ blank, max 55 characters. Leave empty to skip practice.</p>
     <button type="submit" class="nudge-btn">Save word</button>
     <p class="nudge-form-hint" data-form-hint hidden></p>
   `
@@ -388,27 +393,49 @@ export function mountCompanion(
   const formHint = wordForm.querySelector<HTMLParagraphElement>('[data-form-hint]')!
   wordForm.addEventListener('submit', event => {
     event.preventDefault()
-    const data = new FormData(wordForm)
-    const word = String(data.get('word') ?? '').trim()
-    const category = String(data.get('category') ?? 'other') as WordCategory
-    const tagsRaw = String(data.get('tags') ?? '')
-    const tags = tagsRaw
-      .split(',')
-      .map(t => t.trim().toLowerCase())
-      .filter(Boolean)
-    if (!word) return
-    if (!isPersonalCategory(category)) {
-      formHint.hidden = false
-      formHint.textContent = 'Choose a personal category.'
-      return
-    }
-    const entry = buildPersonalEntry(word, category, tags)
-    void shell.store.addWord(entry).then(() => {
+    void (async () => {
+      const data = new FormData(wordForm)
+      const word = String(data.get('word') ?? '').trim()
+      const category = String(data.get('category') ?? 'other') as WordCategory
+      const tagsRaw = String(data.get('tags') ?? '')
+      const practiceRaw = String(data.get('practice') ?? '').trim()
+      const tags = tagsRaw
+        .split(',')
+        .map(t => t.trim().toLowerCase())
+        .filter(Boolean)
+      if (!word) return
+      if (!isPersonalCategory(category)) {
+        formHint.hidden = false
+        formHint.textContent = 'Choose a personal category.'
+        return
+      }
+      if (practiceRaw) {
+        const checked = validatePracticeFrame(practiceRaw)
+        if (!checked.ok) {
+          formHint.hidden = false
+          formHint.textContent = checked.reason
+          return
+        }
+      }
+      const bank = await shell.store.getBank()
+      const takenIds = new Set(bank.map(entry => entry.id))
+      let entry: WordEntry
+      try {
+        entry = buildPersonalEntry(word, category, tags, {
+          takenIds,
+          practiceFrame: practiceRaw || undefined,
+        })
+      } catch (error) {
+        formHint.hidden = false
+        formHint.textContent = error instanceof Error ? error.message : 'Could not save word.'
+        return
+      }
+      await shell.store.addWord(entry)
       formHint.hidden = false
       formHint.textContent = `Saved “${entry.word}”.`
       wordForm.reset()
       void refreshWords()
-    })
+    })()
   })
 
   const header = document.createElement('header')

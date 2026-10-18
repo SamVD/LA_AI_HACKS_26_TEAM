@@ -136,6 +136,11 @@
   font-size: var(--nudge-font-sm);
 }
 
+.nudge-form-hint--static {
+  margin: 0 0 var(--nudge-space-4);
+  color: var(--nudge-text-muted);
+}
+
 .nudge-word-row {
   display: flex;
   flex-wrap: wrap;
