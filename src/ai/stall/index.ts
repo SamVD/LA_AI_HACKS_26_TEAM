@@ -1,0 +1,6 @@
+export { classifyEnding, lastWords, FILLERS, FUNCTION_WORDS } from './ending'
+export type { EndingVerdict, StallReason } from './ending'
+export { createStallDetector, DEFAULT_STALL_CONFIG } from './detector'
+export type { StallConfig, StallDetector, StallEvent, StallSignal } from './detector'
+export { attachStallDetector } from './attach'
+export type { AttachOptions } from './attach'
