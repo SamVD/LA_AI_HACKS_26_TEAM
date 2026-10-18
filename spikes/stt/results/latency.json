@@ -1,0 +1,519 @@
+{
+  "at": "2026-10-18T02:27:11.562Z",
+  "table": {
+    "api.elevenlabs.io pcm": {
+      "n": 12,
+      "p50": 288,
+      "p95": 432,
+      "min": 264,
+      "max": 432,
+      "correct": 12
+    },
+    "api.elevenlabs.io wav": {
+      "n": 12,
+      "p50": 313,
+      "p95": 504,
+      "min": 290,
+      "max": 504,
+      "correct": 12
+    },
+    "api.us.elevenlabs.io pcm": {
+      "n": 12,
+      "p50": 271,
+      "p95": 406,
+      "min": 239,
+      "max": 406,
+      "correct": 12
+    },
+    "api.us.elevenlabs.io wav": {
+      "n": 12,
+      "p50": 338,
+      "p95": 650,
+      "min": 295,
+      "max": 650,
+      "correct": 12
+    }
+  },
+  "rows": [
+    {
+      "host": "api.elevenlabs.io",
+      "format": "pcm",
+      "id": "cup",
+      "audioMs": 1320,
+      "ms": 365,
+      "status": 200,
+      "text": "Cup",
+      "error": null
+    },
+    {
+      "host": "api.elevenlabs.io",
+      "format": "pcm",
+      "id": "spoon",
+      "audioMs": 1437,
+      "ms": 294,
+      "status": 200,
+      "text": "Spoon",
+      "error": null
+    },
+    {
+      "host": "api.elevenlabs.io",
+      "format": "pcm",
+      "id": "fork",
+      "audioMs": 1401,
+      "ms": 279,
+      "status": 200,
+      "text": "Fork",
+      "error": null
+    },
+    {
+      "host": "api.elevenlabs.io",
+      "format": "pcm",
+      "id": "keys",
+      "audioMs": 1378,
+      "ms": 264,
+      "status": 200,
+      "text": "Keys",
+      "error": null
+    },
+    {
+      "host": "api.elevenlabs.io",
+      "format": "pcm",
+      "id": "water",
+      "audioMs": 1320,
+      "ms": 293,
+      "status": 200,
+      "text": "Water",
+      "error": null
+    },
+    {
+      "host": "api.elevenlabs.io",
+      "format": "pcm",
+      "id": "coffee",
+      "audioMs": 1411,
+      "ms": 281,
+      "status": 200,
+      "text": "Coffee",
+      "error": null
+    },
+    {
+      "host": "api.elevenlabs.io",
+      "format": "pcm",
+      "id": "toothbrush",
+      "audioMs": 1655,
+      "ms": 288,
+      "status": 200,
+      "text": "Toothbrush",
+      "error": null
+    },
+    {
+      "host": "api.elevenlabs.io",
+      "format": "pcm",
+      "id": "medicine",
+      "audioMs": 1485,
+      "ms": 432,
+      "status": 200,
+      "text": "Medicine",
+      "error": null
+    },
+    {
+      "host": "api.elevenlabs.io",
+      "format": "pcm",
+      "id": "metformin",
+      "audioMs": 1624,
+      "ms": 290,
+      "status": 200,
+      "text": "Metformin",
+      "error": null
+    },
+    {
+      "host": "api.elevenlabs.io",
+      "format": "pcm",
+      "id": "cup-daniel",
+      "audioMs": 1231,
+      "ms": 318,
+      "status": 200,
+      "text": "Cup",
+      "error": null
+    },
+    {
+      "host": "api.elevenlabs.io",
+      "format": "pcm",
+      "id": "fork-daniel",
+      "audioMs": 1455,
+      "ms": 264,
+      "status": 200,
+      "text": "Fork",
+      "error": null
+    },
+    {
+      "host": "api.elevenlabs.io",
+      "format": "pcm",
+      "id": "banana-daniel",
+      "audioMs": 1506,
+      "ms": 285,
+      "status": 200,
+      "text": "Banana",
+      "error": null
+    },
+    {
+      "host": "api.elevenlabs.io",
+      "format": "wav",
+      "id": "cup",
+      "audioMs": 1320,
+      "ms": 504,
+      "status": 200,
+      "text": "Cup",
+      "error": null
+    },
+    {
+      "host": "api.elevenlabs.io",
+      "format": "wav",
+      "id": "spoon",
+      "audioMs": 1437,
+      "ms": 313,
+      "status": 200,
+      "text": "Spoon",
+      "error": null
+    },
+    {
+      "host": "api.elevenlabs.io",
+      "format": "wav",
+      "id": "fork",
+      "audioMs": 1401,
+      "ms": 290,
+      "status": 200,
+      "text": "Fork",
+      "error": null
+    },
+    {
+      "host": "api.elevenlabs.io",
+      "format": "wav",
+      "id": "keys",
+      "audioMs": 1378,
+      "ms": 308,
+      "status": 200,
+      "text": "Keys",
+      "error": null
+    },
+    {
+      "host": "api.elevenlabs.io",
+      "format": "wav",
+      "id": "water",
+      "audioMs": 1320,
+      "ms": 324,
+      "status": 200,
+      "text": "Water",
+      "error": null
+    },
+    {
+      "host": "api.elevenlabs.io",
+      "format": "wav",
+      "id": "coffee",
+      "audioMs": 1411,
+      "ms": 303,
+      "status": 200,
+      "text": "Coffee.",
+      "error": null
+    },
+    {
+      "host": "api.elevenlabs.io",
+      "format": "wav",
+      "id": "toothbrush",
+      "audioMs": 1655,
+      "ms": 321,
+      "status": 200,
+      "text": "Toothbrush",
+      "error": null
+    },
+    {
+      "host": "api.elevenlabs.io",
+      "format": "wav",
+      "id": "medicine",
+      "audioMs": 1485,
+      "ms": 422,
+      "status": 200,
+      "text": "Medicine",
+      "error": null
+    },
+    {
+      "host": "api.elevenlabs.io",
+      "format": "wav",
+      "id": "metformin",
+      "audioMs": 1624,
+      "ms": 291,
+      "status": 200,
+      "text": "Metformin",
+      "error": null
+    },
+    {
+      "host": "api.elevenlabs.io",
+      "format": "wav",
+      "id": "cup-daniel",
+      "audioMs": 1231,
+      "ms": 335,
+      "status": 200,
+      "text": "Cup",
+      "error": null
+    },
+    {
+      "host": "api.elevenlabs.io",
+      "format": "wav",
+      "id": "fork-daniel",
+      "audioMs": 1455,
+      "ms": 467,
+      "status": 200,
+      "text": "Fork",
+      "error": null
+    },
+    {
+      "host": "api.elevenlabs.io",
+      "format": "wav",
+      "id": "banana-daniel",
+      "audioMs": 1506,
+      "ms": 310,
+      "status": 200,
+      "text": "Banana",
+      "error": null
+    },
+    {
+      "host": "api.us.elevenlabs.io",
+      "format": "pcm",
+      "id": "cup",
+      "audioMs": 1320,
+      "ms": 309,
+      "status": 200,
+      "text": "Cup",
+      "error": null
+    },
+    {
+      "host": "api.us.elevenlabs.io",
+      "format": "pcm",
+      "id": "spoon",
+      "audioMs": 1437,
+      "ms": 329,
+      "status": 200,
+      "text": "Spoon",
+      "error": null
+    },
+    {
+      "host": "api.us.elevenlabs.io",
+      "format": "pcm",
+      "id": "fork",
+      "audioMs": 1401,
+      "ms": 293,
+      "status": 200,
+      "text": "Fork",
+      "error": null
+    },
+    {
+      "host": "api.us.elevenlabs.io",
+      "format": "pcm",
+      "id": "keys",
+      "audioMs": 1378,
+      "ms": 270,
+      "status": 200,
+      "text": "Keys",
+      "error": null
+    },
+    {
+      "host": "api.us.elevenlabs.io",
+      "format": "pcm",
+      "id": "water",
+      "audioMs": 1320,
+      "ms": 239,
+      "status": 200,
+      "text": "Water",
+      "error": null
+    },
+    {
+      "host": "api.us.elevenlabs.io",
+      "format": "pcm",
+      "id": "coffee",
+      "audioMs": 1411,
+      "ms": 260,
+      "status": 200,
+      "text": "Coffee",
+      "error": null
+    },
+    {
+      "host": "api.us.elevenlabs.io",
+      "format": "pcm",
+      "id": "toothbrush",
+      "audioMs": 1655,
+      "ms": 307,
+      "status": 200,
+      "text": "Toothbrush",
+      "error": null
+    },
+    {
+      "host": "api.us.elevenlabs.io",
+      "format": "pcm",
+      "id": "medicine",
+      "audioMs": 1485,
+      "ms": 255,
+      "status": 200,
+      "text": "Medicine",
+      "error": null
+    },
+    {
+      "host": "api.us.elevenlabs.io",
+      "format": "pcm",
+      "id": "metformin",
+      "audioMs": 1624,
+      "ms": 258,
+      "status": 200,
+      "text": "Metformin",
+      "error": null
+    },
+    {
+      "host": "api.us.elevenlabs.io",
+      "format": "pcm",
+      "id": "cup-daniel",
+      "audioMs": 1231,
+      "ms": 406,
+      "status": 200,
+      "text": "Cup",
+      "error": null
+    },
+    {
+      "host": "api.us.elevenlabs.io",
+      "format": "pcm",
+      "id": "fork-daniel",
+      "audioMs": 1455,
+      "ms": 271,
+      "status": 200,
+      "text": "Fork",
+      "error": null
+    },
+    {
+      "host": "api.us.elevenlabs.io",
+      "format": "pcm",
+      "id": "banana-daniel",
+      "audioMs": 1506,
+      "ms": 293,
+      "status": 200,
+      "text": "Banana",
+      "error": null
+    },
+    {
+      "host": "api.us.elevenlabs.io",
+      "format": "wav",
+      "id": "cup",
+      "audioMs": 1320,
+      "ms": 343,
+      "status": 200,
+      "text": "Cup",
+      "error": null
+    },
+    {
+      "host": "api.us.elevenlabs.io",
+      "format": "wav",
+      "id": "spoon",
+      "audioMs": 1437,
+      "ms": 317,
+      "status": 200,
+      "text": "Spoon",
+      "error": null
+    },
+    {
+      "host": "api.us.elevenlabs.io",
+      "format": "wav",
+      "id": "fork",
+      "audioMs": 1401,
+      "ms": 308,
+      "status": 200,
+      "text": "Fork",
+      "error": null
+    },
+    {
+      "host": "api.us.elevenlabs.io",
+      "format": "wav",
+      "id": "keys",
+      "audioMs": 1378,
+      "ms": 477,
+      "status": 200,
+      "text": "Keys",
+      "error": null
+    },
+    {
+      "host": "api.us.elevenlabs.io",
+      "format": "wav",
+      "id": "water",
+      "audioMs": 1320,
+      "ms": 356,
+      "status": 200,
+      "text": "Water",
+      "error": null
+    },
+    {
+      "host": "api.us.elevenlabs.io",
+      "format": "wav",
+      "id": "coffee",
+      "audioMs": 1411,
+      "ms": 317,
+      "status": 200,
+      "text": "Coffee",
+      "error": null
+    },
+    {
+      "host": "api.us.elevenlabs.io",
+      "format": "wav",
+      "id": "toothbrush",
+      "audioMs": 1655,
+      "ms": 397,
+      "status": 200,
+      "text": "Toothbrush",
+      "error": null
+    },
+    {
+      "host": "api.us.elevenlabs.io",
+      "format": "wav",
+      "id": "medicine",
+      "audioMs": 1485,
+      "ms": 338,
+      "status": 200,
+      "text": "Medicine",
+      "error": null
+    },
+    {
+      "host": "api.us.elevenlabs.io",
+      "format": "wav",
+      "id": "metformin",
+      "audioMs": 1624,
+      "ms": 295,
+      "status": 200,
+      "text": "Metformin",
+      "error": null
+    },
+    {
+      "host": "api.us.elevenlabs.io",
+      "format": "wav",
+      "id": "cup-daniel",
+      "audioMs": 1231,
+      "ms": 650,
+      "status": 200,
+      "text": "Cup.",
+      "error": null
+    },
+    {
+      "host": "api.us.elevenlabs.io",
+      "format": "wav",
+      "id": "fork-daniel",
+      "audioMs": 1455,
+      "ms": 311,
+      "status": 200,
+      "text": "Fork",
+      "error": null
+    },
+    {
+      "host": "api.us.elevenlabs.io",
+      "format": "wav",
+      "id": "banana-daniel",
+      "audioMs": 1506,
+      "ms": 504,
+      "status": 200,
+      "text": "Banana",
+      "error": null
+    }
+  ]
+}

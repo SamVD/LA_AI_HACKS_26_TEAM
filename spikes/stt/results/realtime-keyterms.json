@@ -1,0 +1,54 @@
+{
+  "at": "2026-10-18T02:31:52.162Z",
+  "rows": [
+    {
+      "id": "cup",
+      "said": "cup",
+      "target": "cup",
+      "plain": "Car.",
+      "keyterm": "Cup."
+    },
+    {
+      "id": "fork",
+      "said": "fork",
+      "target": "fork",
+      "plain": "Fork.",
+      "keyterm": "Fork."
+    },
+    {
+      "id": "cop",
+      "said": "cop",
+      "target": "cup",
+      "plain": "Car.",
+      "keyterm": "Cup."
+    },
+    {
+      "id": "cuh",
+      "said": "cuh",
+      "target": "cup",
+      "plain": "Car.",
+      "keyterm": "Cup."
+    },
+    {
+      "id": "spoo",
+      "said": "spoo",
+      "target": "spoon",
+      "plain": "Spoo.",
+      "keyterm": "Spoon."
+    },
+    {
+      "id": "spun",
+      "said": "spun",
+      "target": "spoon",
+      "plain": "Spon.",
+      "keyterm": "Spoon."
+    },
+    {
+      "id": "wa-er",
+      "said": "wa er",
+      "target": "water",
+      "plain": "Water.",
+      "keyterm": "Water."
+    }
+  ]
+}

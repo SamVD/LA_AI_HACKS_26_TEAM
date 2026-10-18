@@ -1,0 +1,6 @@
+# Generated audio and local recordings never get committed.
+clips/
+recordings/
+.out/
+*.pcm
+*.wav

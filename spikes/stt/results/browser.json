@@ -1,0 +1,58 @@
+{
+  "note": "Copied from the spike page (window.sttResults / page log) on 2026-10-17. Chrome desktop at the LAN origin http://172.22.201.33:5181, and the Even simulator WebView (WebKit) at http://localhost:5181 with ?auto=1. Tokens from spikes/stt/token-server.mjs.",
+  "chromeNoKeyProbes": {
+    "origin": "http://172.22.201.33:5181",
+    "isSecureContext": false,
+    "getUserMediaAvailable": false,
+    "batchNoAuth": { "status": 401, "ms": 94, "body": "{\"detail\":{\"type\":\"authentication_error\",\"code\":\"unauthorized\",\"message\":\"Neither authorization header nor xi-api-key received, please provide one.\"" },
+    "batchBadKeyHeader": { "status": 401, "ms": 123, "body": "Invalid API key (custom xi-api-key header passed the CORS preflight)" },
+    "batchBadToken": { "status": 403, "ms": 91, "body": "Token not found or has expired." },
+    "tokenNoAuth": { "status": 401, "ms": 130 },
+    "wsFakeToken": [["open", 117], ["msg", "{\"message_type\":\"auth_error\",\"error\":\"You must be authenticated to use this endpoint.\"}"], ["close", 1000, "", 229]]
+  },
+  "chromeBatchViaToken": {
+    "n": 12, "p50": 318, "p95": 495,
+    "rows": [
+      { "id": "cup", "ms": 405, "mintMs": 176, "text": "Cup" },
+      { "id": "spoon", "ms": 316, "mintMs": 126, "text": "Spoon" },
+      { "id": "fork", "ms": 318, "mintMs": 201, "text": "Fork" },
+      { "id": "keys", "ms": 438, "mintMs": 105, "text": "Keys" },
+      { "id": "water", "ms": 381, "mintMs": 104, "text": "Water" },
+      { "id": "coffee", "ms": 299, "mintMs": 110, "text": "Coffee" },
+      { "id": "toothbrush", "ms": 495, "mintMs": 136, "text": "Toothbrush" },
+      { "id": "medicine", "ms": 300, "mintMs": 107, "text": "Medicine" },
+      { "id": "metformin", "ms": 307, "mintMs": 106, "text": "Metformin" },
+      { "id": "cup-daniel", "ms": 334, "mintMs": 103, "text": "Huh?" },
+      { "id": "fork-daniel", "ms": 295, "mintMs": 110, "text": "Fork" },
+      { "id": "banana-daniel", "ms": 343, "mintMs": 101, "text": "Banana" }
+    ]
+  },
+  "chromeRealtimeViaToken": {
+    "commit": "manual on last chunk, 100 ms chunks at real-time pace",
+    "n": 12, "sessionP50": 140, "finalAfterCommitP50": 92, "finalAfterCommitP95": 185,
+    "rows": [
+      { "id": "cup", "mintMs": 139, "sessionMs": 134, "finalAfterEndMs": 90, "text": "Car." },
+      { "id": "spoon", "mintMs": 104, "sessionMs": 132, "finalAfterEndMs": 85, "text": "Spoon." },
+      { "id": "fork", "mintMs": 190, "sessionMs": 138, "finalAfterEndMs": 88, "text": "Fork." },
+      { "id": "keys", "mintMs": 102, "sessionMs": 239, "finalAfterEndMs": 92, "text": "Keys." },
+      { "id": "water", "mintMs": 98, "sessionMs": 152, "finalAfterEndMs": 116, "text": "Water." },
+      { "id": "coffee", "mintMs": 129, "sessionMs": 140, "finalAfterEndMs": 92, "text": "Coffee." },
+      { "id": "toothbrush", "mintMs": 102, "sessionMs": 130, "finalAfterEndMs": 161, "text": "Toothbrush." },
+      { "id": "medicine", "mintMs": 135, "sessionMs": 173, "finalAfterEndMs": 175, "text": "Medicine." },
+      { "id": "metformin", "mintMs": 137, "sessionMs": 133, "finalAfterEndMs": 81, "text": "Metformin." },
+      { "id": "cup-daniel", "mintMs": 104, "sessionMs": 149, "finalAfterEndMs": 86, "text": "Cup." },
+      { "id": "fork-daniel", "mintMs": 103, "sessionMs": 169, "finalAfterEndMs": 155, "text": "Talk." },
+      { "id": "banana-daniel", "mintMs": 103, "sessionMs": 141, "finalAfterEndMs": 185, "text": "Banana." }
+    ]
+  },
+  "evenSimulatorWebView": {
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko)",
+    "origin": "http://localhost:5181",
+    "log": [
+      "AUTO batch {\"id\":\"cup\",\"status\":200,\"ms\":370,\"mintMs\":189,\"text\":\"Cup\"}",
+      "AUTO realtime {\"id\":\"cup\",\"mintMs\":114,\"sessionMs\":182,\"text\":\"Car.\",\"firstPartialMs\":null,\"finalAfterEndMs\":87}",
+      "AUTO batch {\"id\":\"medicine\",\"status\":200,\"ms\":306,\"mintMs\":105,\"text\":\"Medicine\"}",
+      "AUTO realtime {\"id\":\"medicine\",\"mintMs\":113,\"sessionMs\":143,\"text\":\"Medicine.\",\"firstPartialMs\":null,\"finalAfterEndMs\":93}"
+    ]
+  }
+}

@@ -1,0 +1,137 @@
+{
+  "at": "2026-10-18T02:31:16.308Z",
+  "rows": [
+    {
+      "id": "conv-park",
+      "vad": 0.5,
+      "audioMs": 6802,
+      "said": "Yesterday I went to the park with Maya. We sat by the... um... the water, and we had some coffee.",
+      "realtime": "Yesterday, I went to the park with Maya. We sat by the, um, the water, and we had some coffee.",
+      "batch": "Yesterday I went to the park with Mia. We sat by the, um, the water, and we had some coffee",
+      "firstPartialMs": 2226,
+      "partials": 6,
+      "wordLag": {
+        "n": 18,
+        "p50": 817,
+        "p95": 1426,
+        "min": 411,
+        "max": 1426
+      },
+      "commitAfterLastWordMs": [
+        793
+      ],
+      "error": null,
+      "why": "done"
+    },
+    {
+      "id": "conv-park",
+      "vad": 1,
+      "audioMs": 6802,
+      "said": "Yesterday I went to the park with Maya. We sat by the... um... the water, and we had some coffee.",
+      "realtime": "Yesterday, I went to the park with Maya. We sat by the, um, the water, and we had some coffee.",
+      "batch": "Yesterday I went to the park with Mia. We sat by the, um, the water, and we had some coffee",
+      "firstPartialMs": 2205,
+      "partials": 7,
+      "wordLag": {
+        "n": 20,
+        "p50": 886,
+        "p95": 1407,
+        "min": 265,
+        "max": 1423
+      },
+      "commitAfterLastWordMs": [
+        1449
+      ],
+      "error": null,
+      "why": "done"
+    },
+    {
+      "id": "conv-pharmacy",
+      "vad": 0.5,
+      "audioMs": 6826,
+      "said": "I need to call the pharmacy about my metformin. The doctor said I should take it with... uh... with food.",
+      "realtime": "I need to call the pharmacy about my metformin. The doctor said I should take it with, uh, with food.",
+      "batch": "I need to call the pharmacy about my metformin. The doctor said I should take it with, uh, with food",
+      "firstPartialMs": 2112,
+      "partials": 6,
+      "wordLag": {
+        "n": 17,
+        "p50": 848,
+        "p95": 1632,
+        "min": 56,
+        "max": 1632
+      },
+      "commitAfterLastWordMs": [
+        751
+      ],
+      "error": null,
+      "why": "done"
+    },
+    {
+      "id": "conv-pharmacy",
+      "vad": 1,
+      "audioMs": 6826,
+      "said": "I need to call the pharmacy about my metformin. The doctor said I should take it with... uh... with food.",
+      "realtime": "I need to call the pharmacy about my metformin. The doctor said I should take it with, uh, with food.",
+      "batch": "I need to call the pharmacy about my metformin. The doctor said I should take it with, uh, with food",
+      "firstPartialMs": 2271,
+      "partials": 7,
+      "wordLag": {
+        "n": 20,
+        "p50": 853,
+        "p95": 1551,
+        "min": 62,
+        "max": 1791
+      },
+      "commitAfterLastWordMs": [
+        1334
+      ],
+      "error": null,
+      "why": "done"
+    },
+    {
+      "id": "conv-stall",
+      "vad": 0.5,
+      "audioMs": 4905,
+      "said": "Can you pass me the... the... you know. The thing. For soup.",
+      "realtime": "Can you pass me the, the, you know, the thing for soup?",
+      "batch": "Can you pass me the, the, you know, the thing for soup?",
+      "firstPartialMs": 2114,
+      "partials": 4,
+      "wordLag": {
+        "n": 10,
+        "p50": 1030,
+        "p95": 1634,
+        "min": 441,
+        "max": 1634
+      },
+      "commitAfterLastWordMs": [
+        687
+      ],
+      "error": null,
+      "why": "done"
+    },
+    {
+      "id": "conv-stall",
+      "vad": 1,
+      "audioMs": 4905,
+      "said": "Can you pass me the... the... you know. The thing. For soup.",
+      "realtime": "Can you pass me the, the, you know, the thing for soup?",
+      "batch": "Can you pass me the, the, you know, the thing for soup?",
+      "firstPartialMs": 2216,
+      "partials": 5,
+      "wordLag": {
+        "n": 12,
+        "p50": 1032,
+        "p95": 1736,
+        "min": 524,
+        "max": 1736
+      },
+      "commitAfterLastWordMs": [
+        1482
+      ],
+      "error": null,
+      "why": "done"
+    }
+  ]
+}

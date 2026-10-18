@@ -1,0 +1,12 @@
+{
+  "repeat": {
+    "status": 200,
+    "text": "Cup",
+    "error": null
+  },
+  "json": {
+    "status": 400,
+    "text": null,
+    "error": "{\"detail\":{\"type\":\"validation_error\",\"code\":\"invalid_parameters\",\"message\":\"Some keyword contains invalid characters\",\"status\":\"invalid_keyword\",\"request_id\":\"6adc5ee8684a3e5912951799fb69a9d9\",\"param\":\"keywords\"}}"
+  }
+}
