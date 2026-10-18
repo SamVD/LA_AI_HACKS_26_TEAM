@@ -1,6 +1,6 @@
 # Nudge Task Board
 
-_Last updated: Sat Oct 17, 2026 (hackathon hour H5 of 24) by Claude (orchestrator draft)_
+_Last updated: Sat Oct 17, 2026 (about H6) by ORCH. Contracts are frozen at CONTRACT_VERSION 1 (`src/core/types.ts`, `docs/CONTRACTS.md`)._
 
 Single source of truth for who is doing what. Read `PLAN.md` first for architecture, contracts, ownership, and git rules.
 
@@ -23,7 +23,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ### T-002 Scaffold from the Even minimal template
 - **Owner:** GLASS (Claude Code)
-- **Status:** READY
+- **Status:** IN_PROGRESS. Code merged to `integration` (PR #3, audited). Still open: steps 3 and 7 (real G2 via QR, Beta install). **Do these before H8.**
 - **Branch:** `glass/scaffold`
 - **Depends on:** none
 - **Files it may EDIT:** repo root config (`package.json`, lockfile, `app.json`, `vite.config.*`, `tsconfig*`, `.gitignore`, `README.md`), `src/main.ts`, `docs/vendor/**`, `docs/DISPLAY_LIMITS.md`. *(These move to ORCH ownership when this task merges.)*
@@ -48,7 +48,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ### T-001 Contracts and architecture docs
 - **Owner:** ORCH (Claude)
-- **Status:** READY
+- **Status:** MERGED (PR #4). Additive changes vs. the PLAN.md draft are listed in `docs/CONTRACTS.md`.
 - **Branch:** `orch/contracts`
 - **Depends on:** none (rebases onto T-002 when it lands)
 - **Files it may EDIT:** `src/core/**`, `docs/CONTRACTS.md`, `OWNERS.json`, `docs/G2_SMOKE.md`, `docs/PREDICTOR_PROMPT.md`
@@ -61,30 +61,34 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ### T-003 Mocks, stub modes, registry, config, CI, ownership check
 - **Owner:** LOGIC (Codex)
-- **Status:** TODO (blocked on T-001 and T-002)
+- **Status:** READY
 - **Branch:** `logic/foundation`
-- **Depends on:** T-001, T-002
-- **Files it may EDIT:** `src/config.ts`, `src/modes/index.ts`, `src/modes/step1/index.ts`, `src/modes/step2/index.ts`, `src/modes/step3/index.ts` *(stubs only; their owners replace the contents later)*, `src/mocks/**`, `.github/workflows/ci.yml`, `.github/CODEOWNERS`, `scripts/check-ownership.*`
-- **Do not edit:** `src/core/**`, `package.json`.
+- **Depends on:** T-001, T-002 (both merged)
+- **Files it may EDIT:** `src/main.ts`, `src/config.ts`, `src/modes/index.ts`, `src/modes/step1/index.ts`, `src/modes/step2/index.ts`, `src/modes/step3/index.ts` *(stubs only; their owners replace the contents later)*, `src/mocks/**`, `.github/workflows/ci.yml`, `.github/CODEOWNERS`, `scripts/check-ownership.*`
+- **Do not edit:** `src/core/**`, `package.json`, `src/glasses/**`.
+- **Read for context:** `src/core/types.ts`, `docs/CONTRACTS.md`, `OWNERS.json`, the current `src/main.ts`.
 - **Why this owner:** self-contained, well-specified, testable.
 - **Spec:**
   1. `src/config.ts`: read `Flags` from `?svc=mock`, URL params, and env. Defaults: `step2Enabled=false`, `step3Enabled=false`, `imuEnabled=false`.
   2. `src/mocks/`: `MockStt` (replays a scripted conversation fixture with timestamps and speech state), `MockPredictor` (returns canned Suggestions keyed by `stalledAfter`), `MemoryStore`, `MockUI` (records Screens and lets tests emit Intents).
   3. Registry in `src/modes/index.ts` registers `step1`, `step2`, `step3`. Each stub shows `status: "<id> not built yet"`. **This registry file is never edited again after this task.**
-  4. `ci.yml`: install, typecheck, lint, test, build, then `check-ownership`.
-  5. `check-ownership`: reads `OWNERS.json`, takes the PR's branch prefix and changed file list, fails if any file is outside the lane's globs.
+  4. `src/main.ts`: read `Flags` from `src/config.ts` and build a `ModeContext` (mocks when `mockServices` is true). Keep the existing SDK hello screen and exit handling for now; T-101 replaces the display path with `GlassesUI`. Log the active mode's Screens to the console so the wiring is visible in the simulator.
+  5. `ci.yml`: install (`npm ci`), typecheck, test, build, then `check-ownership`. **No lint step** (ORCH decision: no ESLint dependency for now). Checkout with `fetch-depth: 0` so the changed-file list can be computed against the base branch.
+  6. `check-ownership` (Node, no new dependencies, hand-written glob matching): reads `OWNERS.json`, takes the PR's branch name and changed file list, and fails if any file matches neither the lane's `paths` nor `branchGrants[<branch>]`. Fails branches whose prefix is not a lane. Glob rules are in `docs/CONTRACTS.md`.
 - **Acceptance criteria:**
-  - [ ] All three stubs mount from the registry in the simulator.
+  - [ ] Vitest: each stub enters from the registry with a mock `ModeContext`, shows its `status` Screen on `MockUI`, and exits cleanly. (Seeing the stubs on the glasses moves to T-101, which owns rendering.)
+  - [ ] `npm run dev` + simulator still boots with `src/main.ts` wired to config and registry; no console errors.
   - [ ] `MockStt` replay test passes (emits transcripts and speech-state events in order).
-  - [ ] `check-ownership` has tests: a PR from `ui/` touching `src/glasses/` fails; touching `src/phone/` passes.
+  - [ ] `check-ownership` has tests: a PR from `ui/` touching `src/glasses/` fails; touching `src/phone/` passes; `logic/foundation` touching `src/main.ts` passes (branch grant); `logic/other` touching `src/main.ts` fails; `copilot/x` fails.
   - [ ] CI is green on the PR itself.
 
 ### T-004 Fixtures and word bank seed
 - **Owner:** LOGIC (Codex)
-- **Status:** TODO (blocked on T-001)
+- **Status:** READY
 - **Branch:** `logic/fixtures`
 - **Depends on:** T-001
 - **Files it may EDIT:** `fixtures/**`, `src/content/words.json`
+- **Read for context:** `src/core/types.ts`, `docs/PREDICTOR_PROMPT.md` Section 8 (the worked examples show the fixture shapes).
 - **Spec:**
   - `src/content/words.json`: 30 `WordEntry` objects across objects, food, and everyday places, plus 8 sample personal entries (names, a medication, a place) clearly marked `tags: ["sample"]`. Each has 2 sentence frames with `____`. No real people's names.
   - `fixtures/conversations/*.json`: at least 8 scripted conversations. Each is an array of timed transcript segments and speech-state changes, with at least one stall point, the `intendedWord`, and `expectedTop3` (words acceptable as suggestions). Include: a clean stall, a stall after a filler ("um"), two near-synonym cases, a name the user knows, and a case where the intended word is not in the bank.
@@ -95,7 +99,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ### T-005 Predictor prompt design
 - **Owner:** ORCH
-- **Status:** IN_PROGRESS (merged into T-001's `docs/PREDICTOR_PROMPT.md`)
+- **Status:** MERGED (as part of T-001: `docs/PREDICTOR_PROMPT.md`, prompt version 1)
 
 ### S-1 Spike: ElevenLabs Scribe from the WebView
 - **Owner:** AI (Claude Code)
@@ -107,7 +111,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ### S-2 Spike: Gemini predictor against fixtures
 - **Owner:** AI (Claude Code)
-- **Status:** TODO (after T-001 prompt draft and T-004)
+- **Status:** TODO (prompt is merged; waiting on T-004)
 - **Branch:** `ai/spike-predictor` (writes only `spikes/predictor/**`)
 - **Depends on:** T-001, T-004
 - **Spec:** run `docs/PREDICTOR_PROMPT.md` against `fixtures/predictor-eval.json` with the fastest Gemini tier. Report accuracy at top-1 and top-3, p50/p95 latency, and JSON-validity rate. Confirm current model ID from Gemini docs. Recommend prompt changes to ORCH.
@@ -115,7 +119,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ### S-3 Spike: on-device audio and IMU
 - **Owner:** GLASS
-- **Status:** TODO (after T-002; **must finish before H8 while the Even table is staffed**)
+- **Status:** READY (T-002 code merged; **must finish before H8 while the Even table is staffed**)
 - **Branch:** `glass/spike-device` (writes only `spikes/device/**`)
 - **Depends on:** T-002
 - **Spec:** on the real G2: (1) capture 10 seconds from the glasses mic and from the phone mic, save locally for comparison (do not commit audio); report which is cleaner at normal conversation distance; (2) log raw IMU x/y/z during nod left, nod right, look up, look down; (3) confirm an event-capturing container works while nothing is visible (needed for the `blank` Screen); (4) confirm the WebView page is visible on the phone while the glasses render; (5) test lock/resume while the mic is open.
@@ -123,7 +127,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ### T-006 Design tokens and glasses layout sketches
 - **Owner:** UI (Cursor)
-- **Status:** TODO
+- **Status:** READY
 - **Branch:** `ui/design-tokens`
 - **Depends on:** T-002 (reads `docs/DISPLAY_LIMITS.md`)
 - **Files it may EDIT:** `src/phone/theme/**`, `docs/design/**`
@@ -145,9 +149,10 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 - **Depends on:** T-001, T-002, T-003
 - **Files it may EDIT:** `src/glasses/**` (excluding `src/glasses/imu/`)
 - **Read for context:** `src/core/types.ts`, `docs/DISPLAY_LIMITS.md`, `docs/vendor/even-skills/`
-- **Spec:** implement `GlassesUI`: render each `Screen` kind with SDK containers sized by the font-measurement guidance; `blank` is an event-capturing empty container. Map touchpad events to `Intent` (click=SELECT, swipe down=NEXT, swipe up=PREV, double-click=BACK). Reusable cue ladder component (`level 1/2/3`). Page lifecycle: survive phone lock/resume, handle exit. Await `waitForEvenAppBridge()` before SDK calls.
+- **Spec:** implement `GlassesUI`: render each `Screen` kind with SDK containers sized by the font-measurement guidance; `blank` is an event-capturing empty container. Map touchpad events to `Intent` (click=SELECT, swipe down=NEXT, swipe up=PREV, double-click=BACK). Reusable cue ladder component (`level 1/2/3`). Page lifecycle: survive phone lock/resume, handle exit. Await `waitForEvenAppBridge()` before SDK calls. Render `feedback` with `√` / `×` or words, never `✓` / `✗` (not in the G2 font). Request `@evenrealities/pretext` in the PR description if you need text measurement; ORCH installs it. Also take over the display path in `src/main.ts` from T-003's console logging (request the edit; `src/main.ts` is ORCH-owned).
 - **Acceptance criteria:**
   - [ ] Each Screen kind renders in the simulator with a screenshot check.
+  - [ ] The three stub modes from the registry show their status text on the simulator.
   - [ ] Intents arrive correctly from sim input injection.
   - [ ] No text overflows the container on the longest sentence in `words.json`.
   - [ ] Works on the real G2.
@@ -178,7 +183,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 - **Status:** TODO
 - **Branch:** `ai/audio-utterance`
 - **Depends on:** T-001, T-002, S-1, S-3
-- **Files it may EDIT:** `src/audio/**` (excluding `src/audio/rolling/`), `api/stt/**`
+- **Files it may EDIT:** `src/audio/**` (excluding `src/audio/rolling/`), `api/stt/**`. `app.json` permissions (`g2-microphone` or `phone-microphone`, `network` with the proxy URL whitelisted) are requested in the PR description; ORCH adds them.
 - **Spec:** implement `SttService` for real: capture PCM (source chosen per S-3), energy-based VAD producing `onSpeechState`, and `transcribeUtterance` (record until `endSilenceMs` of silence after speech or `maxMs`, wrap PCM, send to the ElevenLabs adapter via `api/` if S-1 says a proxy is needed). Honor `targetHint` if S-1 found biasing is supported. No audio written to disk or storage. Graceful errors: mic denied, network down, timeout (return an empty `Transcript` with a typed error the mode can show as `status`).
 - **Acceptance criteria:**
   - [ ] Real utterance round-trip works from the simulator mic path and on the G2.
@@ -376,7 +381,9 @@ No new features after H18. Only fixes, packaging, polish, and the story.
 - Clinician or caregiver export of session logs.
 
 ## Done log
-_(empty)_
+- H5: `PLAN.md` and `TASKS.md` merged to `main` (PR #2). `integration` created from `main`.
+- H6: T-002 scaffold code merged to `integration` (PR #3, audited; G2 and Beta checks still open).
+- H6: T-001 contracts merged to `integration` (PR #4): `src/core/types.ts` (CONTRACT_VERSION 1), `OWNERS.json`, `docs/CONTRACTS.md`, `docs/G2_SMOKE.md`, `docs/PREDICTOR_PROMPT.md`. Includes T-005.
 
 ---
 
