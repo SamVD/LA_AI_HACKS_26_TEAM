@@ -1,6 +1,6 @@
 # Nudge Task Board
 
-_Last updated: Sat Oct 17, 2026 (about H8) by ORCH. Decisions D1-D6: `PLAN.md` Section 13. Contracts: CONTRACT_VERSION 2 (`src/core/types.ts`, `docs/CONTRACTS.md`). Phase 1 builder prompts: `docs/prompts/phase1-builder-prompts.md`._
+_Last updated: Sat Oct 17, 2026 (about H9) by ORCH. Decisions D1-D10: `PLAN.md` Section 13. Contracts: CONTRACT_VERSION 2 (`src/core/types.ts`, `docs/CONTRACTS.md`). Phase 1 builder prompts: `docs/prompts/phase1-builder-prompts.md`._
 
 Single source of truth for who is doing what. Read `PLAN.md` first for architecture, contracts, ownership, and git rules.
 
@@ -11,8 +11,8 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 **Device testing (all lanes):** QR prototype mode is broken on Even's side, so the glasses only run **packaged Beta builds** (pack → upload at hub.evenrealities.com → Me → Beta tester; a few minutes per cycle). Iterate in the simulator and batch device checks. The workflow, including how to pack a spike page on its own, is in `README.md` → "Run on the real G2". Gate flags are set at pack time with `VITE_STEP2=1` / `VITE_STEP3=1` (`docs/G2_SMOKE.md`).
 
 **Queue by lane (now):**
-- GLASS: S-3 via a packaged spike build (**before H8**), the T-003 simulator boot check, then T-101.
-- AI: S-1 is merged. Next: S-2 (Gemini eval), then T-104 once S-3 reports (needs the mic source). T-203 can run alongside.
+- GLASS: S-3 is merged. Next: **T-101 now (critical path)**. Fit the S-3 0.1.2 rerun (5-minute lock, SDK storage timing) into a device cycle when convenient.
+- AI: S-1 is merged. Next: finish S-2, then **T-104 (now unblocked: glasses mic, D7)**. Set up the `api/` hosting (Vercel + ElevenLabs key) early. T-203 can share it.
 - LOGIC (Codex): T-103, then T-106, then T-102, then T-007.
 - UI (Cursor): T-105 is merged. Next: the placeholder-label nit plus dev-page intent buttons (small), then T-206 once T-106 lands.
 
@@ -127,7 +127,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ### S-3 Spike: on-device audio and IMU
 - **Owner:** GLASS
-- **Status:** READY (T-002 code merged; **must finish before H8 while the Even table is staffed**)
+- **Status:** MERGED (PR #20). Findings: `spikes/device/FINDINGS.md`. Decisions D7-D10 in `PLAN.md` §13. **Open items for a 0.1.2 rerun (follow-up PR, not blocking):** full 5-minute lock with the mic open; SDK `setLocalStorage` reliability and timing (matters for T-106); phone-mic retry; tester confirmation that the blank screen looks dark.
 - **Branch:** `glass/spike-device` (writes only `spikes/device/**`)
 - **Depends on:** T-002
 - **Spec:** on the real G2: (1) capture 10 seconds from the glasses mic and from the phone mic, save locally for comparison (do not commit audio); report which is cleaner at normal conversation distance; (2) log raw IMU x/y/z during nod left, nod right, look up, look down; (3) confirm an event-capturing container works while nothing is visible (needed for the `blank` Screen); (4) confirm the WebView page is visible on the phone while the glasses render; (5) test lock/resume while the mic is open.
@@ -177,6 +177,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 - **Read for context:** `src/core/types.ts`, `docs/DISPLAY_LIMITS.md`, `docs/design/GLASSES_LAYOUTS.md`, `docs/vendor/even-skills/`
 - **Also builds (CONTRACT_VERSION 2):** the `AppShell` (glasses launcher as the root screen, mode switching, Screen mirroring for the phone), `createBridgeKeyValue` (a `KeyValueStore` over SDK storage), and lifecycle handling. Full spec in the Phase 1 builder prompt.
 - **Spec:** implement `GlassesUI`: render each `Screen` kind with SDK containers sized by the font-measurement guidance; `blank` is an event-capturing empty container. Map touchpad events to `Intent` (click=SELECT, swipe down=NEXT, swipe up=PREV, double-click=BACK). Reusable cue ladder component (`level 1/2/3`). Page lifecycle: survive phone lock/resume, handle exit. Await `waitForEvenAppBridge()` before SDK calls. Render `feedback` with `√` / `×` or words, never `✓` / `✗` (not in the G2 font). Request `@evenrealities/pretext` in the PR description if you need text measurement; ORCH installs it. Also take over the display path in `src/main.ts` from T-003's console logging (request the edit; `src/main.ts` is ORCH-owned).
+  - **Per S-3 (D8):** lifecycle via `document.visibilitychange` (hidden → flush store; visible → re-show the last Screen). SDK 0.0.12 has no `setBackgroundState`, and `FOREGROUND_*` events never fired on the device. The `blank` Screen (single-space event-capture container) is confirmed to receive taps and swipes. The Phase 1 prompt is corrected to match.
 - **Acceptance criteria:**
   - [ ] Each Screen kind renders in the simulator with a screenshot check.
   - [ ] The three stub modes from the registry show their status text on the simulator.
@@ -207,15 +208,15 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ### T-104 Audio capture, VAD, and utterance STT
 - **Owner:** AI
-- **Status:** TODO (S-1 done; waiting on S-3 for the mic source)
+- **Status:** READY (S-1 and S-3 done). Use the glasses mic only (D7).
 - **Branch:** `ai/audio-utterance`
 - **Depends on:** T-001, T-002, S-1, S-3
 - **Files it may EDIT:** `src/audio/**` (excluding `src/audio/rolling/`), `api/stt/**`. `app.json` permissions (`g2-microphone` or `phone-microphone`, `network` with the proxy URL whitelisted) are requested in the PR description; ORCH adds them.
-- **Spec:** implement `SttService` for real: capture PCM (source chosen per S-3), energy-based VAD producing `onSpeechState`, and `transcribeUtterance` (record until `endSilenceMs` of silence after speech or `maxMs`, then send to ElevenLabs batch STT). No audio written to disk or storage.
+- **Spec:** implement `SttService` for real: capture PCM from **`AudioInputSource.Glasses`** (D7; 50 ms chunks, a few hundred ms of start-up lag after `audioControl(true)`, so start the mic when the prompt is shown), energy-based VAD producing `onSpeechState`, and `transcribeUtterance` (record until `endSilenceMs` of silence after speech or `maxMs`, then send to ElevenLabs batch STT). No audio written to disk or storage.
   - **Per S-1** (`spikes/stt/FINDINGS.md`, "Integration notes"): batch `POST /v1/speech-to-text`, `model_id=scribe_v2`, raw PCM as `file` with `file_format=pcm_s16le_16` (no WAV wrapper), **`language_code=en` always** (D5), and a single-use `batch_scribe` token in `?token=`, pre-minted while the prompt is on screen. Use an `AbortController` with a ~4 s timeout → `error: 'timeout'`; a thrown fetch → `'network'`; HTTP 401/403 → `'unknown'` (logged); empty text → `'no-speech'`.
   - **`targetHint` is accepted but ignored (D1).** Never send it as a keyterm in Step 1.
   - **`api/stt` = token minter only (D3)**: `POST /api/stt/token {type: 'batch_scribe'|'realtime_scribe'}` → `{token}`, key from the host's env, origin allow-list, per-IP rate limit, never logs the key or tokens. Port `spikes/stt/token-server.mjs`. Host it (Vercel per PLAN §12.2) so a packaged build can reach it.
-  - **`app.json` (D4):** list the exact `network` whitelist entries and the mic permission in the PR description; ORCH adds them when this merges. Graceful errors: mic denied, network down, timeout (return an empty `Transcript` with a typed error the mode can show as `status`).
+  - **`app.json` (D4, D7):** list the exact `network` whitelist entries plus `g2-microphone` in the PR description; ORCH adds them when this merges. For device tests before then, use a separate spike-style manifest (see `spikes/device/app.json`) with a version above the last upload (D10). Graceful errors: mic denied, network down, timeout (return an empty `Transcript` with a typed error the mode can show as `status`).
 - **Acceptance criteria:**
   - [ ] Real utterance round-trip works from the simulator mic path and on the G2.
   - [ ] VAD emits speaking true/false transitions on a recorded test clip (clip not committed; test uses a synthetic PCM generator).
@@ -368,6 +369,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 - **Depends on:** S-3, T-101
 - **Files it may EDIT:** `src/glasses/imu/**`
 - **Spec:** calibrate on mode entry (look straight), derive tilt from raw x/y/z, emit `NEXT`/`PREV` through the same `Intent` stream (modes need no changes). Debounce, dead-zone, and a visible indicator when tilt is active. Flag `imuEnabled`, default off.
+  - **Per S-3 (D9):** look up / look down only (x axis, ±0.15 g dead zone around a calibrated rest value, ~10 Hz). No left/right.
 - **Acceptance criteria:** on the real G2, 20 deliberate tilts register at least 18 times and 20 idle head movements trigger at most 2 false intents.
 
 ### T-306 Gate G3: audit, soak, decide, tag
@@ -424,6 +426,7 @@ No new features after H18. Only fixes, packaging, polish, and the story.
 - H7: T-004 fixtures merged (PR #9). Follow-up filed as T-007.
 - H7: T-006 design tokens and glasses layouts merged (PR #7, after one round of changes).
 - H7: T-002 device checks done (PR #13, `docs/BETA_RESULTS.md`). QR prototype mode is broken on Even's side, so device testing uses packaged Beta builds; README and `docs/G2_SMOKE.md` updated.
+- H9: S-3 device spike merged (PR #20). Decisions D7-D10 (glasses mic, visibilitychange lifecycle, up/down tilt, `app.json` 0.2.0). T-104 READY. T-101 prompt corrected.
 - H8: S-1 ElevenLabs STT spike merged (PR #17). Decisions D1-D5 recorded in `PLAN.md` Section 13; T-104, T-202, T-203 and T-204 cards updated.
 - H7: T-105 phone companion merged (PR #11). Cue-ladder rule added to `GLASSES_LAYOUTS.md` (PR #15): the word stays hidden until level 3.
 - H7: CONTRACT_VERSION 2 (additive: `AppShell`, `ModeInfo`, `ModeContext.leave?()`, `GreyImage`, `ImageSource`, `KeyValueStore`). `@evenrealities/pretext@0.1.4` installed. Menu layout corrected to a text container. Phase 1 builder prompts added. **All lanes: rebase on `integration`.**
