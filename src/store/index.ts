@@ -58,12 +58,18 @@ export function createStore(
 
   function load(): Promise<void> {
     loading ??= Promise.all([read(BANK_KEY), read(SESSIONS_KEY)]).then(([bank, records]) => {
-      if (object(bank) && Array.isArray(bank.added) && bank.added.every(validWord) && strings(bank.removed)) {
-        for (const entry of bank.added) added.set(entry.id, structuredClone(entry))
-        for (const id of bank.removed) removed.add(id)
+      if (object(bank)) {
+        // Salvage valid records independently: one damaged personal word or
+        // tombstone must not erase the rest on the next successful write.
+        if (Array.isArray(bank.added)) {
+          for (const entry of bank.added.filter(validWord)) added.set(entry.id, structuredClone(entry))
+        }
+        if (Array.isArray(bank.removed)) {
+          for (const id of bank.removed) if (typeof id === 'string' && id.length > 0) removed.add(id)
+        }
       }
-      if (Array.isArray(records) && records.every(validSession)) {
-        sessions = records.sort((a, b) => b.startedAt - a.startedAt).slice(0, maxSessions)
+      if (Array.isArray(records)) {
+        sessions = records.filter(validSession).sort((a, b) => b.startedAt - a.startedAt).slice(0, maxSessions)
       }
     })
     return loading

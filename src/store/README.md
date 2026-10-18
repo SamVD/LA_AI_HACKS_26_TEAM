@@ -14,8 +14,11 @@ and `nudge.sessions.v1`. Await `store.flush()` when leaving the app or before
 an operation that needs confirmed persistence. Flushes serialize writes and
 include changes made during an in-flight write. Only changed keys are written.
 
-Malformed JSON or a wrong stored schema resets that key in memory; the next
-mutation repairs its persisted data. Read failures keep the store usable in
+Malformed JSON or an unsupported root value resets that key in memory.
+Within a stored list, invalid words, tombstones and sessions are ignored
+individually so valid neighboring records survive. Bank additions and removed
+ids load independently; damage to one does not discard the other. The next
+mutation to that key writes the recovered data. Read failures keep the store usable in
 memory. Failed background writes remain dirty and retry on the next mutation
 or explicit flush. An explicit `flush()` rejects on adapter failure so the
 shell can report it; it does not discard the in-memory data.
