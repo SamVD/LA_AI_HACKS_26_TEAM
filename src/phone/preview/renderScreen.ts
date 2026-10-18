@@ -31,13 +31,22 @@ function g2Lines(x: number, startY: number, rows: string[]): string {
   return rows.map((row, i) => g2Line(x, startY + i * LH, row)).join('\n')
 }
 
-function imageBox(x: number, y: number, w: number, h: number, key: string, opts?: RenderScreenOptions): string {
+function imagePlaceholder(
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  key: string,
+  kind: 'picture' | 'mouth',
+  opts?: RenderScreenOptions,
+): string {
   const url = opts?.imageUrl?.(key)
   if (url) {
     return `<image href="${esc(url)}" x="${x}" y="${y}" width="${w}" height="${h}" preserveAspectRatio="xMidYMid meet"/>`
   }
+  const label = kind === 'mouth' ? '(mouth)' : '(picture)'
   return `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="none" stroke="${GD}" stroke-width="1"/>
-${g2Line(x + 8, y + 8, key)}`
+${g2Line(x + 8, y + 8, label)}`
 }
 
 function wrapLines(text: string, maxChars = 60): string[] {
@@ -74,9 +83,10 @@ export function renderScreen(screen: Screen, opts?: RenderScreenOptions): string
       if (screen.level === 1) {
         const rows: string[] = []
         if (screen.sentence) rows.push(screen.sentence)
-        const visualKey = screen.imageKey ?? screen.mouthKey
-        if (visualKey) {
-          parts.push(imageBox(16, 54, 200, 120, visualKey, opts))
+        if (screen.imageKey) {
+          parts.push(imagePlaceholder(16, 54, 200, 120, screen.imageKey, 'picture', opts))
+        } else if (screen.mouthKey) {
+          parts.push(imagePlaceholder(16, 54, 200, 120, screen.mouthKey, 'mouth', opts))
         }
         if (rows.length) parts.push(g2Lines(16, 27, rows))
       } else if (screen.level === 2 && screen.masked) {
@@ -98,11 +108,13 @@ export function renderScreen(screen: Screen, opts?: RenderScreenOptions): string
       const item = screen.items[screen.index]
       const meta = [`${screen.index + 1}/${screen.items.length}`, `L${screen.level}`]
       if (screen.level === 1 && item) {
-        const visualKey = item.mouthKey ?? item.imageKey
-        if (visualKey) {
-          parts.push(imageBox(16, 54, 180, 108, visualKey, opts))
+        const hasVisual = item.mouthKey ?? item.imageKey
+        if (item.mouthKey) {
+          parts.push(imagePlaceholder(16, 54, 180, 108, item.mouthKey, 'mouth', opts))
+        } else if (item.imageKey) {
+          parts.push(imagePlaceholder(16, 54, 180, 108, item.imageKey, 'picture', opts))
         }
-        parts.push(g2Lines(visualKey ? 208 : 16, 72, meta))
+        parts.push(g2Lines(hasVisual ? 208 : 16, 72, meta))
         break
       } else if (screen.level === 2 && item) {
         parts.push(g2Lines(16, 108, [item.word.slice(0, 1), ...meta]))

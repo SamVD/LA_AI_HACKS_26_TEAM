@@ -48,6 +48,8 @@ describe('renderScreen', () => {
       sentence: 'You drink from a ____.',
     })
     expect(cueL1).not.toContain('>cup</text>')
+    expect(cueL1).not.toContain('cup-line')
+    expect(cueL1).toContain('(picture)')
 
     const l1 = renderScreen({
       kind: 'candidates',
@@ -58,6 +60,8 @@ describe('renderScreen', () => {
     expect(l1).toContain('1/1')
     expect(l1).toContain('L1')
     expect(l1).not.toContain('>cup</text>')
+    expect(l1).not.toContain('round-lips')
+    expect(l1).toContain('(mouth)')
 
     const l2 = renderScreen({
       kind: 'candidates',
