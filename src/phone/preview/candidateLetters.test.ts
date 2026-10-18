@@ -12,4 +12,9 @@ describe('candidateLetters (CONTRACT v3)', () => {
   it('shows the full word at L3', () => {
     expect(candidateDisplay('sunny', 3)).toBe('sunny')
   })
+
+  it('keeps spaces visible for multi-word suggestions', () => {
+    expect(candidateLevel1('Maple Hall')).toBe('M _ _ _ _   _ _ _ _')
+    expect(candidateLevel2('Maple Hall')).toBe('M a p l e   _ _ _ _')
+  })
 })

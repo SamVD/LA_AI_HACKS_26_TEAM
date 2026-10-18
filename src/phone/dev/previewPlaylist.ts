@@ -1,8 +1,5 @@
 import type { Screen } from '../../core/types'
-import { mouthKeyFor } from '../../content'
 import { sketchScreens } from '../theme/sketchSamples'
-
-const cupMouth = mouthKeyFor({ id: 'cup', word: 'cup', category: 'object', frames: [], tags: [] })
 
 const cueL1: Screen = {
   kind: 'cue',
@@ -19,9 +16,9 @@ const candidatesL1: Screen = {
   level: 1,
   index: 0,
   items: [
-    { word: 'cup', confidence: 0.9, imageKey: 'cup', source: 'bank' },
-    { word: 'water', confidence: 0.7, imageKey: 'water', source: 'bank' },
-    { word: 'tea', confidence: 0.5, imageKey: 'tea', source: 'bank' },
+    { word: 'cup', confidence: 0.9, source: 'bank' },
+    { word: 'water', confidence: 0.7, source: 'bank' },
+    { word: 'tea', confidence: 0.5, source: 'bank' },
   ],
 }
 
@@ -30,7 +27,7 @@ const candidatesL2: Screen = {
   level: 2,
   index: 0,
   items: [
-    { word: 'cup', confidence: 0.9, mouthKey: cupMouth, source: 'bank' },
+    { word: 'cup', confidence: 0.9, source: 'bank' },
     { word: 'water', confidence: 0.7, source: 'bank' },
     { word: 'tea', confidence: 0.5, source: 'bank' },
   ],

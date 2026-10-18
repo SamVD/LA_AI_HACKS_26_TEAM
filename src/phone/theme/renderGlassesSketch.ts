@@ -127,9 +127,8 @@ export function renderLayoutSketch(id: LayoutSketchId): string {
       break
 
     case 'candidates-1':
-      parts.push(containerRect(16, 54, 180, 108, 'image mouth', false))
-      parts.push(containerRect(208, 54, 360, 135, 'text candidate', true))
-      parts.push(g2Lines(216, 72, ['cup', '1/3 · L1']))
+      parts.push(containerRect(8, 54, 560, 135, 'text candidate', true))
+      parts.push(g2Lines(16, 72, ['c _ _', '1/3 · L1']))
       parts.push(g2Lines(16, 216, ['swipe · tap']))
       break
 
