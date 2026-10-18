@@ -1,0 +1,26 @@
+{
+  "name": "nudge",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests",
+    "preview": "vite preview",
+    "pack": "npm run build && evenhub pack app.json dist --sdk-ver 0.0.12 -o nudge.ehpk",
+    "simulate": "evenhub-simulator http://localhost:5173",
+    "qr": "evenhub qr --url"
+  },
+  "dependencies": {
+    "@evenrealities/even_hub_sdk": "0.0.12"
+  },
+  "devDependencies": {
+    "@evenrealities/evenhub-cli": "^0.1.14",
+    "@evenrealities/evenhub-simulator": "^0.9.5",
+    "typescript": "^5.7.0",
+    "vite": "^5.4.0",
+    "vitest": "^3.2.0"
+  }
+}

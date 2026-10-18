@@ -13,3 +13,14 @@ Thumbs.db
 # Environment
 .env
 .env.*
+!.env.example
+
+# Node / build
+node_modules/
+dist/
+*.ehpk
+
+# Audio (never commit recordings)
+*.wav
+*.pcm
+*.raw
