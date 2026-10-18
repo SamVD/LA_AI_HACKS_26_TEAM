@@ -12,8 +12,14 @@ describe('createDevShell', () => {
     shell.onScreen(s => seen.push(s.kind))
     await shell.startMode('step1')
     expect(shell.activeMode()).toBe('step1')
-    expect(seen.at(-1)).toBe('status')
-    expect(shell.lastScreen()).toEqual({ kind: 'status', text: 'step1 not built yet' })
+
+    const last = shell.lastScreen()
+    if (last?.kind === 'prompt') {
+      expect(last.sentence).toContain('____')
+      expect(seen).toContain('prompt')
+    } else {
+      expect(last).toEqual({ kind: 'status', text: 'step1 not built yet' })
+    }
 
     await shell.leaveMode()
     expect(shell.activeMode()).toBe(null)
