@@ -8,7 +8,7 @@ _Status: DONE, Sat Oct 17 2026, AI lane. Prompt v1, 25 cases × 2 reps per model
 - **Accuracy:** top-3 is **0.94 zero-shot** and **0.98 few-shot**, against 0.60 for the bank-only fallback. JSON was valid on 100% of calls.
 - **Latency:** p50 ~650 ms and p95 ~840-890 ms, measured client-to-Gemini **without** the proxy hop. 1 of 100 calls went over 1.2 s (1350 ms). **1.2 s is realistic** if the proxy adds about 150 ms or less.
 - **Ship the few-shot examples.** Few-shot is +0.04 top-3 for about +20 ms p50, and it fixes the one systematic zero-shot failure: forcing a bank word that doesn't fit.
-- **Rate limit (blocking for the demo):** the team key is on a free tier, about 15 requests/minute. The first unpaced run hit `429 RESOURCE_EXHAUSTED` after 16 calls. Step 2 calls predict on every final transcript segment, so in a live conversation it **will** hit this limit and silently fall back to 0.60 accuracy. See R5.
+- **Rate limit:** the free tier is **15 requests/minute per project per model** (measured from the 429). Unthrottled, Step 2 prefetch would hit it within a minute and silently fall back to 0.60 accuracy. **Decision: stay free and throttle.** `throttle.mjs` holds the reference policy, which T-201 ports. It is checked in simulation and live. See R5.
 - **The fallback has real bugs in the Section 7 spec** (R0-R3). It matters more than it looks, because of the rate limit.
 
 ## How to run
@@ -115,12 +115,31 @@ These are proposals. I have not edited `PREDICTOR_PROMPT.md`, which ORCH owns. A
 - **R4. Clarify** whether the `sample` tag counts in tag overlap. The harness ignores it as metadata.
 
 **Ops (blocking for the G2 gate and the demo):**
-- **R5. Rate limit.** The current key gets about 15 requests/minute (free tier). Step 2 speculative prefetch fires on every final segment, which is easily 10-20 per minute in conversation, before any retries.
-  - Either put the key on a billed project before G2, or have T-203/T-201 **debounce prefetch** (for example, at most one predict per 3 s, cancelling stale calls).
-  - Either way, T-201 must treat **429 as an immediate fallback, never a retry,** inside the 1.2 s budget.
+- **R5. Rate limit. Decision for now: stay on the free tier and throttle.** The free tier caps us at **15 requests/minute per project per model**. That number comes from the API itself: 429 `quotaId: GenerateRequestsPerMinutePerProjectPerModel-FreeTier`, `quotaValue: "15"`, `retryDelay: "19s"`, reached after 17 calls in 5.9 s. Google no longer publishes free-tier numbers ([rate-limits](https://ai.google.dev/gemini-api/docs/rate-limits) points to AI Studio), and the limits are **per project, not per key**, so extra keys don't help.
+  - **Why not another free model:** they were 3-7× slower (above), and the limit is per model anyway. `gemini-3.5-flash-lite` at 15/min is the best free option.
+  - **Without a throttle,** Step 2 prefetch on every final segment runs 30-60 calls/min in busy talk and hits 429 within the first minute.
+  - **Reference throttle: `spikes/predictor/throttle.mjs`** (pure, injectable clock). T-201 should port it.
+    - Prefetch is trailing-edge: at most 1 call per 5 s, always on the *latest* transcript, and in-between segments are coalesced. Prefetch can use at most 12 of the 15 slots, so **3 slots/min are reserved for help taps**.
+    - A tap uses the cache if it matches the current transcript. Otherwise it makes a live call if the window has room, and otherwise uses the stale cache or the fallback. **It never waits on the limiter.**
+    - A 429 blocks calls for its `retryDelay` and is **never retried** inside the 1.2 s budget.
+  - **Fake-clock check** (`node spikes/predictor/throttle-check.mjs`, deterministic, enforces the real 15/min quota):
+
+| Scenario | Finals | Taps | Model calls | Max per 60 s | 429s | Taps answered from | Max tap wait |
+|---|---|---|---|---|---|---|---|
+| 8 fixture conversations back to back | 48 | 8 | 48 | 12 | 0 | cache 8/8 | 0 ms |
+| Busy talk: final every 2 s, tap every 10 s, 10 min | 300 | 59 | 122 | 13 | 0 | live 59 | 650 ms (one call) |
+| Worst case: final every 1 s, tap every 4 s, 10 min | 600 | 149 | 150 | **15** | 0 | live 142, stale cache 7 | 650 ms |
+| Shared quota: +6 req/min used elsewhere in the project | 200 | 37 | 54 | 12 | 8 (others' traffic) | live 15, cache 3, stale 19 | 650 ms |
+| Unthrottled, final every 1 s | | | | 60 | 429 within the first minute | | |
+
+    In the real fixture conversations every help tap was an **instant cache hit**: the user stops talking at a stall, so prefetch has caught up. The worst case sits exactly at the cap with 0 429s. When someone else on the project eats quota, taps degrade to the stale cache, not to errors.
+  - **Live check** (`--live`, 3 min against real Gemini, a final every 1.5 s, a tap every 8 s): **PASS, 0 HTTP 429s.** All 22 help taps were answered by a live model call, with a max tap wait of 683 ms. The total call count and max per 60 s weren't captured (output was truncated). Re-run `--live` to get them. The fake-clock run above bounds them at ≤15/min.
+  - **Also needed:** prefetch only while Step 2/3 is active. **The daily cap (RPD) is unknown**; it isn't in the 429 or the docs, so check AI Studio → Rate limits. At ≤12 prefetches a minute, an hour of continuous talk is ≤720 calls. If the RPD cap turns out low, raise `minGapMs` to 10 s for the demo.
+  - **If we get billing later:** Tier 1 removes the bottleneck. Keep the throttle anyway, at `minGapMs` ~2 s.
 
 ## Notes for other lanes
 
-- **T-201 (LOGIC):** `validate()` and `fallback()` in `eval.mjs` are a spec-faithful reference with a self-check. Port them; do not import from `spikes/`. Handle 429 as an immediate fallback (R5).
+- **T-201 (LOGIC):** `validate()` and `fallback()` in `eval.mjs` are a spec-faithful reference with a self-check. Port them; do not import from `spikes/`. Also port `throttle.mjs` (R5) and keep `throttle-check.mjs`'s scenarios as Vitest cases. Handle 429 as an immediate fallback.
+- **T-204 (GLASS, Step 2):** call `onFinal` on each final segment and `onHelp` on SELECT. Don't call `predict` directly, or the prefetch will blow the 15/min quota.
 - **T-203 (AI):** the exact request body that worked is `body()` in `eval.mjs` plus `thinkingConfig.thinkingLevel = 'minimal'`. Put the model ID in one constant.
 - **T-007 (LOGIC):** see eval-04 above. The eval set is also near ceiling (0.94-0.98). Add harder cases, such as noisy STT-style transcripts with mis-hearings, two plausible bank names, or long tails, so the next prompt change can be measured.
