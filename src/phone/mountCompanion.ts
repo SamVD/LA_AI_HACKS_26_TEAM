@@ -6,6 +6,7 @@ import { applyPhoneTheme, watchThemePreference } from './theme/applyTheme'
 import { buildPersonalEntry, isPersonalCategory, validatePracticeFrame } from './personalWord'
 import { ensurePreviewImages, renderPreviewOptions } from './preview/previewAssets'
 import { renderScreen } from './preview/renderScreen'
+import { judgeDemoHref } from './judgeDemoHref'
 import { formatStep1ItemLine, summarizeStep1Session } from './sessionSummary'
 
 export type CompanionDebugState = {
@@ -78,6 +79,18 @@ export function mountCompanion(
   previewHost.setAttribute('aria-live', 'polite')
   const previewKind = document.createElement('p')
   previewKind.className = 'nudge-preview-kind'
+
+  const judgeDemoCard = document.createElement('section')
+  judgeDemoCard.className = 'nudge-card nudge-home-demo'
+  judgeDemoCard.innerHTML = `
+    <h2>Judge demo</h2>
+    <p class="nudge-home-demo-lead">Scripted conversation stall for the booth — no second person required.</p>
+  `
+  const demoLink = document.createElement('a')
+  demoLink.className = 'nudge-btn nudge-btn--ghost'
+  demoLink.href = judgeDemoHref()
+  demoLink.textContent = 'Open judge demo'
+  judgeDemoCard.append(demoLink)
 
   const modeList = document.createElement('div')
   modeList.className = 'nudge-mode-list'
@@ -349,7 +362,7 @@ export function mountCompanion(
     tabBar.append(btn)
   }
 
-  homePanel.append(modeList)
+  homePanel.append(judgeDemoCard, modeList)
   previewPanel.append(previewHost, previewKind)
   if (options.devPlaylist?.length) {
     const prev = document.createElement('button')
@@ -440,7 +453,10 @@ export function mountCompanion(
 
   const header = document.createElement('header')
   header.className = 'nudge-card'
-  header.innerHTML = `<h1>Nudge</h1>`
+  header.innerHTML = `
+    <h1>Nudge</h1>
+    <p class="nudge-tagline">Quiet word-finding help on the glasses. This page stays calm.</p>
+  `
   root.append(header, tabBar, panels)
 
   const unsubScreen = shell.onScreen(() => {

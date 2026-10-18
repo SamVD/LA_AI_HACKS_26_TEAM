@@ -22,7 +22,7 @@ _Source: [LA AI Hackathon 2026 Devpost](https://la-ai-hackathon-2026.devpost.com
 1. **One cohesive visual system** — tokens + typography scale + spacing (done in T-006; polish pass in T-403).
 2. **Documented glasses layouts** — `GLASSES_LAYOUTS.md` + `sketches/*.svg` (T-006); implemented in `src/glasses/` (T-101).
 3. **Devpost extras** — link to `docs/design/`, optional Figma or exported PNGs from the Screen preview (T-105).
-4. **Demo story** — judge puts on G2; phone page stays calm; glasses stay blank until help is needed (Quiet Tech thesis).
+4. **Demo story** — judge puts on G2; phone page stays calm; glasses stay blank until help is needed (Quiet Tech thesis). **Judge demo:** Home → “Open judge demo”, or `/src/phone/demo/index.html` (T-401).
 
 ## Open question for sponsor table
 
