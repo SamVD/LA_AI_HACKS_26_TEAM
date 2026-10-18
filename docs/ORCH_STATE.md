@@ -193,7 +193,7 @@ Legend: ✅ merged · 🟡 in progress / review · ⬜ todo · 🚦 gate.
 | T-403 | Paper design polish | UI | 🟡 partly done (tagline, focus rings, contrast, Devpost asset index, Home copy, preview captions, Words asset hint, Step 3 demo); #80 needs a rebase | #41→#44, #47, #64, #69, #71, #83, #80 |
 | T-404 | Devpost + demo script | ORCH | 🟡 drafts merged (#113, #114). Non-G3 finishing moved to **T-406** (juannli); ORCH fills the G3-dependent `[FILL]`s after the decision | #113, #114 |
 | T-406 | Finish Devpost (team, What we learned, local demo steps, screenshot, field map, video prep) | UI (juannli + Claude) | ✅ merged (#121); left: Devpost handles + the G3/final-build `[FILL]`s (ORCH) | #121 |
-| T-317 | StepFun predictor spike, Phase A | AI (Sam) | ❌ **FAIL on latency** (#129): step-5-preview p50 6.6 s, 0/62 within 1.2 s; accurate when it answers | #129 |
+| T-317 | StepFun predictor spike, Phase A | AI (Sam) | ❌ **FAIL on latency** (#129): step-5-preview p50 6.6 s, 0/62 within 1.2 s; accurate when it answers. Like-for-like Gemini on the same 31 cases (#132): p50 764 ms, top-3 1.00, 0/31 over 1.2 s | #129, #132 |
 | T-318 | StepFun in `api/predict` (Phase B) | AI (Sam) | ✖ cancelled (T-317 failed); Gemini stays the only provider | — |
 | T-405 | Final audit + submission | ORCH | ⬜ | — |
 
@@ -234,7 +234,7 @@ ORCH infrastructure PRs: #2, #5, #6, #10, #12, #14, #15, #16, #19, #25, #27, #30
 | 3 | Gemini **free tier 15 req/min, daily cap unknown** | Suggestions fall back to bank-only under load | AI | Throttle (D11); check AI Studio → Rate limits before the demo; billing would remove it |
 | 4 | **Vercel Hobby** blocks Git deploys from non-members; only Sam can deploy | A deploy bottleneck | AI | D15: only `bash api/_deploy-prod.sh` (merged commits, auto-checks). A `vercel --prod` from a checkout caused the 9-minute 500 outage (05:07-05:16 UTC, issue #56) |
 | 5 | Single-device team (one G2) and minutes-long pack/upload cycles | Slow device iteration | GLASS | Simulator first; batch device checks; G1 and G2 back to back when possible |
-| 9 | ~~Gemini free daily quota exhausted~~ **Resolved 8:31 AM:** live `/api/predict` answers again (5 calls 0.95-1.22 s; the first, cold, 2.06 s) | Warm up with one tap before tests and demo takes | Aarav / Sam | Done |
+| 9 | ~~Gemini free daily quota exhausted~~ **Resolved 8:31 AM:** live `/api/predict` answers again (5 calls 0.95-1.22 s; the first, cold, 2.06 s) | Warm up with one tap before tests and demo takes. Sam set a **$5/month Gemini spend cap** with alerts at 50/80/100% (#132); that covers about 25k calls, far beyond demo use | Aarav / Sam | Done |
 | 8 | **The repo is public** (it was private earlier) | Anyone can read the full history | ORCH | **Checked H18:** all 287 commits on every branch scanned for Google/ElevenLabs keys, `sutkn_` tokens, private keys and `.env`/`.vercel` files: **clean**. Keep secrets on Vercel only |
 | 7 | **Vercel Hobby deploy quota exhausted** (100 per 24 h, rolling; error `api-deployments-young-hobby-team-24h` on every PR since about #79). Cause: every branch push made a preview deploy | **Production keeps serving** (checked live), but Sam **can't redeploy `api/`** until slots free up. Each freed slot was being used by the next push | ORCH / Sam | `vercel.json` `git.deploymentEnabled: false` (this PR) stops preview deploys. `api/_deploy-prod.sh` writes its own `vercel.json`, so production deploys are unaffected. **Avoid `api/` changes before the demo**; if one is critical, Sam checks `vercel ls` for a free slot. Ignore the red "Vercel" status on PRs; `verify` is the check that counts |
 | 6 | Not yet seen on hardware: mic denial path, SDK storage persistence across restarts, multiple `onEvenHubEvent` listeners | Possible G1 failures | GLASS | G2_SMOKE A4, A7, B5 cover them explicitly |
@@ -261,7 +261,7 @@ There are no console logs on the device. Use the phone companion's **Preview** t
 | Person | Now | Then |
 |---|---|---|
 | **Sarah (GLASS)** | **T-312** launcher label ("Practice", "Conversation": show `ModeInfo.title` only). Then the **G3 re-run** on 0.4.4 with the tally + log export | T-402 final Beta at 7:00 (after the freeze) |
-| **Sam (AI)** | **First: Gemini billing on the existing project** (blocker #9). Then **T-317** StepFun spike (local only, results by 8:45 or stop). T-318 only after T-317 passes (cut-off 9:30). No `api/` deploy otherwise | Help with the Devpost technical section |
+| **Sam (AI)** | ✅ Gemini billing + $5 cap, T-317 done (#129, #132). **No `api/` deploys before the demo.** Next: help Sarah with the G3b re-test if needed, then the video and the Devpost technical section | Help with the Devpost technical section |
 | **juannli (LOGIC via Devin + UI)** | **T-313** Step 1 short-speech filter (Devin); **T-312** phone Home (hide Step 2, Conversation copy); **T-315** export-log button | Refresh `15-phone-companion.png`; final T-403 polish |
 | **Aarav (ORCH)** | Audit T-311..T-315 as they land; flip `.env.production` (`VITE_STEP2=0`, `VITE_STEP3=1`) when T-312 is in; bump to 0.4.4; record the G3 re-run; tag `v0.3-step3` on a pass | **T-404 Devpost + demo script** (start now), T-405 submission |
 
@@ -285,6 +285,7 @@ There are no console logs on the device. Use the phone companion's **Preview** t
 
 | When | Change |
 |---|---|
+| Sun 8:45 AM | Merged #132 (Sam): like-for-like Gemini baseline for T-317, p50 764 ms, 31/31 in top 3, 0 over 1.2 s. StepFun FAIL confirmed. Gemini $5 monthly spend cap set. **No open PRs**; waiting on the G3b re-test for 9:30 |
 | Sun 8:40 AM | Gemini back (billing): live predict 0.95-1.22 s. **D21:** one fair Conversation re-test (G3b) on **0.4.6** (`VITE_STEP3=1 VITE_DEBUG=1`), 15-min checklist with pass criteria, decision at 9:30, **final judge build 0.4.7** uploaded last. `app.json` → 0.4.6 |
 | Sun 8:25 AM | Merged #129 (T-317 StepFun spike: **FAIL**, reasoning model, p50 6.6 s). T-318 cancelled; #124 closed. Merged #121 (T-406), #128 (gallery). **No open PRs.** Left: Gemini billing, 0.4.5 final build + check, video, Devpost FILLs, submit |
 | Sun 8:20 AM | Merged #121 (T-406: field map, What we learned, local judge demo, team, Practice · Assist screenshot, shoot plan). System-map diagram added to the Devpost gallery order. No open PRs; waiting on T-317 (Sam, local) |
