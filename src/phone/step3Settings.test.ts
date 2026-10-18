@@ -39,8 +39,11 @@ describe('step3Settings', () => {
     expect(calm.minSilenceMs).toBeGreaterThan(DEFAULT_STALL_CONFIG.minSilenceMs)
     expect(calm.maxPerMinute).toBeLessThan(DEFAULT_STALL_CONFIG.maxPerMinute)
     expect(eager.minSilenceMs).toBeLessThan(DEFAULT_STALL_CONFIG.minSilenceMs)
-    expect(eager.contentWordEndings).toBe(true)
     expect(eager.cooldownMs).toBeLessThan(DEFAULT_STALL_CONFIG.cooldownMs)
+    // ORCH nit on T-304: no sensitivity enables the content-word ending reason.
+    for (const s of ['calm', 'balanced', 'eager'] as const) {
+      expect({ ...DEFAULT_STALL_CONFIG, ...stallOverrides(s) }.contentWordEndings).toBe(false)
+    }
   })
 
   it('notifies subscribers with the merged settings on write', () => {

@@ -63,14 +63,16 @@ export function onStep3SettingsChange(cb: (settings: Step3Settings) => void): ()
 /**
  * Sensitivity → stall-detector overrides (T-301's StallConfig).
  * `balanced` is the tuned default from G1; `calm` needs a longer silence and hints
- * less often; `eager` also hints on content-word endings with a shorter silence.
+ * less often; `eager` is a shorter silence with a higher rate. None enable the
+ * `content-word` ending reason — a content-word tail can't be told from a finished
+ * unpunctuated sentence, so it stays off at every sensitivity (ORCH nit on T-304).
  */
 export function stallOverrides(sensitivity: Step3Sensitivity): Partial<StallConfig> {
   switch (sensitivity) {
     case 'calm':
       return { minSilenceMs: 2500, cooldownMs: 20_000, maxPerMinute: 2, contentWordEndings: false }
     case 'eager':
-      return { minSilenceMs: 900, cooldownMs: 5000, maxPerMinute: 6, contentWordEndings: true, contentWordSilenceMs: 2000 }
+      return { minSilenceMs: 900, cooldownMs: 5000, maxPerMinute: 6, contentWordEndings: false }
     case 'balanced':
       return {}
   }
