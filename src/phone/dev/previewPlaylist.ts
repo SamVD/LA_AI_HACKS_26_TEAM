@@ -1,12 +1,15 @@
 import type { Screen } from '../../core/types'
+import { mouthKeyFor } from '../../content'
 import { sketchScreens } from '../theme/sketchSamples'
+
+const cupMouth = mouthKeyFor({ id: 'cup', word: 'cup', category: 'object', frames: [], tags: [] })
 
 const cueL1: Screen = {
   kind: 'cue',
   level: 1,
   word: 'cup',
-  imageKey: 'cup-line',
-  sentence: 'You drink from a ____.',
+  imageKey: 'cup',
+  sentence: 'I drink tea from a ____ with a handle.',
 }
 
 const cueL3: Screen = { kind: 'cue', level: 3, word: 'cup' }
@@ -16,9 +19,9 @@ const candidatesL1: Screen = {
   level: 1,
   index: 0,
   items: [
-    { word: 'cup', confidence: 0.9, mouthKey: 'round-lips', source: 'bank' },
-    { word: 'mug', confidence: 0.7, source: 'bank' },
-    { word: 'glass', confidence: 0.5, source: 'bank' },
+    { word: 'cup', confidence: 0.9, imageKey: 'cup', source: 'bank' },
+    { word: 'water', confidence: 0.7, imageKey: 'water', source: 'bank' },
+    { word: 'tea', confidence: 0.5, imageKey: 'tea', source: 'bank' },
   ],
 }
 
@@ -27,9 +30,9 @@ const candidatesL2: Screen = {
   level: 2,
   index: 0,
   items: [
-    { word: 'cup', confidence: 0.9, source: 'bank' },
-    { word: 'mug', confidence: 0.7, source: 'bank' },
-    { word: 'glass', confidence: 0.5, source: 'bank' },
+    { word: 'cup', confidence: 0.9, mouthKey: cupMouth, source: 'bank' },
+    { word: 'water', confidence: 0.7, source: 'bank' },
+    { word: 'tea', confidence: 0.5, source: 'bank' },
   ],
 }
 
@@ -39,8 +42,8 @@ const candidatesL3: Screen = {
   index: 1,
   items: [
     { word: 'cup', confidence: 0.9, source: 'bank' },
-    { word: 'mug', confidence: 0.7, source: 'bank' },
-    { word: 'glass', confidence: 0.5, source: 'bank' },
+    { word: 'water', confidence: 0.7, source: 'bank' },
+    { word: 'tea', confidence: 0.5, source: 'bank' },
   ],
 }
 
