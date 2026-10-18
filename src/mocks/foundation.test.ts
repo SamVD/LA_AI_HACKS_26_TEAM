@@ -50,7 +50,8 @@ describe('UI and registered modes', () => {
       // The default mock flags have step2Enabled off, so Step 2 shows its "off" status.
       expect(last).toEqual({ kind: 'status', text: 'Step 2 is turned off.\nDouble-tap to go back.' })
     } else {
-      expect(last).toEqual({ kind: 'status', text: `${id} not built yet` })
+      // The default mock flags have step3Enabled off, so Step 3 shows its "off" status.
+      expect(last).toEqual({ kind: 'status', text: 'Step 3 is turned off.\nDouble-tap to go back.' })
     }
     await getMode(id).exit()
   })
