@@ -78,6 +78,11 @@
     }
   },
   "branchGrants": {
+    "ui/devpost-finish": [
+      "docs/DEVPOST.md",
+      "docs/DEMO_SCRIPT.md",
+      "src/glasses/screenshots/**"
+    ],
     "logic/speaker-levels": [
       "src/audio/stt.ts",
       "src/audio/stt.test.ts",

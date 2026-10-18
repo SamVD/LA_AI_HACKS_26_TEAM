@@ -577,6 +577,28 @@ No new features after H18. Only fixes, packaging, polish, and the story.
 - **Files it may EDIT:** `docs/DEVPOST.md`, `docs/DEMO_SCRIPT.md`
 - **Spec:** problem and user story, how G2 is used (the judge will ask), architecture, what is real vs mocked, sponsor-prize claims (Gemini, ElevenLabs, Paper), honest limitations. Demo script with timings and a backup plan (simulator + Screen preview).
 
+### T-406 Finish the Devpost writeup (everything not waiting on G3)
+- **Owner:** UI (juannli, with Claude). Takes over the non-G3 part of T-404 from ORCH
+- **Status:** READY NOW. Target: PR by **8:15 AM**
+- **Branch:** `ui/devpost-finish` (OWNERS grant: `docs/DEVPOST.md`, `docs/DEMO_SCRIPT.md`, `src/glasses/screenshots/**`; `docs/design/**` is already UI)
+- **Depends on:** T-404 drafts (#113, #114, merged)
+- **Do:**
+  1. **Team section:** full names, roles and Devpost handles for all four (ask Aarav and the team). Remove its `[FILL]`.
+  2. **Add a "What we learned" section** to `DEVPOST.md`; Devpost has that field and the draft doesn't. 3-5 honest bullets, for example:
+     - device-only bugs (the WebView origin);
+     - measure latency before optimizing;
+     - STT that "corrects" speech is wrong for aphasia grading;
+     - mocks plus an SDK-free mode contract let four people share one pair of glasses.
+  3. **Judge demo without glasses:** there is **no hosted URL**. The Vercel root needs the Even bridge, the demo page isn't deployed, and we don't redeploy before the demo (D15, Vercel quota). Replace that `[FILL]` with local steps (`npm ci && npm run dev`, then open `http://localhost:5173/src/phone/demo/`) and **check the steps actually work**.
+  4. **Screenshots:** refresh `src/glasses/screenshots/15-phone-companion.png` from the dev server with Step 3 on (`?step3=1`), so Home shows "Practice · Conversation" and the Step 3 card, with no Debug tab. Check the gallery list in `DEVPOST.md` points only at files that exist (letters-first `16`-`18`, not `08`-`10`).
+  5. **Devpost form map:** at the top of `DEVPOST.md`, add a short table mapping each Devpost field to the section to paste: Elevator pitch/tagline, Inspiration, What it does, How we built it, Challenges, Accomplishments, What we learned, What's next, Built with, Try it out. Check the length limits (the tagline is short).
+  6. **Video prep (`DEMO_SCRIPT.md`):** settle who films and on what. Mark which beats can be shot **now** (Practice, phone companion, Assist tap) and which wait for the final build (Conversation auto-hint).
+- **Don't:**
+  - fill the G3-dependent `[FILL]`s: the Step 3 result, latency numbers, final version, test count, Beta install path and Step 3 on/off. ORCH fills those after the G3 decision (~8:00). Leave them as `[FILL]`.
+  - paste into Devpost or submit. Aarav submits (T-405).
+  - touch app code.
+- **Acceptance criteria:** one PR with only the files above; the only `[FILL]`s left are the G3-dependent ones; the local demo steps were run and work; the new screenshot is committed.
+
 ### T-405 Final audit and submission
 - **Owner:** ORCH
 - **Spec:** final audit pass; confirm tag, Beta build, Devpost, and G2 return arrangement; two full rehearsals.
