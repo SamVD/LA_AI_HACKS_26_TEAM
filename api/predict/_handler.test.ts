@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { orderBank, toWireRequest } from '../../src/ai/predictor/input'
 import type { WordEntry } from '../../src/core/types'
-import { createPredictHandler, MAX_BODY_BYTES, MODEL, parseOrigins, parseWireRequest, retryDelayMs } from './_handler'
+import { createPredictHandler, MAX_BODY_BYTES, MODEL, originMatches, parseOrigins, parseWireRequest, retryDelayMs } from './_handler'
 import { EXAMPLES, SYSTEM_PROMPT } from './_prompt'
 
 const KEY = 'AQ.test_key_never_leaks_0123456789'
@@ -193,5 +193,40 @@ describe('helpers', () => {
 
   it('parses origins', () => {
     expect(parseOrigins('a, b,,null')).toEqual(['a', 'b', 'null'])
+  })
+})
+
+// G1 (real G2): the Even app serves the packaged build from a local server, so the
+// WebView's Origin is http://127.0.0.1:<port> (61976 in the logs). The port may change per launch.
+describe('loopback any-port origins', () => {
+  it.each([
+    ['http://127.0.0.1:61976', 'http://127.0.0.1:*', true],
+    ['http://127.0.0.1:1', 'http://127.0.0.1:*', true],
+    ['http://127.0.0.1:61976', 'http://127.0.0.1:61976', true],
+    ['http://127.0.0.1', 'http://127.0.0.1:*', false], // no port
+    ['http://127.0.0.1:abc', 'http://127.0.0.1:*', false],
+    ['http://127.0.0.1:123456', 'http://127.0.0.1:*', false],
+    ['http://127.0.0.1.evil.com:80', 'http://127.0.0.1:*', false], // lookalike host
+    ['https://127.0.0.1:61976', 'http://127.0.0.1:*', false], // other scheme
+    ['http://127.0.0.10:61976', 'http://127.0.0.1:*', false],
+    ['http://localhost:61976', 'http://127.0.0.1:*', false],
+    ['https://evil.example', '*', true], // dev wildcard
+  ] as const)('%s vs %s -> %s', (origin, entry, ok) => {
+    expect(originMatches(origin, entry)).toBe(ok)
+  })
+
+  it('serves the Even WebView origin on any port and still rejects other origins', async () => {
+    const handle = createPredictHandler({
+      apiKey: 'k', allowedOrigins: parseOrigins('http://localhost:5173,http://127.0.0.1:*'),
+      fetch: (async () => Response.json({ candidates: [{ content: { parts: [{ text: '[]' }] } }] })) as unknown as typeof fetch,
+    })
+    const req = (origin: string) => new Request('https://nudge.example/api/predict', { method: 'POST', headers: { origin, 'content-type': 'application/json' }, body: JSON.stringify(wire) })
+    for (const port of [61976, 50123]) {
+      const res = await handle(req(`http://127.0.0.1:${port}`))
+      expect(res.status).toBe(200)
+      expect(res.headers.get('access-control-allow-origin')).toBe(`http://127.0.0.1:${port}`)
+    }
+    expect((await handle(req('http://127.0.0.1.evil.com:80'))).status).toBe(403)
+    expect((await handle(req('https://evil.example'))).status).toBe(403)
   })
 })
