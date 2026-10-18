@@ -5,6 +5,7 @@ import { judgeConversation, runJudgeDemo, stallCueLine } from './judgeDemo'
 vi.mock('../preview/previewAssets', () => ({
   ensurePreviewImages: async () => {},
   renderPreviewOptions: () => ({}),
+  previewImageUrl: () => null,
 }))
 
 describe('judgeDemo', () => {
@@ -34,7 +35,8 @@ describe('judgeDemo', () => {
       { speed: 0 },
     )
     expect(phases).toContain('help')
-    expect(lastLabel).toContain('cup')
+    expect(lastLabel).toContain('candidates L1')
+    expect(lastLabel).not.toContain('cup')
   })
 
   it('stops when the run is aborted', async () => {
