@@ -29,3 +29,6 @@ dist/
 
 # Vercel CLI link folder
 .vercel
+
+# Local Claude Code settings
+.claude/

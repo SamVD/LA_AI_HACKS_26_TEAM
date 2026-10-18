@@ -336,6 +336,7 @@ There are no console logs on the device. Use the phone companion's **Preview** t
 
 | When | Change |
 |---|---|
+| Sun 11:20 AM | Repo cleanup for judges: removed the empty setup folders (`docs/decisions|ideas|meeting-notes/`, `tasks/`) and the stub screenshot; resolved every `[FILL]` in DEVPOST.md and DEMO_SCRIPT.md (0.5.1, 839 tests, G3b, head gestures now built); OWNERS lane handles; `.claude/` ignored. Deleted 139 merged branches; kept 6 unmerged |
 | Sun 11:00 AM | **Judge-facing README** rewritten from the final Devpost (pitch, both modes, gestures, pipeline, measured results with sources, privacy, try-it, repo map, team). Glasses images rendered from the real layout code (`docs/design/readme/render.ts`). Dev setup moved to CONTRIBUTING.md |
 | Sun 10:47 AM | Merged #151 (T-320 Practice ladder). **0.5.1 = final judge build** (0.5.0 was never uploaded): Practice + Conversation + head tilt, no Debug. Main fast-forwarded, tag `v0.5.1` |
 | Sun 10:30 AM | **D27 / T-320:** Practice ladder fix (letter → letter + picture → show answer → next). Branch `logic/practice-ladder`, grant for glasses layout. Goes into 0.5.1 after a device check; doesn't block 0.5.0 or the video |

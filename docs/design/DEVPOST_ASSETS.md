@@ -24,7 +24,6 @@ Captured from the glasses renderer / simulator (`src/glasses/screenshots/`).
 | [`11-menu.png`](../../src/glasses/screenshots/11-menu.png) | Menu |
 | [`12-status.png`](../../src/glasses/screenshots/12-status.png) | Status |
 | [`13-blank.png`](../../src/glasses/screenshots/13-blank.png) | Blank (Step 2 idle) |
-| [`14-stub-step2.png`](../../src/glasses/screenshots/14-stub-step2.png) | Step 2 (early stub) |
 | [`15-phone-companion.png`](../../src/glasses/screenshots/15-phone-companion.png) | Phone companion (Home tab) |
 | [`system-map-diagram.png`](./system-map-diagram.png) | **How it works**: system map of the final judge build 0.4.5 (glasses → phone → cloud). Full page: [`system-map.png`](./system-map.png); source: [`system-map.html`](./system-map.html) |
 
