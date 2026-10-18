@@ -74,7 +74,7 @@ export function bindJudgeDemo(root: HTMLElement, options: BindJudgeDemoOptions =
       <li>Put on the <strong>Even G2</strong> (or watch the preview below).</li>
       <li><strong>Step 2:</strong> glasses stay blank until you tap SELECT for help.</li>
       <li><strong>Step 3:</strong> after a pause, a quiet hint can appear on its own (use Home to pause hints).</li>
-      <li>Swipe up/down between suggestions; tap to climb the cue ladder.</li>
+      <li>After help: <strong>tap</strong> shows the first letter and blanks (<code>c _ _</code>); tap again for more letters; swipe down = next suggestion; swipe up = confirm.</li>
       <li>Double-tap to go back; root double-tap exits the app.</li>
     `
     root.append(steps)
@@ -100,7 +100,7 @@ export function bindJudgeDemo(root: HTMLElement, options: BindJudgeDemoOptions =
       stalled: lastHintTrigger === 'tap'
         ? 'Stall — tap SELECT on the G2 for help.'
         : 'Stall — waiting for a quiet auto-hint…',
-      help: 'Showing help (level 1 picture cue).',
+      help: 'Showing help — first letter and blanks (tap for more).',
       cancelled: 'Cancelled.',
     }
     status.textContent = phaseLabel[state.phase]

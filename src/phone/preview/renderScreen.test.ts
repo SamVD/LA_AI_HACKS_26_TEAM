@@ -39,7 +39,7 @@ describe('renderScreen', () => {
     expect(cue).toContain('c _ p')
   })
 
-  it('hides candidate word at level 1 and shows first letter at level 2', () => {
+  it('renders letters-first candidates (CONTRACT v3)', () => {
     const cueL1 = renderScreen({
       kind: 'cue',
       level: 1,
@@ -59,17 +59,25 @@ describe('renderScreen', () => {
     })
     expect(l1).toContain('1/1')
     expect(l1).toContain('L1')
+    expect(l1).toContain('c _ _')
     expect(l1).not.toContain('>cup</text>')
-    expect(l1).not.toContain('round-lips')
-    expect(l1).toContain('(mouth)')
+    expect(l1).not.toContain('(mouth)')
 
     const l2 = renderScreen({
       kind: 'candidates',
       level: 2,
       index: 0,
+      items: [{ word: 'sunny', confidence: 1, source: 'bank' }],
+    })
+    expect(l2).toContain('s u n _ _')
+    expect(l2).not.toContain('>sunny</text>')
+
+    const l3 = renderScreen({
+      kind: 'candidates',
+      level: 3,
+      index: 0,
       items: [{ word: 'cup', confidence: 1, source: 'bank' }],
     })
-    expect(l2).toContain('>c</text>')
-    expect(l2).not.toContain('>cup</text>')
+    expect(l3).toContain('>cup</text>')
   })
 })

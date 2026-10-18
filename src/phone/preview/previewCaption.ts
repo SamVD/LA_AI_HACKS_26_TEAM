@@ -1,4 +1,5 @@
 import type { Screen } from '../../core/types'
+import { revealWord } from '../../glasses/ladder'
 import { collectImageKeys } from './collectImageKeys'
 import { previewImageUrl } from './previewAssets'
 
@@ -31,14 +32,8 @@ export function describePreviewScreen(screen: Screen, options: PreviewCaptionOpt
     case 'candidates': {
       const item = screen.items[screen.index]
       const parts = [`candidates L${screen.level}`, `${screen.index + 1}/${screen.items.length}`]
-      if (screen.level === 1 && item) {
-        if (item.mouthKey) parts.push(assetLine(item.mouthKey, 'mouth', showAssetKeys))
-        else if (item.imageKey) parts.push(assetLine(item.imageKey, 'picture', showAssetKeys))
-        else parts.push('text only')
-      } else if (screen.level === 2 && item) {
-        parts.push(item.word.slice(0, 1))
-      } else if (item) {
-        parts.push(item.word)
+      if (item) {
+        parts.push(revealWord(item.word, screen.level))
       }
       return `${head} · ${parts.join(' · ')}`
     }

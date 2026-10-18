@@ -1,4 +1,5 @@
 import type { Screen } from '../../core/types'
+import { revealWord } from '../../glasses/ladder'
 import { glassesCanvas } from '../theme/tokens'
 
 const W = glassesCanvas.width
@@ -107,19 +108,9 @@ export function renderScreen(screen: Screen, opts?: RenderScreenOptions): string
     case 'candidates': {
       const item = screen.items[screen.index]
       const meta = [`${screen.index + 1}/${screen.items.length}`, `L${screen.level}`]
-      if (screen.level === 1 && item) {
-        const hasVisual = item.mouthKey ?? item.imageKey
-        if (item.mouthKey) {
-          parts.push(imagePlaceholder(16, 54, 180, 108, item.mouthKey, 'mouth', opts))
-        } else if (item.imageKey) {
-          parts.push(imagePlaceholder(16, 54, 180, 108, item.imageKey, 'picture', opts))
-        }
-        parts.push(g2Lines(hasVisual ? 208 : 16, 72, meta))
-        break
-      } else if (screen.level === 2 && item) {
-        parts.push(g2Lines(16, 108, [item.word.slice(0, 1), ...meta]))
-      } else if (item) {
-        parts.push(g2Lines(16, 108, [item.word, ...meta]))
+      if (item) {
+        const line = revealWord(item.word, screen.level)
+        parts.push(g2Lines(16, screen.level === 1 ? 72 : 108, [line, ...meta]))
       }
       break
     }

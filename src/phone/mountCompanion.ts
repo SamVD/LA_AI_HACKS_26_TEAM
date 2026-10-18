@@ -528,7 +528,7 @@ export function mountCompanion(
   const previewLead = document.createElement('p')
   previewLead.className = 'nudge-preview-lead'
   previewLead.textContent =
-    'Mirrors the glasses. Captions follow the cue ladder (no target word until level 3). Asset lines show loaded vs placeholder only.'
+    'Mirrors the glasses. Step 2 and 3 candidates are letters-first (not pictures or mouth shapes). Captions follow the cue ladder; asset lines show loaded vs placeholder only.'
   previewPanel.append(previewLead, previewLive, previewHost, previewKind)
   if (options.devPlaylist?.length) {
     const prev = document.createElement('button')
