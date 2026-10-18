@@ -4,6 +4,18 @@ The orchestrator's single snapshot of where Nudge stands. **ORCH updates this af
 
 _Last updated: **Sun Oct 18, 2026, 8:40 AM PT** by ORCH (aaravj9). **Gemini is back (0.95-1.22 s).** Next: **Conversation re-test G3b on 0.4.6 (Sarah), decision at 9:30 → final judge build 0.4.7.** Read "Conversation re-test" first. Video due 11:00 AM._
 
+## Final stretch (D25): sideways tilt, last test 0.4.9, judge build 0.5.0
+
+| When | What |
+|---|---|
+| now | Sarah finishes the 0.4.8 check (tilt up/down, speaker gate) |
+| **10:15** | **Cut-off:** T-319 (sideways tilt = reveal more) and T-407 (phone cleanup, extended from 10:10) PRs green. Late = dropped |
+| 10:20 | ORCH merges what passed review, sets `app.json` **0.4.9**. Sarah packs the **last test build**: `npm ci && npm test && VITE_IMU=1 VITE_SPEAKER_GATE=1 VITE_DEBUG=1 npm run pack` (`VITE_STEP3` is already on) |
+| 10:20-10:30 | **Final check (10 min):** suggestion showing: 10 sideways tilts → ≥ 8 reveal; 10 down/up → switch, ≤ 1 wrong reveal; 2 min talking/nodding → ≤ 1 unwanted action; partner talks with 3 pauses → 0 hints; 3 wearer stalls → ≥ 2 hints; phone UI looks right |
+| 10:30 | ORCH: passing flags go into `.env.production` (`VITE_IMU=1`, `VITE_SPEAKER_GATE=1`); `app.json` **0.5.0** |
+| 10:35 | Sarah packs a clean **0.5.0** (`npm ci && npm test && npm run pack`), uploads it **last**, and deletes or disables older test builds if she can. **The judge build** |
+| 10:35-10:55 | Film the remaining clips on 0.5.0, cut, upload. **Submit by 11:00** |
+
 ## Late features (D22): head tilt + partner-proof Conversation, cut-off 9:45 AM
 
 Two small features, **both off by default behind a flag**, built in parallel while Sarah runs G3b. Anything not green by 9:45 is dropped.
@@ -324,6 +336,7 @@ There are no console logs on the device. Use the phone companion's **Preview** t
 
 | When | Change |
 |---|---|
+| Sun 10:00 AM | **D25 / T-319:** sideways head tilt = tap on a suggestion (any roll; S-3 could not split left/right). Cut-off 10:15 (T-407 extended to 10:15 too). Builds: 0.4.9 last test, **0.5.0 judge build** |
 | Sun 9:51 AM | Blocker #10 resolved: ElevenLabs upgraded, Scribe 200 from production. Sarah: one Practice word on 0.4.7, then re-run the 0.4.8 check |
 | Sun 9:50 AM | 🚨 **Blocker #10: ElevenLabs credits exhausted** (#141, reproduced). All STT fails on every build. Fix = upgrade the same account (no deploy). 0.4.8 check blocked; tilt and gate untested, not failed |
 | Sun 9:35 AM | Merged #137 (T-305 head tilt, fix: arm on entry only) and **0.4.8** for the feature check |
