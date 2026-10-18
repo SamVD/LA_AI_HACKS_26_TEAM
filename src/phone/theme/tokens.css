@@ -1,0 +1,112 @@
+/* Phone companion base styles — colors come from applyPhoneTheme() or demo shell. */
+
+.nudge-phone {
+  font-family: var(--nudge-font);
+  font-size: var(--nudge-font-md);
+  line-height: 1.45;
+  color: var(--nudge-text);
+  background: var(--nudge-bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+.nudge-demo-shell {
+  box-sizing: border-box;
+  max-width: 375px;
+  margin: 0 auto;
+  min-height: 100vh;
+  padding: var(--nudge-space-4);
+  overflow-x: hidden;
+}
+
+.nudge-phone h1,
+.nudge-phone h2 {
+  font-weight: 600;
+  line-height: 1.25;
+  margin: 0;
+}
+
+.nudge-phone h1 {
+  font-size: var(--nudge-font-xl);
+}
+
+.nudge-phone h2 {
+  font-size: var(--nudge-font-lg);
+}
+
+.nudge-card {
+  background: var(--nudge-bg-elevated);
+  border: 1px solid var(--nudge-border);
+  border-radius: var(--nudge-radius-md);
+  padding: var(--nudge-space-4);
+}
+
+.nudge-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--nudge-touch-min);
+  min-width: var(--nudge-touch-min);
+  padding: 0.75rem 1.25rem;
+  font-size: var(--nudge-font-md);
+  font-weight: 500;
+  color: var(--nudge-on-accent);
+  background: var(--nudge-accent);
+  border: none;
+  border-radius: var(--nudge-radius-md);
+  cursor: pointer;
+  transition: background var(--nudge-motion-duration) var(--nudge-motion-easing);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nudge-btn {
+    transition: none;
+  }
+}
+
+.nudge-btn:hover {
+  background: var(--nudge-accent-hover);
+}
+
+.nudge-btn:focus-visible {
+  outline: 2px solid var(--nudge-focus);
+  outline-offset: 2px;
+}
+
+.nudge-btn--ghost {
+  color: var(--nudge-text);
+  background: transparent;
+  border: 1px solid var(--nudge-border-strong);
+}
+
+.nudge-btn--ghost:hover {
+  background: var(--nudge-accent-soft);
+}
+
+.nudge-theme-toggle {
+  min-height: var(--nudge-touch-min);
+  padding: 0 var(--nudge-space-4);
+  font-size: var(--nudge-font-sm);
+  color: var(--nudge-text-muted);
+  background: transparent;
+  border: 1px solid var(--nudge-border);
+  border-radius: var(--nudge-radius-md);
+  cursor: pointer;
+}
+
+.nudge-glasses-frame {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 576px;
+  aspect-ratio: 2 / 1;
+  background: var(--nudge-glasses-bg);
+  border: 1px solid var(--nudge-border-strong);
+  border-radius: var(--nudge-radius-md);
+  overflow: hidden;
+  position: relative;
+}
+
+.nudge-glasses-frame svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
