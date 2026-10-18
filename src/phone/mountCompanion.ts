@@ -72,9 +72,11 @@ export function mountCompanion(
   root.className = 'nudge-phone nudge-demo-shell'
   root.replaceChildren()
 
+  const viteEnv = (import.meta as ImportMeta & { env?: Record<string, unknown> }).env
   const showDebugTab = companionShowsDebugTab(
     Boolean(options.debug),
     typeof location === 'undefined' ? '' : location.search,
+    viteEnv?.VITE_DEBUG === '1',
   )
 
   let activeTab: TabId = 'home'
