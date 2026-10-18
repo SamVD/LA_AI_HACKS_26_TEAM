@@ -1,0 +1,98 @@
+<!doctype html>
+<!--
+  S-1 browser check: proves (or disproves) that a page with a real browser origin can call
+  Scribe batch and realtime with single-use tokens, i.e. that CORS is not a blocker.
+  Open via any static server (e.g. `python3 -m http.server -d spikes/stt 5173`) in a desktop
+  browser, and if possible load it in the Even app WebView via `evenhub qr --url`.
+  Get tokens with: ELEVENLABS_API_KEY=... node spikes/stt/bench.mjs --tokens
+  No API key ever goes in this page.
+-->
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>S-1 STT check</title>
+  <style>
+    body { font: 16px system-ui, sans-serif; margin: 16px; background: #fff; color: #111 }
+    input { width: 100%; font: inherit; margin: 4px 0 12px }
+    button { font: inherit; padding: 8px 14px; margin: 4px 4px 4px 0 }
+    pre { background: #f2f2f2; padding: 8px; white-space: pre-wrap; word-break: break-all }
+  </style>
+</head>
+<body>
+  <h1>S-1 STT browser check</h1>
+  <label>batch_scribe token <input id="bt" /></label>
+  <label>realtime_scribe token <input id="rt" /></label>
+  <label>keyterm (optional) <input id="kt" placeholder="cup" /></label>
+  <button id="rec">Record 2.5 s</button>
+  <button id="b">Send batch</button>
+  <button id="r">Send realtime</button>
+  <pre id="log"></pre>
+<script>
+const log = (...a) => { document.getElementById('log').textContent += a.map(x => typeof x === 'string' ? x : JSON.stringify(x)).join(' ') + '\n' }
+const $ = id => document.getElementById(id)
+let pcm = null // Int16Array, 16 kHz mono
+
+log('origin', location.origin, 'ua', navigator.userAgent)
+
+$('rec').onclick = async () => {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1 } })
+    const ctx = new AudioContext()
+    const src = ctx.createMediaStreamSource(stream)
+    const proc = ctx.createScriptProcessor(4096, 1, 1)
+    const chunks = []
+    proc.onaudioprocess = e => chunks.push(new Float32Array(e.inputBuffer.getChannelData(0)))
+    src.connect(proc); proc.connect(ctx.destination)
+    log('recording...')
+    await new Promise(r => setTimeout(r, 2500))
+    proc.disconnect(); src.disconnect(); stream.getTracks().forEach(t => t.stop())
+    const f32 = new Float32Array(chunks.reduce((n, c) => n + c.length, 0)); let o = 0
+    for (const c of chunks) { f32.set(c, o); o += c.length }
+    // naive resample to 16 kHz
+    const ratio = ctx.sampleRate / 16000, out = new Int16Array(Math.floor(f32.length / ratio))
+    for (let i = 0; i < out.length; i++) out[i] = Math.max(-1, Math.min(1, f32[Math.floor(i * ratio)])) * 32767
+    pcm = out; await ctx.close()
+    log('recorded', out.length / 16, 'ms')
+  } catch (e) { log('mic error', String(e)) }
+}
+
+$('b').onclick = async () => {
+  if (!pcm) return log('record first')
+  const fd = new FormData()
+  fd.append('model_id', 'scribe_v2'); fd.append('language_code', 'en'); fd.append('file_format', 'pcm_s16le_16')
+  fd.append('file', new Blob([pcm.buffer]), 'clip.pcm')
+  if ($('kt').value) fd.append('keyterms', $('kt').value)
+  const t0 = performance.now()
+  try {
+    const res = await fetch('https://api.elevenlabs.io/v1/speech-to-text?token=' + encodeURIComponent($('bt').value), { method: 'POST', body: fd })
+    log('batch', res.status, Math.round(performance.now() - t0) + 'ms', await res.text())
+  } catch (e) { log('batch FAILED (CORS or network)', String(e), Math.round(performance.now() - t0) + 'ms') }
+}
+
+$('r').onclick = () => {
+  if (!pcm) return log('record first')
+  const q = new URLSearchParams({ model_id: 'scribe_v2_realtime', token: $('rt').value, audio_format: 'pcm_16000', commit_strategy: 'manual', language_code: 'en' })
+  if ($('kt').value) q.append('keyterms', $('kt').value)
+  const t0 = performance.now(); let tLast = 0
+  const ws = new WebSocket('wss://api.elevenlabs.io/v1/speech-to-text/realtime?' + q)
+  ws.onerror = () => log('ws error', Math.round(performance.now() - t0) + 'ms')
+  ws.onclose = e => log('ws close', e.code, e.reason)
+  ws.onmessage = async ev => {
+    const m = JSON.parse(ev.data)
+    log('rt', Math.round(performance.now() - t0) + 'ms', m.message_type, m.text ?? m.error ?? '')
+    if (m.message_type === 'session_started') {
+      const b = new Uint8Array(pcm.buffer), CH = 3200
+      for (let i = 0; i < b.length; i += CH) {
+        const last = i + CH >= b.length
+        let s = ''; for (const x of b.subarray(i, i + CH)) s += String.fromCharCode(x)
+        ws.send(JSON.stringify({ message_type: 'input_audio_chunk', audio_base_64: btoa(s), commit: last, sample_rate: 16000 }))
+        if (last) tLast = performance.now(); else await new Promise(r => setTimeout(r, 100))
+      }
+    }
+    if (m.message_type === 'committed_transcript') { log('commit latency', Math.round(performance.now() - tLast) + 'ms'); ws.close() }
+  }
+}
+</script>
+</body>
+</html>
