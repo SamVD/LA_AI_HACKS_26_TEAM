@@ -1,6 +1,6 @@
 # Nudge: Master Plan (Even G2, UCLA AI Hackathon)
 
-_Last updated: Sat Oct 17, 2026, about H9, by ORCH. Decisions taken since the draft are in Section 13._
+_Last updated: Sat Oct 17, 2026, about H9:15, by ORCH. Decisions taken since the draft are in Section 13._
 
 Nudge is a quiet word-finding aid for people with aphasia, built as an Even Hub app for the Even G2 glasses. It runs as a web app (Vite + TypeScript) inside the Even phone app's WebView. Steps 1-3 are in scope for this hackathon. Steps 4-5 are backlog.
 
@@ -210,7 +210,7 @@ Sleep: plan a rotation so the people who run the demo and the Beta packaging are
 |---|---|
 | Step 3 unreliable | Ship `v0.2` (Steps 1-2). Step 3 stays flagged off. |
 | Streaming STT unusable from the WebView, or `wss://` blocked by the Even whitelist on the device | Steps 2-3 use VAD-segmented chunks sent to batch STT (~300 ms per segment, same `SttService` interface). |
-| Gemini slow or down | Predictor falls back to word-bank suggestions ranked by tag overlap and recency (built into `PredictorService`). |
+| Gemini slow, down, or rate-limited (free tier: 15 req/min) | The throttle (D11) keeps us under the cap. Otherwise the predictor falls back to the v2 bank-only ranking (`PREDICTOR_PROMPT.md` §7), which returns `[]` rather than noise when nothing fits. |
 | ElevenLabs fails | Swap the adapter behind `SttService`. Last resort: manual-override tap so a helper confirms the word. |
 | STT mangles aphasic speech (autocorrects to a real word: S-1 saw cop→Cough, medsin→Medicine) | Fuzzy matcher strictness setting; "helper override" tap (Step 1). **Do not** pass the target as a keyterm by default: it turns near-misses into the target (spun→Spoon), which gives false "correct" results (decision D1). |
 | Glasses unavailable or flaky | Simulator + Screen preview in the phone page for the demo. |
@@ -271,4 +271,6 @@ Not targeted: Sentry, Cognition, StepFun, and the rest. Adding any of them adds 
 | D8 | H9 (S-3) | **Detect lock and background with `document.visibilitychange`.** SDK foreground events are optional extras; don't use `setBackgroundState` / `onBackgroundRestore` (they're not in SDK 0.0.12). On hidden, flush the store; on visible, re-show the last Screen. | With the phone locked, the WebView kept running (no reload, timers fired) and the glasses mic streamed with no gaps over 1 s. `FOREGROUND_EXIT/ENTER` never fired; only `visibilitychange` did. §5. |
 | D9 | H9 (S-3) | **T-305 head tilt is look up / look down only** (→ PREV / NEXT), calibrated on mode entry, with a ±0.15 g dead zone on x. Left/right is out unless a second run separates it. | Up/down was clear on x; tilt left and tilt right both moved y negative. §2. |
 | D10 | H9 (S-3) | **`app.json` version is now 0.2.0.** Every Beta upload under `com.lahacks.nudge` (including spike builds) must use a version higher than the last one uploaded. | The S-3 probe was uploaded as 0.1.2 under Nudge's package ID; the repo was still at 0.1.0. |
+| D11 | H9 (S-2) | **Gemini: `gemini-3.5-flash-lite` with minimal thinking, few-shot Examples 1-7, 1.2 s timeout. Stay on the free tier and throttle every call** (`PREDICTOR_PROMPT.md` v2 §10): prefetch at most 1 per 5 s and ≤12/min, 3 slots/min reserved for help taps, a tap never waits, and a 429 is never retried. T-201 ports `spikes/predictor/throttle.mjs`; T-204 and T-302 call only the throttle (`onFinal`, `onHelp`), never `predict` directly. | S-2: top-3 0.98 few-shot, p95 ~880 ms before the proxy. The free tier allows **15 requests/min per project per model**, and unthrottled prefetch hits 429 within a minute. The throttle passed simulation and a 3-minute live run with 0 429s. The daily cap is unknown, so billing would remove the risk; the throttle stays either way. |
+| D12 | H9 (S-2) | **Fallback v2** (`PREDICTOR_PROMPT.md` §7): don't boost non-name words already said; penalise words just said or rejected; add a partial-word prefix rule; check category cues over the last 8 words without fillers; return `[]` when nothing scores. | The v1 rules suggested "fork" right after "not a fork", and "tea" above "cup". Users see the fallback more often because of the rate limit. |
 
