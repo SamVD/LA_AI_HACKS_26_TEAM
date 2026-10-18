@@ -1,6 +1,6 @@
 # Nudge Task Board
 
-_Last updated: Sat Oct 17, 2026 (about H10:30) by ORCH. Decisions D1-D14: `PLAN.md` Section 13. Contracts: CONTRACT_VERSION 2 (`src/core/types.ts`, `docs/CONTRACTS.md`). Phase 1 builder prompts: `docs/prompts/phase1-builder-prompts.md`._
+_Last updated: Sat Oct 17, 2026 (about H10:30) by ORCH. **Current snapshot of every task, PR, decision and blocker: `docs/ORCH_STATE.md`.** Decisions D1-D14: `PLAN.md` Section 13. Contracts: CONTRACT_VERSION 2 (`src/core/types.ts`, `docs/CONTRACTS.md`). Phase 1 builder prompts: `docs/prompts/phase1-builder-prompts.md`._
 
 Single source of truth for who is doing what. Read `PLAN.md` first for architecture, contracts, ownership, and git rules.
 
@@ -243,7 +243,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ### T-107 Gate G1: audit, integrate, smoke, tag
 - **Owner:** ORCH (with GLASS holding the device)
-- **Status:** READY. `api/stt` is hosted at `https://nudge-seven-psi.vercel.app/api/stt/token` (PR #50). **Production must be redeployed from `integration` first** (at H10:10 it returned `FUNCTION_INVOCATION_FAILED`, i.e. it was running a build without the #50 fix).
+- **Status:** **READY TO RUN.** All Step 1 code merged; production `api/` healthy (verified 10:20 PM: tokens 200, foreign origin 403, predict 200). Sarah runs the runbook below; ping Sam within 1 h about the WebView origin.
 - **Depends on:** T-101 to T-106
 - **Spec:** audit every PR against the checklist; verify no contract drift; merge order T-101, T-104, T-103, T-102, T-106, T-105; run `docs/G2_SMOKE.md` on the real G2 with the Beta build; fast-forward `main`, tag `v0.1-step1`, upload the `.ehpk`.
 - **Acceptance criteria (gate):** Step 1 runs 10 prompts on the real G2, with check/X feedback and the cue ladder; survives a 5-minute lock/resume; mic-denied path shows a message; root double-tap exits cleanly.
@@ -287,7 +287,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ### T-203 Serverless proxy for prediction
 - **Owner:** AI
-- **Status:** MERGED (PR #53): `api/predict` (prompt v2, few-shot, 429 + Retry-After, request rebuild, metadata-only logs). Hosted with `api/stt` once Sam redeploys production from `integration`. Measured p95 ~1.15 s through Vercel.
+- **Status:** MERGED (PR #53) and **deployed** (production = `integration` @ `4b13180`, verified live). Deploys only via `bash api/_deploy-prod.sh` (PR #57).
 - **Branch:** `ai/api-predict`
 - **Depends on:** T-001
 - **Files it may EDIT:** `api/predict/**`
@@ -298,7 +298,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ### T-204 Step 2 mode
 - **Owner:** GLASS
-- **Status:** APPROVED (PR #43). Waiting on the `src/mocks/foundation.test.ts` update (branch grant #45), then merge. Acceptance 3 (real services, two-person conversation on the G2) is G2-gate work.
+- **Status:** MERGED (PR #43). Acceptance 3 (real services, two-person conversation on the G2) is part of G2 (T-207).
 - **Branch:** `glass/step2-mode`
 - **Depends on:** T-101, T-201 (mock first), T-202 (mock first)
 - **Files it may EDIT:** `src/modes/step2/**`
@@ -313,7 +313,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ### T-205 Mouth-shape resolver and asset expansion
 - **Owner:** LOGIC (Codex)
-- **Status:** READY (T-106 merged). Lower priority than T-102.
+- **Status:** IN PROGRESS: branch `logic/mouth-resolver` pushed without a PR; needs the 60-word table test and wiring into `resolveAssets` before review.
 - **Branch:** `logic/mouth-resolver`
 - **Depends on:** T-106
 - **Files it may EDIT:** `src/content/phonetics/**`
@@ -417,6 +417,7 @@ No new features after H18. Only fixes, packaging, polish, and the story.
 
 ### T-403 Design polish (Paper challenge)
 - **Owner:** UI (Cursor)
+- **Status:** PARTLY DONE (PRs #44, #47: tagline, focus rings, contrast, in-app demo CTA). Final polish pass before H18.
 - **Branch:** `ui/polish`
 - **Files it may EDIT:** `src/phone/**` (excluding `src/phone/demo/`, owned by T-401), `docs/design/**`
 - **Spec:** one polish pass per the Paper brief (design fundamentals, ease of use, personal craft).
