@@ -1,0 +1,119 @@
+{
+  "at": "2026-10-18T15:18:35.742Z",
+  "promptVersion": 2,
+  "timeoutMs": 1200,
+  "reps": 1,
+  "cases": 31,
+  "bankSize": 38,
+  "modelsListed": [
+    "step-3.5-flash",
+    "step-3.5-flash-2603",
+    "stepaudio-2.5-tts",
+    "stepaudio-2.5-asr",
+    "step-3.7-flash",
+    "stepaudio-2.5-chat",
+    "stepaudio-2.5-realtime",
+    "stepaudio-2.5-asr-stream",
+    "stepaudio-3-realtime-preview",
+    "stepaudio-3-asr-max",
+    "stepaudio-3-music-preview",
+    "stepaudio-3-chat-preview",
+    "stepaudio-3-gen-preview",
+    "stepaudio-3-tts",
+    "step-5-preview"
+  ],
+  "configProbe": {
+    "step-3.7-flash": {
+      "chosen": null,
+      "tried": [
+        {
+          "label": "reasoning_effort=low + json_object",
+          "status": 200,
+          "ok": true,
+          "parses": false,
+          "totalMs": 8565,
+          "reasoningChars": 3882,
+          "usage": {
+            "prompt_tokens": 1370,
+            "completion_tokens": 1024,
+            "total_tokens": 2394,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0
+            }
+          },
+          "sample": ""
+        },
+        {
+          "label": "reasoning_effort=low",
+          "status": 200,
+          "ok": true,
+          "parses": false,
+          "totalMs": 6760,
+          "reasoningChars": 3753,
+          "usage": {
+            "cached_tokens": 1024,
+            "prompt_tokens": 1370,
+            "completion_tokens": 1024,
+            "total_tokens": 2394,
+            "prompt_tokens_details": {
+              "cached_tokens": 1024
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0
+            }
+          },
+          "sample": ""
+        },
+        {
+          "label": "json_object",
+          "status": 200,
+          "ok": true,
+          "parses": false,
+          "totalMs": 8664,
+          "reasoningChars": 3634,
+          "usage": {
+            "prompt_tokens": 1365,
+            "completion_tokens": 1024,
+            "total_tokens": 2389,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0
+            }
+          },
+          "sample": ""
+        },
+        {
+          "label": "model default",
+          "status": 200,
+          "ok": true,
+          "parses": false,
+          "totalMs": 7155,
+          "reasoningChars": 3955,
+          "usage": {
+            "cached_tokens": 1024,
+            "prompt_tokens": 1365,
+            "completion_tokens": 1024,
+            "total_tokens": 2389,
+            "prompt_tokens_details": {
+              "cached_tokens": 1024
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0
+            }
+          },
+          "sample": ""
+        }
+      ]
+    }
+  },
+  "summary": {},
+  "spread": {},
+  "byShape": {},
+  "worstMisses": {},
+  "rows": []
+}
