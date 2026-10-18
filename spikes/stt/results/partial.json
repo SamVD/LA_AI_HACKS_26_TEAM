@@ -1,0 +1,360 @@
+{
+  "at": "2026-10-18T02:27:45.361Z",
+  "rows": [
+    {
+      "id": "cup",
+      "said": "cup",
+      "target": "cup",
+      "plain": "Cup",
+      "keyterm": "Cup",
+      "autoLang": "Cup [eng]",
+      "noVerbatim": "Cup",
+      "words": [
+        {
+          "t": "Cup",
+          "type": "word",
+          "lp": -0.4317830801010132
+        }
+      ]
+    },
+    {
+      "id": "medicine",
+      "said": "medicine",
+      "target": "medicine",
+      "plain": "Medicine",
+      "keyterm": "Medicine",
+      "autoLang": "Medicine [eng]",
+      "noVerbatim": "Medicine",
+      "words": [
+        {
+          "t": "Medicine",
+          "type": "word",
+          "lp": -0.001807485707104206
+        }
+      ]
+    },
+    {
+      "id": "metformin",
+      "said": "metformin",
+      "target": "metformin",
+      "plain": "Metformin",
+      "keyterm": "Metformin",
+      "autoLang": "Metformin [fra]",
+      "noVerbatim": "Metformin",
+      "words": [
+        {
+          "t": "Metformin",
+          "type": "word",
+          "lp": -0.000049707899355174355
+        }
+      ]
+    },
+    {
+      "id": "cop",
+      "said": "cop",
+      "target": "cup",
+      "plain": "Cough",
+      "keyterm": "Cup",
+      "autoLang": "Cough [eng]",
+      "noVerbatim": "Cop",
+      "words": [
+        {
+          "t": "Cough",
+          "type": "word",
+          "lp": -0.1383052408695221
+        }
+      ]
+    },
+    {
+      "id": "tup",
+      "said": "tup",
+      "target": "cup",
+      "plain": "Top",
+      "keyterm": "Top",
+      "autoLang": "Top [eng]",
+      "noVerbatim": "Top",
+      "words": [
+        {
+          "t": "Top",
+          "type": "word",
+          "lp": -0.0013097288319841027
+        }
+      ]
+    },
+    {
+      "id": "cuh",
+      "said": "cuh",
+      "target": "cup",
+      "plain": "Car.",
+      "keyterm": "Cup",
+      "autoLang": "Car. [por]",
+      "noVerbatim": "Car.",
+      "words": [
+        {
+          "t": "Car.",
+          "type": "word",
+          "lp": -0.6253205984830856
+        }
+      ]
+    },
+    {
+      "id": "fo-fork",
+      "said": "fo... fork",
+      "target": "fork",
+      "plain": "Faux fork",
+      "keyterm": "Faux fork",
+      "autoLang": "Faux fork [eng]",
+      "noVerbatim": "Faux fork",
+      "words": [
+        {
+          "t": "Faux",
+          "type": "word",
+          "lp": -0.08839759125839919
+        },
+        {
+          "t": "fork",
+          "type": "word",
+          "lp": -0.3594713509082794
+        }
+      ]
+    },
+    {
+      "id": "fock",
+      "said": "fock",
+      "target": "fork",
+      "plain": "Fog",
+      "keyterm": "Fog",
+      "autoLang": "Fog [eng]",
+      "noVerbatim": "Fog",
+      "words": [
+        {
+          "t": "Fog",
+          "type": "word",
+          "lp": -0.004379443824291229
+        }
+      ]
+    },
+    {
+      "id": "spoo",
+      "said": "spoo",
+      "target": "spoon",
+      "plain": "Spu",
+      "keyterm": "Spoon.",
+      "autoLang": "Spu [eng]",
+      "noVerbatim": "Spu",
+      "words": [
+        {
+          "t": "Spu",
+          "type": "word",
+          "lp": -0.503709226846695
+        }
+      ]
+    },
+    {
+      "id": "spun",
+      "said": "spun",
+      "target": "spoon",
+      "plain": "Spun",
+      "keyterm": "Spoon",
+      "autoLang": "Spun [jav]",
+      "noVerbatim": "Spun",
+      "words": [
+        {
+          "t": "Spun",
+          "type": "word",
+          "lp": -0.0779286844044691
+        }
+      ]
+    },
+    {
+      "id": "medsin",
+      "said": "medsin",
+      "target": "medicine",
+      "plain": "Medicine",
+      "keyterm": "Medicine",
+      "autoLang": "Medicine [eng]",
+      "noVerbatim": "Medicine",
+      "words": [
+        {
+          "t": "Medicine",
+          "type": "word",
+          "lp": -0.0022795426193624735
+        }
+      ]
+    },
+    {
+      "id": "medicine-slow",
+      "said": "medicine",
+      "target": "medicine",
+      "plain": "Medicine",
+      "keyterm": "Medicine",
+      "autoLang": "Medicine [eng]",
+      "noVerbatim": "Medicine",
+      "words": [
+        {
+          "t": "Medicine",
+          "type": "word",
+          "lp": -0.001618624315597117
+        }
+      ]
+    },
+    {
+      "id": "wa-er",
+      "said": "wa er",
+      "target": "water",
+      "plain": "Why are",
+      "keyterm": "Water",
+      "autoLang": "Wire. [eng]",
+      "noVerbatim": "Why are",
+      "words": [
+        {
+          "t": "Why",
+          "type": "word",
+          "lp": -0.6801881790161133
+        },
+        {
+          "t": "are",
+          "type": "word",
+          "lp": -0.3291676342487335
+        }
+      ]
+    },
+    {
+      "id": "kee",
+      "said": "kee",
+      "target": "keys",
+      "plain": "Key",
+      "keyterm": "Key.",
+      "autoLang": "Key [eng]",
+      "noVerbatim": "Key",
+      "words": [
+        {
+          "t": "Key",
+          "type": "word",
+          "lp": -0.05887371301651001
+        }
+      ]
+    },
+    {
+      "id": "met-fommin",
+      "said": "met fommin",
+      "target": "metformin",
+      "plain": "Metformin",
+      "keyterm": "Metformin",
+      "autoLang": "Metformin [fra]",
+      "noVerbatim": "Metformin",
+      "words": [
+        {
+          "t": "Metformin",
+          "type": "word",
+          "lp": -0.00033444378641434014
+        }
+      ]
+    },
+    {
+      "id": "lie-sin-pril",
+      "said": "lie sin oh pill",
+      "target": "lisinopril",
+      "plain": "Lysino pill",
+      "keyterm": "Lisinopril",
+      "autoLang": "Lysino pill [eng]",
+      "noVerbatim": "Lysino Pill",
+      "words": [
+        {
+          "t": "Lysino",
+          "type": "word",
+          "lp": -0.12790388241410255
+        },
+        {
+          "t": "pill",
+          "type": "word",
+          "lp": -0.5666831135749817
+        }
+      ]
+    },
+    {
+      "id": "um-cup",
+      "said": "um... cup",
+      "target": "cup",
+      "plain": "Um, cup",
+      "keyterm": "Um, cup",
+      "autoLang": "Um, cup [eng]",
+      "noVerbatim": "Tom Cobb",
+      "words": [
+        {
+          "t": "Um,",
+          "type": "word",
+          "lp": -0.02293024871808787
+        },
+        {
+          "t": "cup",
+          "type": "word",
+          "lp": -0.36478057503700256
+        }
+      ]
+    },
+    {
+      "id": "uh-the-fork",
+      "said": "uh, the... the fork",
+      "target": "fork",
+      "plain": "Ah, the, the fork",
+      "keyterm": "Ah, the, the fork",
+      "autoLang": "Ah, the, the fork [eng]",
+      "noVerbatim": "Ah, the fork",
+      "words": [
+        {
+          "t": "Ah,",
+          "type": "word",
+          "lp": -0.0002300444757565856
+        },
+        {
+          "t": "the,",
+          "type": "word",
+          "lp": -0.0003231195150874555
+        },
+        {
+          "t": "the",
+          "type": "word",
+          "lp": -0.0000020265558760002023
+        },
+        {
+          "t": "fork",
+          "type": "word",
+          "lp": -0.00026925752172246575
+        }
+      ]
+    },
+    {
+      "id": "cop-daniel",
+      "said": "cop",
+      "target": "cup",
+      "plain": "Hello.",
+      "keyterm": "Cup.",
+      "autoLang": "好。 [zho]",
+      "noVerbatim": "Cool.",
+      "words": [
+        {
+          "t": "Hello.",
+          "type": "word",
+          "lp": -1.4490112662315369
+        }
+      ]
+    },
+    {
+      "id": "spoo-daniel",
+      "said": "spoo",
+      "target": "spoon",
+      "plain": "Spoo",
+      "keyterm": "Spoon",
+      "autoLang": "Spoo [eng]",
+      "noVerbatim": "Spoo",
+      "words": [
+        {
+          "t": "Spoo",
+          "type": "word",
+          "lp": -0.18453270196914673
+        }
+      ]
+    }
+  ]
+}

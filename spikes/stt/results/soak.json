@@ -1,0 +1,92 @@
+{
+  "at": "2026-10-18T02:42:42.482Z",
+  "minutes": 8,
+  "events": [
+    {
+      "s": 0,
+      "type": "session_started"
+    },
+    {
+      "s": 8,
+      "type": "committed_transcript",
+      "text": "Yesterday, I went to the park with Maya. We sat by the, um, "
+    },
+    {
+      "s": 43,
+      "type": "committed_transcript",
+      "text": ""
+    },
+    {
+      "s": 67,
+      "type": "committed_transcript",
+      "text": "Yesterday, I went to the park with Maya. We sat by the, um, "
+    },
+    {
+      "s": 103,
+      "type": "committed_transcript",
+      "text": ""
+    },
+    {
+      "s": 127,
+      "type": "committed_transcript",
+      "text": "Yesterday, I went to the park with Maya. We sat by the, um, "
+    },
+    {
+      "s": 163,
+      "type": "committed_transcript",
+      "text": ""
+    },
+    {
+      "s": 188,
+      "type": "committed_transcript",
+      "text": "Yesterday, I went to the park with Maya. We sat by the, um, "
+    },
+    {
+      "s": 223,
+      "type": "committed_transcript",
+      "text": ""
+    },
+    {
+      "s": 247,
+      "type": "committed_transcript",
+      "text": "Yesterday, I went to the park with Maya. We sat by the, um, "
+    },
+    {
+      "s": 283,
+      "type": "committed_transcript",
+      "text": ""
+    },
+    {
+      "s": 307,
+      "type": "committed_transcript",
+      "text": "Yesterday, I went to the park with Maya. We sat by the, um, "
+    },
+    {
+      "s": 343,
+      "type": "committed_transcript",
+      "text": ""
+    },
+    {
+      "s": 367,
+      "type": "committed_transcript",
+      "text": "Yesterday, I went to the park with Maya. We sat by the, um, "
+    },
+    {
+      "s": 403,
+      "type": "committed_transcript",
+      "text": ""
+    },
+    {
+      "s": 427,
+      "type": "committed_transcript",
+      "text": "Yesterday, I went to the park with Maya. We sat by the, um, "
+    },
+    {
+      "s": 463,
+      "type": "committed_transcript",
+      "text": ""
+    }
+  ],
+  "closed": null,
+  "commits": 16
+}

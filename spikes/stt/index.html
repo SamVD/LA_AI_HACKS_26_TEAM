@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>S-1 STT spike</title>
+    <style>
+      body { font: 15px/1.4 system-ui, sans-serif; margin: 16px; background: #111; color: #eee; }
+      button, select, input { font: inherit; padding: 8px 10px; margin: 4px 4px 4px 0; border-radius: 6px; border: 1px solid #555; background: #222; color: #eee; }
+      button:active { background: #3a3; }
+      fieldset { border: 1px solid #444; border-radius: 8px; margin: 10px 0; }
+      #log { white-space: pre-wrap; font: 12px/1.35 ui-monospace, monospace; background: #000; padding: 8px; border-radius: 6px; max-height: 60vh; overflow: auto; }
+      .ok { color: #7f7; } .err { color: #f77; }
+    </style>
+  </head>
+  <body>
+    <h2>S-1: ElevenLabs Scribe from the WebView</h2>
+    <div>Origin: <code id="origin"></code> · token server: <code id="tokenUrl"></code></div>
+    <fieldset>
+      <legend>Clips (works without a mic; tests fetch + WebSocket from this origin)</legend>
+      <select id="clip"></select>
+      <input id="keyterms" placeholder="keyterms, comma separated" />
+      <br />
+      <button id="batch">Batch (token)</button>
+      <button id="rt">Realtime (token)</button>
+      <button id="direct">Batch, no auth (CORS probe)</button>
+      <button id="allBatch">All clean clips x batch</button>
+      <button id="allRt">All clean clips x realtime</button>
+    </fieldset>
+    <fieldset>
+      <legend>Mic (needs a secure context: localhost or https)</legend>
+      <button id="rec">Hold to record, release to transcribe (batch)</button>
+      <button id="live">Start live realtime</button>
+    </fieldset>
+    <div id="log"></div>
+    <script type="module" src="./spike.ts"></script>
+  </body>
+</html>
