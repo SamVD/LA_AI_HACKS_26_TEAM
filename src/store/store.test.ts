@@ -123,6 +123,41 @@ describe('persistent store', () => {
     await store.flush()
     expect(await createStore(kv, []).getSessions()).toEqual([record(3)])
   })
+  it('keeps valid personal words and tombstones when neighboring entries are malformed', async () => {
+    const kv = memoryKeyValue()
+    await kv.set('nudge.bank.v1', JSON.stringify({
+      added: [word, null, { ...word, id: 'bad', tags: 'family' }, { id: 'incomplete' }],
+      removed: ['cup', 42, null],
+    }))
+    const store = createStore(kv, [cup])
+    expect(await store.getBank()).toEqual([word])
+    const other = { ...word, id: 'pip-two', word: 'Pip Two' }
+    await store.addWord(other)
+    await store.flush()
+    expect(JSON.parse((await kv.get('nudge.bank.v1'))!)).toEqual({ added: [word, other], removed: ['cup'] })
+    expect(await createStore(kv, [cup]).getBank()).toEqual([word, other])
+  })
+  it('loads additions even when the removed list is corrupt', async () => {
+    const kv = memoryKeyValue()
+    await kv.set('nudge.bank.v1', JSON.stringify({ added: [word], removed: 'cup' }))
+    expect(await createStore(kv, [cup]).getBank()).toEqual([cup, word])
+  })
+  it('loads tombstones even when the added list is corrupt', async () => {
+    const kv = memoryKeyValue()
+    await kv.set('nudge.bank.v1', JSON.stringify({ added: { bad: true }, removed: ['cup'] }))
+    expect(await createStore(kv, [cup]).getBank()).toEqual([])
+  })
+  it('recovers valid sessions individually and preserves them on the next write', async () => {
+    const kv = memoryKeyValue()
+    await kv.set('nudge.sessions.v1', JSON.stringify([
+      record(10), null, { mode: 'step1', startedAt: '15', items: [] }, record(20, 'step2'),
+    ]))
+    const store = createStore(kv, [])
+    expect(await store.getSessions()).toEqual([record(20, 'step2'), record(10)])
+    await store.saveSession(record(30))
+    await store.flush()
+    expect(await createStore(kv, []).getSessions()).toEqual([record(30), record(20, 'step2'), record(10)])
+  })
   it('continues in memory if storage reads fail', async () => {
     const kv: KeyValueStore = { get: async () => { throw new Error('unavailable') }, set: async () => {} }
     const store = createStore(kv, [cup])
