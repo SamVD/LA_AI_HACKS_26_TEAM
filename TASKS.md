@@ -1,6 +1,6 @@
 # Nudge Task Board
 
-_Last updated: Sat Oct 17, 2026 (about H9:15) by ORCH. Decisions D1-D13: `PLAN.md` Section 13. Contracts: CONTRACT_VERSION 2 (`src/core/types.ts`, `docs/CONTRACTS.md`). Phase 1 builder prompts: `docs/prompts/phase1-builder-prompts.md`._
+_Last updated: Sat Oct 17, 2026 (about H9:45) by ORCH. Decisions D1-D13: `PLAN.md` Section 13. Contracts: CONTRACT_VERSION 2 (`src/core/types.ts`, `docs/CONTRACTS.md`). Phase 1 builder prompts: `docs/prompts/phase1-builder-prompts.md`._
 
 Single source of truth for who is doing what. Read `PLAN.md` first for architecture, contracts, ownership, and git rules.
 
@@ -11,10 +11,10 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 **Device testing (all lanes):** QR prototype mode is broken on Even's side, so the glasses only run **packaged Beta builds** (pack → upload at hub.evenrealities.com → Me → Beta tester; a few minutes per cycle). Iterate in the simulator and batch device checks. The workflow, including how to pack a spike page on its own, is in `README.md` → "Run on the real G2". Gate flags are set at pack time with `VITE_STEP2=1` / `VITE_STEP3=1` (`docs/G2_SMOKE.md`).
 
 **Queue by lane (now):**
-- GLASS: T-101 is merged. Next: **the real-G2 gallery run** from a packaged build (`VITE_GALLERY=1 npm run pack`, version above the last upload), logged in `docs/BETA_RESULTS.md`. Then T-204 (Step 2 mode) on mocks.
-- AI: S-1 and S-2 are merged. Next: **T-104 now (critical path for Step 1)**, with the `api/` hosting (Vercel + ElevenLabs and Gemini keys) set up first. Then T-203 (`api/predict`, sharing that hosting).
-- LOGIC (Codex): T-103, T-106 (+ store fix), T-007, T-201 part 1 and T-206 are merged. Next: **T-102 Step 1 mode (critical path)**, then **T-201 part 2** (fallback v2 + throttle), then T-205. Small fixture fix: eval-04 should accept "Sunrise Clinic".
-- UI (Cursor): T-206 (PR #24) needs two fixes (personal-word frames, unique ids) and a retarget to `integration`; see the review.
+- GLASS: T-101 passed on the real G2 (PR #38). Next: **the G1 run** (T-107 runbook) as soon as `api/stt` is hosted. Meanwhile **T-204 (Step 2 mode) on mocks**: use the throttle stub interface from the T-204 card until T-201 part 2 lands.
+- AI: S-1, S-2 and T-104 are merged. Next: **host `api/` on Vercel with Aarav** (`ELEVENLABS_API_KEY`, `STT_ALLOWED_ORIGINS`; later `GEMINI_API_KEY`); this blocks G1. Then T-203 (`api/predict` on the same project), then T-202 (rolling STT).
+- LOGIC (Codex): T-102 Step 1 is merged (PR #34); Step 1 code is complete. Next: **T-201 part 2** (fallback v2 + throttle; T-204 needs it), then T-205. Small fixture fix: eval-04 should accept "Sunrise Clinic".
+- UI (Cursor): T-206 and T-401 part 1 are merged. Next (lower priority than Step 2): T-401 part 2, the Demo entry inside `mountCompanion` so judges can reach it in the packaged app, with a cancellable replay.
 
 **Global rules for every task (also repeated in the builder prompt):**
 - Read anything. Edit only the files listed on your card. If you need a change elsewhere, stop and say so in your reply.
@@ -170,7 +170,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ### T-101 Glasses renderer, input mapper, cue ladder, lifecycle
 - **Owner:** GLASS
-- **Status:** MERGED (PR #29). Renderer, touchpad input, app shell (launcher root), `visibilitychange` lifecycle, SDK storage store and `getImage` pictures wired in `src/main.ts`; phone companion mounted on `#app`. Simulator-verified for every Screen kind (screenshots in `src/glasses/screenshots/`). **Still open: the real-G2 gallery run** (every layout, a mode, back, exit, 5-minute lock, pictures, SDK storage), with results in `docs/BETA_RESULTS.md`.
+- **Status:** MERGED (PR #29); **passed on the real G2** (PR #38: all 13 Screens incl. pictures and mouth shapes, touchpad mapping, exit dialog, 5-minute lock).
 - **Branch:** `glass/renderer`
 - **Depends on:** T-001, T-002, T-003
 - **Files it may EDIT:** `src/glasses/**` (excluding `src/glasses/imu/`), `src/main.ts` (branch grant for `glass/renderer`)
@@ -187,7 +187,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ### T-102 Step 1 engine and mode
 - **Owner:** LOGIC (Codex)
-- **Status:** APPROVED (PR #34). Waiting on: update the 3 stub tests (`src/mocks/foundation.test.ts`, plus `src/glasses/main.test.ts` and `src/phone/dev/devShell.test.ts` under a new branch grant), and stop STT only on finish, leave, error and exit (not per item), then mark the PR ready.
+- **Status:** MERGED (PR #34). 10-item Practice, cue ladder, matcher at strictness 1, typed STT errors with retry, partial-session save on BACK, warm mic between items.
 - **Branch:** `logic/step1-mode`
 - **Depends on:** T-001, T-003, T-004, T-103 (`matchWord`), T-106 (`resolveAssets`). Start after T-103 and T-106 merge.
 - **Files it may EDIT:** `src/modes/step1/**`
@@ -243,10 +243,17 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ### T-107 Gate G1: audit, integrate, smoke, tag
 - **Owner:** ORCH (with GLASS holding the device)
-- **Status:** TODO
+- **Status:** READY except hosting. All Step 1 code is merged (T-101 to T-106). **Blocked on `api/stt` being hosted** (AI + ORCH).
 - **Depends on:** T-101 to T-106
 - **Spec:** audit every PR against the checklist; verify no contract drift; merge order T-101, T-104, T-103, T-102, T-106, T-105; run `docs/G2_SMOKE.md` on the real G2 with the Beta build; fast-forward `main`, tag `v0.1-step1`, upload the `.ehpk`.
 - **Acceptance criteria (gate):** Step 1 runs 10 prompts on the real G2, with check/X feedback and the cue ladder; survives a 5-minute lock/resume; mic-denied path shows a message; root double-tap exits cleanly.
+- **G1 runbook (GLASS runs it, ORCH records it):**
+  1. Hosting is up: `curl -s -X POST https://<host>/api/stt/token -H 'origin: http://localhost:5173' -H 'content-type: application/json' -d '{"type":"batch_scribe"}'` returns `{"token":"sutkn_..."}`.
+  2. ORCH adds `https://<host>` to the `network` whitelist in `app.json` (version is already 0.3.0; bump again for any re-upload, per D10).
+  3. On a clean checkout of `integration`: `npm ci && npm run typecheck && npm test`, then `VITE_STT_TOKEN_URL=https://<host>/api/stt/token npm run pack`.
+  4. Upload `nudge.ehpk`, then install from Me → Beta tester and check the version is 0.3.0.
+  5. Run `docs/G2_SMOKE.md` sections A, B (**including B5: touchpad while the mic is open**, and B6) and C. If `api/stt` rejects the WebView's origin, its log names the origin: add it to `STT_ALLOWED_ORIGINS` (or set `STT_ALLOW_MISSING_ORIGIN=1` if there's none) and retry. No re-pack needed.
+  6. Record the results in `docs/BETA_RESULTS.md` and the G2_SMOKE results table. On a pass, ORCH fast-forwards `main` to that commit, tags `v0.1-step1`, and keeps the `.ehpk`.
 
 ---
 
@@ -269,7 +276,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ### T-202 Rolling-transcript STT and buffer
 - **Owner:** AI
-- **Status:** TODO
+- **Status:** READY (T-104 merged). After the hosting and T-203 in the AI queue.
 - **Branch:** `ai/audio-rolling`
 - **Depends on:** T-104, S-1
 - **Files it may EDIT:** `src/audio/rolling/**`
@@ -279,7 +286,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ### T-203 Serverless proxy for prediction
 - **Owner:** AI
-- **Status:** TODO
+- **Status:** READY. Shares the Vercel project with `api/stt`.
 - **Branch:** `ai/api-predict`
 - **Depends on:** T-001
 - **Files it may EDIT:** `api/predict/**`
@@ -290,7 +297,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ### T-204 Step 2 mode
 - **Owner:** GLASS
-- **Status:** TODO
+- **Status:** READY on mocks (T-101 merged). Use a local throttle stub (`onFinal`/`onHelp`) until T-201 part 2 merges; real STT/predictor plug in with T-202/T-203.
 - **Branch:** `glass/step2-mode`
 - **Depends on:** T-101, T-201 (mock first), T-202 (mock first)
 - **Files it may EDIT:** `src/modes/step2/**`
@@ -390,6 +397,7 @@ No new features after H18. Only fixes, packaging, polish, and the story.
 
 ### T-401 Demo mode and judge flow
 - **Owner:** UI (Cursor)
+- **Status:** PART 1 MERGED (PR #40): laptop demo page with a scripted stall. Part 2: a Demo entry inside `mountCompanion` (reachable in the packaged app), with a cancellable replay.
 - **Branch:** `ui/demo-mode`
 - **Files it may EDIT:** `src/phone/demo/**`
 - **Spec:** a "Demo" entry on the phone page with a scripted stall so a judge can try Steps 2-3 without needing a second person to hold a conversation. Plan the hand-off: judges are told to put the G2 on and try it.
@@ -432,6 +440,7 @@ No new features after H18. Only fixes, packaging, polish, and the story.
 - H7: T-004 fixtures merged (PR #9). Follow-up filed as T-007.
 - H7: T-006 design tokens and glasses layouts merged (PR #7, after one round of changes).
 - H7: T-002 device checks done (PR #13, `docs/BETA_RESULTS.md`). QR prototype mode is broken on Even's side, so device testing uses packaged Beta builds; README and `docs/G2_SMOKE.md` updated.
+- H9:45: **T-102 merged (PR #34): all Step 1 code is in.** T-101 passed on the real G2 (PR #38). T-401 part 1 merged (PR #40). `app.json` 0.3.0 for the G1 build; G1 runbook in T-107. **G1 is blocked only on hosting `api/stt`.** T-204, T-202 and T-203 READY.
 - H9: PR #36 (dev-shell test + playlist) merged. T-102 (PR #34): changes requested (rebase off duplicated commits; verified `main.test.ts` patch; mic-stop fix). `docs/G2_SMOKE.md` gains B5 (touchpad while the mic is open: two SDK event listeners) and B6 (mic across items).
 - H9: **T-104 mic + STT merged (PR #33)** and wired in `src/main.ts`; `app.json` gets `g2-microphone` + ElevenLabs. T-102 (PR #34) approved, pending stub-test updates (grant added). Step 1 now needs: T-102 merged, `api/stt` hosted, then a packaged G1 run on the real G2.
 - H9: **T-101 glasses renderer and shell merged (PR #29)**: the glasses half of Step 1 is in. Step 1 still needs T-102 (mode) and T-104 (mic and STT).
