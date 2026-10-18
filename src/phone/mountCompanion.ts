@@ -538,14 +538,20 @@ export function mountCompanion(
   const assetHint = wordForm.querySelector<HTMLParagraphElement>('[data-asset-hint]')!
   const wordInput = wordForm.querySelector<HTMLInputElement>('input[name="word"]')!
 
+  let assetHintGeneration = 0
+
   const refreshWordAssetHint = async () => {
-    const word = wordInput.value
-    if (!word.trim()) {
+    const generation = ++assetHintGeneration
+    const word = wordInput.value.trim()
+    if (!word) {
       assetHint.hidden = true
       assetHint.textContent = ''
       return
     }
     const bank = await shell.store.getBank()
+    if (generation !== assetHintGeneration || wordInput.value.trim() !== word) {
+      return
+    }
     const takenIds = new Set(bank.map(entry => entry.id))
     const hint = describeWordAssetHint(word, takenIds)
     if (!hint) {
@@ -603,6 +609,7 @@ export function mountCompanion(
       await shell.store.addWord(entry)
       formHint.hidden = false
       formHint.textContent = `Saved “${entry.word}”.`
+      assetHintGeneration++
       wordForm.reset()
       assetHint.hidden = true
       assetHint.textContent = ''

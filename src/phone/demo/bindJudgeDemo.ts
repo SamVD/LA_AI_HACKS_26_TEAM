@@ -1,5 +1,11 @@
 import type { Screen } from '../../core/types'
-import { judgeConversation, runJudgeDemo, stallCueLine, type JudgeDemoState } from './judgeDemo'
+import {
+  judgeConversation,
+  runJudgeDemo,
+  stallCueLine,
+  type JudgeDemoHintTrigger,
+  type JudgeDemoState,
+} from './judgeDemo'
 
 export type BindJudgeDemoOptions = {
   /** Hide long judge steps (companion tab). */
@@ -17,10 +23,14 @@ export function bindJudgeDemo(root: HTMLElement, options: BindJudgeDemoOptions =
 
   const controls = document.createElement('div')
   controls.className = 'nudge-demo-controls'
-  const playBtn = document.createElement('button')
-  playBtn.type = 'button'
-  playBtn.className = 'nudge-btn'
-  playBtn.textContent = 'Play scripted conversation'
+  const playStep2Btn = document.createElement('button')
+  playStep2Btn.type = 'button'
+  playStep2Btn.className = 'nudge-btn'
+  playStep2Btn.textContent = 'Play Step 2 (tap for help)'
+  const playStep3Btn = document.createElement('button')
+  playStep3Btn.type = 'button'
+  playStep3Btn.className = 'nudge-btn nudge-btn--ghost'
+  playStep3Btn.textContent = 'Play Step 3 (auto-hint)'
   const cancelBtn = document.createElement('button')
   cancelBtn.type = 'button'
   cancelBtn.className = 'nudge-btn nudge-btn--ghost'
@@ -48,7 +58,7 @@ export function bindJudgeDemo(root: HTMLElement, options: BindJudgeDemoOptions =
   const suggestBox = document.createElement('div')
   suggestBox.className = 'nudge-card nudge-demo-suggestions'
   const suggestTitle = document.createElement('h2')
-  suggestTitle.textContent = 'Suggestions (after help tap)'
+  suggestTitle.textContent = 'Suggestions'
   const suggestList = document.createElement('ul')
   suggestList.className = 'nudge-word-list nudge-demo-list'
   suggestBox.append(suggestTitle, suggestList)
@@ -62,8 +72,8 @@ export function bindJudgeDemo(root: HTMLElement, options: BindJudgeDemoOptions =
     steps.className = 'nudge-demo-steps nudge-card'
     steps.innerHTML = `
       <li>Put on the <strong>Even G2</strong> (or watch the preview below).</li>
-      <li>Open <strong>Assist (Step 2)</strong> when enabled on your build.</li>
-      <li>At the stall, <strong>tap once</strong> (SELECT) on the touchpad for help.</li>
+      <li><strong>Step 2:</strong> glasses stay blank until you tap SELECT for help.</li>
+      <li><strong>Step 3:</strong> after a pause, a quiet hint can appear on its own (use Home to pause hints).</li>
       <li>Swipe up/down between suggestions; tap to climb the cue ladder.</li>
       <li>Double-tap to go back; root double-tap exits the app.</li>
     `
@@ -87,7 +97,9 @@ export function bindJudgeDemo(root: HTMLElement, options: BindJudgeDemoOptions =
     const phaseLabel: Record<JudgeDemoState['phase'], string> = {
       idle: 'Ready.',
       playing: 'Playing script…',
-      stalled: 'Stall — tap SELECT on the G2 for help.',
+      stalled: lastHintTrigger === 'tap'
+        ? 'Stall — tap SELECT on the G2 for help.'
+        : 'Stall — waiting for a quiet auto-hint…',
       help: 'Showing help (level 1 picture cue).',
       cancelled: 'Cancelled.',
     }
@@ -95,23 +107,30 @@ export function bindJudgeDemo(root: HTMLElement, options: BindJudgeDemoOptions =
   }
 
   let abort: AbortController | null = null
+  let lastHintTrigger: JudgeDemoHintTrigger = 'auto'
+
+  const setPlaying = (disabled: boolean) => {
+    playStep2Btn.disabled = disabled
+    playStep3Btn.disabled = disabled
+  }
 
   const reset = () => {
     abort?.abort()
     abort = null
     cancelBtn.hidden = true
-    playBtn.disabled = false
+    setPlaying(false)
     previewHost.innerHTML = ''
     previewLabel.textContent = 'G2 preview'
     renderState({ phase: 'idle', transcripts: [], suggestions: [] })
     status.textContent = 'Ready.'
   }
 
-  playBtn.addEventListener('click', () => {
+  const startDemo = (hintTrigger: JudgeDemoHintTrigger) => {
     if (abort) return
+    lastHintTrigger = hintTrigger
     abort = new AbortController()
     cancelBtn.hidden = false
-    playBtn.disabled = true
+    setPlaying(true)
     void runJudgeDemo(
       judgeConversation,
       {
@@ -122,7 +141,7 @@ export function bindJudgeDemo(root: HTMLElement, options: BindJudgeDemoOptions =
         },
         onScreen: options.onScreen,
       },
-      { signal: abort.signal, paused: options.paused },
+      { signal: abort.signal, paused: options.paused, hintTrigger },
     )
       .catch(error => {
         if (error instanceof DOMException && error.name === 'AbortError') {
@@ -135,9 +154,12 @@ export function bindJudgeDemo(root: HTMLElement, options: BindJudgeDemoOptions =
       .finally(() => {
         abort = null
         cancelBtn.hidden = true
-        playBtn.disabled = false
+        setPlaying(false)
       })
-  })
+  }
+
+  playStep2Btn.addEventListener('click', () => startDemo('tap'))
+  playStep3Btn.addEventListener('click', () => startDemo('auto'))
 
   cancelBtn.addEventListener('click', () => {
     abort?.abort()
@@ -145,7 +167,7 @@ export function bindJudgeDemo(root: HTMLElement, options: BindJudgeDemoOptions =
 
   resetBtn.addEventListener('click', reset)
 
-  controls.append(playBtn, cancelBtn, resetBtn)
+  controls.append(playStep2Btn, playStep3Btn, cancelBtn, resetBtn)
   root.append(cue, controls, previewHost, previewLabel, status, transcriptBox, suggestBox)
   renderState({ phase: 'idle', transcripts: [], suggestions: [] })
 
