@@ -243,6 +243,7 @@ There are no console logs on the device. Use the phone companion's **Preview** t
 
 | When | Change |
 |---|---|
+| Sun 8:15 AM | System map (Sam's, updated to the 0.4.5 judge build by ORCH) added: `docs/design/system-map.html` + `system-map-diagram.png` / `system-map.png` for the Devpost gallery. The investor deck stays out of the repo |
 | Sun 8:10 AM | Sam's anomia-evidence brief (issue #125) added as reference: `docs/research/ANOMIA_EVIDENCE.md`. Not a task; Sarah reads it after the final build |
 | Sun 8:00 AM | New **T-317** (StepFun spike, Phase A, local, Sam; results by 8:45) and **T-318** (StepFun behind `PREDICT_PROVIDER` in `api/predict`, Phase B, blocked on T-317; cut-off 9:30). `spikes/stepfun/**` → AI lane. Priority stays: Gemini billing, 0.4.5 build, video, Devpost |
 | Sun 7:55 AM | **G3 not passed → ship Practice + Assist (D20).** Merged #120 (re-run results: Gemini daily quota hit 7:09 AM). ORCH quick fixes: no fallback recency boost, function-word filter, junk-segment filter (non-Latin / short-quiet). `app.json` 0.4.5. #111 closed. Blocker #9: unblock Gemini (billing) |
