@@ -255,7 +255,8 @@ What this shows:
 
 ```
 # key: ELEVENLABS_API_KEY=sk_... in .env.local at the repo root (gitignored; the last non-empty line wins)
-node spikes/stt/make-clips.mjs                  # macOS `say`; writes clips/ (gitignored)
+node spikes/stt/check-key.mjs                   # any OS, no audio: key, both tokens, batch, realtime (Node 22+)
+node spikes/stt/make-clips.mjs                  # macOS only (`say`); writes clips/ (gitignored)
 node spikes/stt/bench.mjs keyterm-encoding|latency|partial|token|realtime|realtime-keyterms|rolling|soak
 node spikes/stt/token-server.mjs                # :8787, for the browser page
 npm run dev                                     # then /spikes/stt/index.html
