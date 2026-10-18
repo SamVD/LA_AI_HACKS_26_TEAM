@@ -1,0 +1,537 @@
+[
+  {
+    "id": "cup",
+    "word": "cup",
+    "category": "object",
+    "frames": [
+      "I drink tea from a ____ with a handle.",
+      "My ____ sits on a saucer beside the teapot."
+    ],
+    "tags": [
+      "kitchen",
+      "drink",
+      "tea"
+    ]
+  },
+  {
+    "id": "spoon",
+    "word": "spoon",
+    "category": "object",
+    "frames": [
+      "I stir my tea with a ____.",
+      "I eat soup with a ____."
+    ],
+    "tags": [
+      "kitchen",
+      "soup",
+      "eat"
+    ]
+  },
+  {
+    "id": "fork",
+    "word": "fork",
+    "category": "object",
+    "frames": [
+      "I twirl spaghetti around my ____.",
+      "The ____ has four prongs for picking up food."
+    ],
+    "tags": [
+      "kitchen",
+      "pasta",
+      "eat"
+    ]
+  },
+  {
+    "id": "knife",
+    "word": "knife",
+    "category": "object",
+    "frames": [
+      "I cut my toast with a ____.",
+      "The sharp ____ slices the loaf."
+    ],
+    "tags": [
+      "kitchen",
+      "cut",
+      "bread"
+    ]
+  },
+  {
+    "id": "keys",
+    "word": "keys",
+    "category": "object",
+    "frames": [
+      "I unlock the door with my ____.",
+      "My ____ jingle on a ring in my pocket."
+    ],
+    "tags": [
+      "door",
+      "car",
+      "unlock"
+    ]
+  },
+  {
+    "id": "phone",
+    "word": "phone",
+    "category": "object",
+    "frames": [
+      "I call my family on my ____.",
+      "My ____ rings when someone calls."
+    ],
+    "tags": [
+      "call",
+      "family",
+      "talk"
+    ]
+  },
+  {
+    "id": "glasses",
+    "word": "glasses",
+    "category": "object",
+    "frames": [
+      "I put on my ____ to read the small print.",
+      "My ____ rest on my nose and help me see."
+    ],
+    "tags": [
+      "read",
+      "see",
+      "eyes"
+    ]
+  },
+  {
+    "id": "toothbrush",
+    "word": "toothbrush",
+    "category": "object",
+    "frames": [
+      "I clean my teeth with a ____.",
+      "I put toothpaste on my ____."
+    ],
+    "tags": [
+      "bathroom",
+      "teeth",
+      "morning"
+    ]
+  },
+  {
+    "id": "comb",
+    "word": "comb",
+    "category": "object",
+    "frames": [
+      "I untangle my hair with a ____.",
+      "The ____ has teeth that run through my hair."
+    ],
+    "tags": [
+      "hair",
+      "bathroom",
+      "morning"
+    ]
+  },
+  {
+    "id": "towel",
+    "word": "towel",
+    "category": "object",
+    "frames": [
+      "I dry my hands with a ____.",
+      "After my shower I wrap myself in a ____."
+    ],
+    "tags": [
+      "bathroom",
+      "dry",
+      "shower"
+    ]
+  },
+  {
+    "id": "book",
+    "word": "book",
+    "category": "object",
+    "frames": [
+      "I turn the pages of my ____.",
+      "I put a bookmark in my ____."
+    ],
+    "tags": [
+      "read",
+      "library",
+      "pages"
+    ]
+  },
+  {
+    "id": "remote",
+    "word": "remote",
+    "category": "object",
+    "frames": [
+      "I change the TV channel with the ____.",
+      "I point the ____ at the TV to turn it on."
+    ],
+    "tags": [
+      "television",
+      "channel",
+      "living"
+    ]
+  },
+  {
+    "id": "water",
+    "word": "water",
+    "category": "food",
+    "frames": [
+      "I fill my glass from the tap with ____.",
+      "The clear drink from the faucet is ____."
+    ],
+    "tags": [
+      "drink",
+      "thirsty",
+      "tap"
+    ]
+  },
+  {
+    "id": "bread",
+    "word": "bread",
+    "category": "food",
+    "frames": [
+      "I toast a slice of ____.",
+      "I use two slices of ____ for my sandwich."
+    ],
+    "tags": [
+      "breakfast",
+      "toast",
+      "sandwich"
+    ]
+  },
+  {
+    "id": "milk",
+    "word": "milk",
+    "category": "food",
+    "frames": [
+      "I pour ____ over my cereal.",
+      "The white drink in the fridge is ____."
+    ],
+    "tags": [
+      "breakfast",
+      "cereal",
+      "fridge"
+    ]
+  },
+  {
+    "id": "coffee",
+    "word": "coffee",
+    "category": "food",
+    "frames": [
+      "I brew a pot of ____ from ground beans.",
+      "The dark drink made from roasted beans is ____."
+    ],
+    "tags": [
+      "morning",
+      "drink",
+      "beans"
+    ]
+  },
+  {
+    "id": "tea",
+    "word": "tea",
+    "category": "food",
+    "frames": [
+      "I steep a ____ bag in hot water.",
+      "I make ____ in my teapot."
+    ],
+    "tags": [
+      "drink",
+      "teapot",
+      "hot"
+    ]
+  },
+  {
+    "id": "apple",
+    "word": "apple",
+    "category": "food",
+    "frames": [
+      "I bite into a crisp red ____.",
+      "I pick an ____ from the orchard tree."
+    ],
+    "tags": [
+      "fruit",
+      "red",
+      "orchard"
+    ]
+  },
+  {
+    "id": "banana",
+    "word": "banana",
+    "category": "food",
+    "frames": [
+      "I peel a yellow ____ before eating it.",
+      "The curved yellow fruit is a ____."
+    ],
+    "tags": [
+      "fruit",
+      "yellow",
+      "peel"
+    ]
+  },
+  {
+    "id": "rice",
+    "word": "rice",
+    "category": "food",
+    "frames": [
+      "I serve the curry over white ____.",
+      "I cook these small white grains of ____."
+    ],
+    "tags": [
+      "dinner",
+      "grains",
+      "curry"
+    ]
+  },
+  {
+    "id": "soup",
+    "word": "soup",
+    "category": "food",
+    "frames": [
+      "I sip hot ____ from a bowl.",
+      "I eat tomato ____ with a spoon."
+    ],
+    "tags": [
+      "lunch",
+      "bowl",
+      "spoon"
+    ]
+  },
+  {
+    "id": "eggs",
+    "word": "eggs",
+    "category": "food",
+    "frames": [
+      "I crack two ____ into the frying pan.",
+      "The hen laid three ____."
+    ],
+    "tags": [
+      "breakfast",
+      "pan",
+      "hen"
+    ]
+  },
+  {
+    "id": "kitchen",
+    "word": "kitchen",
+    "category": "place",
+    "frames": [
+      "I cook dinner in the ____.",
+      "The stove and sink are in the ____."
+    ],
+    "tags": [
+      "cook",
+      "stove",
+      "home"
+    ]
+  },
+  {
+    "id": "bathroom",
+    "word": "bathroom",
+    "category": "place",
+    "frames": [
+      "I take a shower in the ____.",
+      "The toilet is in the ____."
+    ],
+    "tags": [
+      "shower",
+      "toilet",
+      "home"
+    ]
+  },
+  {
+    "id": "pharmacy",
+    "word": "pharmacy",
+    "category": "place",
+    "frames": [
+      "I collect my prescription at the ____.",
+      "The pharmacist works at the ____."
+    ],
+    "tags": [
+      "prescription",
+      "medicine",
+      "shopping"
+    ]
+  },
+  {
+    "id": "park",
+    "word": "park",
+    "category": "place",
+    "frames": [
+      "I walk past the swings in the ____.",
+      "We sit on a bench by the playground in the ____."
+    ],
+    "tags": [
+      "outside",
+      "walk",
+      "playground"
+    ]
+  },
+  {
+    "id": "library",
+    "word": "library",
+    "category": "place",
+    "frames": [
+      "I borrow a book from the ____.",
+      "The librarian works at the ____."
+    ],
+    "tags": [
+      "books",
+      "read",
+      "borrow"
+    ]
+  },
+  {
+    "id": "grocery-store",
+    "word": "grocery store",
+    "category": "place",
+    "frames": [
+      "I buy food at the ____.",
+      "The ____ has aisles of fruit, milk, and bread."
+    ],
+    "tags": [
+      "shopping",
+      "food",
+      "groceries"
+    ]
+  },
+  {
+    "id": "bedroom",
+    "word": "bedroom",
+    "category": "place",
+    "frames": [
+      "I sleep in the ____.",
+      "My bed and nightstand are in the ____."
+    ],
+    "tags": [
+      "sleep",
+      "bed",
+      "home"
+    ]
+  },
+  {
+    "id": "garden",
+    "word": "garden",
+    "category": "place",
+    "frames": [
+      "I grow roses in my ____.",
+      "I water the flowers in the ____."
+    ],
+    "tags": [
+      "flowers",
+      "outside",
+      "grow"
+    ]
+  },
+  {
+    "id": "p-maya",
+    "word": "Maya",
+    "category": "person",
+    "frames": [
+      "My sample daughter is called ____.",
+      "In this story, ____ is my daughter."
+    ],
+    "tags": [
+      "sample",
+      "daughter",
+      "family"
+    ]
+  },
+  {
+    "id": "p-nilo",
+    "word": "Nilo",
+    "category": "person",
+    "frames": [
+      "My sample neighbor is named ____.",
+      "In this story, ____ lives next door."
+    ],
+    "tags": [
+      "sample",
+      "neighbor",
+      "friend"
+    ]
+  },
+  {
+    "id": "p-dr-velrin",
+    "word": "Dr. Velrin",
+    "category": "person",
+    "frames": [
+      "My fictional doctor is called ____.",
+      "The sample appointment is with ____."
+    ],
+    "tags": [
+      "sample",
+      "doctor",
+      "appointment"
+    ],
+    "firstSound": "v"
+  },
+  {
+    "id": "p-lisinopril",
+    "word": "lisinopril",
+    "category": "medication",
+    "frames": [
+      "The sample label starts with 'lisi': ____.",
+      "The sample tablet name ends in 'nopril': ____."
+    ],
+    "tags": [
+      "sample",
+      "morning",
+      "tablet"
+    ],
+    "firstSound": "l"
+  },
+  {
+    "id": "p-metformin",
+    "word": "metformin",
+    "category": "medication",
+    "frames": [
+      "The sample label starts with 'met': ____.",
+      "The sample tablet name ends in 'formin': ____."
+    ],
+    "tags": [
+      "sample",
+      "evening",
+      "tablet"
+    ],
+    "firstSound": "m"
+  },
+  {
+    "id": "p-sunrise-clinic",
+    "word": "Sunrise Clinic",
+    "category": "place",
+    "frames": [
+      "My sample clinic is called ____.",
+      "The fictional doctor sees me at ____."
+    ],
+    "tags": [
+      "sample",
+      "doctor",
+      "appointment"
+    ]
+  },
+  {
+    "id": "p-maple-hall",
+    "word": "Maple Hall",
+    "category": "place",
+    "frames": [
+      "My sample community hall is called ____.",
+      "Our fictional craft group meets at ____."
+    ],
+    "tags": [
+      "sample",
+      "group",
+      "craft"
+    ]
+  },
+  {
+    "id": "p-pip",
+    "word": "Pip",
+    "category": "other",
+    "frames": [
+      "My sample pet cat is called ____.",
+      "In this story, ____ is my cat."
+    ],
+    "tags": [
+      "sample",
+      "cat",
+      "pet"
+    ]
+  }
+]
