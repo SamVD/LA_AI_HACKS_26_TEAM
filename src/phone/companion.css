@@ -220,6 +220,12 @@ a.nudge-btn {
   font-size: var(--nudge-font-sm);
 }
 
+.nudge-btn--primary {
+  color: var(--nudge-text);
+  border-color: var(--nudge-border-strong);
+  background: var(--nudge-accent-soft);
+}
+
 .nudge-debug-block {
   margin-bottom: var(--nudge-space-6);
 }

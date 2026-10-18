@@ -1,8 +1,13 @@
+import type { Screen } from '../../core/types'
 import { judgeConversation, runJudgeDemo, stallCueLine, type JudgeDemoState } from './judgeDemo'
 
 export type BindJudgeDemoOptions = {
   /** Hide long judge steps (companion tab). */
   compact?: boolean
+  /** T-304: demo screens also feed the hint log. */
+  onScreen?: (screen: Screen) => void
+  /** T-304: paused at the stall → the demo shows the paused state, not a hint. */
+  paused?: () => boolean
 }
 
 export function bindJudgeDemo(root: HTMLElement, options: BindJudgeDemoOptions = {}) {
@@ -115,8 +120,9 @@ export function bindJudgeDemo(root: HTMLElement, options: BindJudgeDemoOptions =
           previewHost.innerHTML = svg
           previewLabel.textContent = label
         },
+        onScreen: options.onScreen,
       },
-      { signal: abort.signal },
+      { signal: abort.signal, paused: options.paused },
     )
       .catch(error => {
         if (error instanceof DOMException && error.name === 'AbortError') {

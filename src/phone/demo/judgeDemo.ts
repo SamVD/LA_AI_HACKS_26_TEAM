@@ -16,6 +16,8 @@ export type JudgeDemoState = {
 export type JudgeDemoCallbacks = {
   onState(state: JudgeDemoState): void
   onPreviewSvg(svg: string, label: string): void
+  /** Every screen painted for the demo (feeds the Step 3 hint log, T-304). */
+  onScreen?(screen: Screen): void
 }
 
 function delay(ms: number, signal?: AbortSignal): Promise<void> {
@@ -33,6 +35,7 @@ function delay(ms: number, signal?: AbortSignal): Promise<void> {
 async function paint(host: JudgeDemoCallbacks, screen: Screen, note?: string) {
   await ensurePreviewImages(screen)
   const caption = describePreviewScreen(screen)
+  host.onScreen?.(screen)
   host.onPreviewSvg(renderScreen(screen, renderPreviewOptions()), note ? `${caption} · ${note}` : caption)
 }
 
@@ -40,6 +43,8 @@ export type RunJudgeDemoOptions = {
   stallIndex?: number
   speed?: number
   signal?: AbortSignal
+  /** T-304: when true at the stall, the demo shows the paused state instead of a hint. */
+  paused?: () => boolean
 }
 
 /** Replay fixture transcripts up to the first stall, then show Step 2-style candidates. */
@@ -89,14 +94,12 @@ export async function runJudgeDemo(
   })
 
   const items = suggestionsForStall(stall)
-  const helpScreen: Screen = {
-    kind: 'candidates',
-    level: 1,
-    index: 0,
-    items,
-  }
-  host.onState({ phase: 'help', transcripts: [...transcripts], suggestions: items })
-  await paint(host, helpScreen, 'after help tap')
+  const paused = opts.paused?.() === true
+  const helpScreen: Screen = paused
+    ? { kind: 'status', text: 'Hints paused — resume Step 3 to see suggestions.' }
+    : { kind: 'candidates', level: 1, index: 0, items }
+  host.onState({ phase: 'help', transcripts: [...transcripts], suggestions: paused ? [] : items })
+  await paint(host, helpScreen, paused ? 'hints paused' : 'after help tap')
 }
 
 export function stallCueLine(): string {
