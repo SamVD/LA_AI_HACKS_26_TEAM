@@ -1,8 +1,9 @@
 import { waitForEvenAppBridge } from '@evenrealities/even_hub_sdk'
+import { createPredictor } from './ai/predictor'
 import { createRollingStt, personalKeyterms } from './audio/rolling'
-import type { SttService } from './core/types'
+import type { PredictorService, SttService } from './core/types'
 import { readFlags } from './config'
-import { builtinBank, getImage } from './content'
+import { builtinBank, getImage, resolveAssets } from './content'
 import { createBridgeKeyValue, createHubBridge, startApp } from './glasses'
 import { createGallery } from './glasses/gallery'
 import { MockPredictor, MockStt } from './mocks'
@@ -30,12 +31,29 @@ const gallery = new URLSearchParams(typeof location === 'undefined' ? '' : locat
 // keyterms are the personal bank's names, medications and places (D2). It is created
 // on the first mode start, after the startup page exists (the glasses mic needs it),
 // and shared across modes. `?svc=mock` keeps the scripted MockStt.
-// Prediction (T-201) is wired with T-201 part 2 and T-203.
 let realStt: SttService | undefined
 const sttForMode = (): SttService =>
   flags.mockServices
     ? new MockStt()
     : (realStt ??= createRollingStt(bridge, { now: Date.now, log, keyterms: async () => personalKeyterms(await store.getBank()) }))
+
+// Prediction (T-201 + T-203): the Gemini proxy at VITE_PREDICT_URL (set for packaged
+// builds in .env.production). Without it, the predictor runs bank-only (fallback v2).
+// Timeout 1.5 s: T-203 measured p95 ~1.15 s through Vercel (PREDICTOR_PROMPT §2). One
+// shared instance, so suggestion history and the 429 cooldown span modes. Step 2 wraps
+// it in the shared throttle (D11). `?svc=mock` keeps the canned MockPredictor.
+const predictUrl = (import.meta as ImportMeta & { env?: Record<string, unknown> }).env?.VITE_PREDICT_URL
+let realPredictor: PredictorService | undefined
+const predictorForMode = (): PredictorService =>
+  flags.mockServices
+    ? new MockPredictor()
+    : (realPredictor ??= createPredictor({
+        endpoint: typeof predictUrl === 'string' && predictUrl ? predictUrl : undefined,
+        timeoutMs: 1500,
+        now: Date.now,
+        log,
+        resolveAssets,
+      }))
 
 const { shell } = await startApp({
   hub,
@@ -47,7 +65,7 @@ const { shell } = await startApp({
     ui,
     leave,
     stt: sttForMode(),
-    predictor: new MockPredictor(),
+    predictor: predictorForMode(),
     store,
     now: Date.now,
     log,

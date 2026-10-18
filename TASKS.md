@@ -1,6 +1,6 @@
 # Nudge Task Board
 
-_Last updated: Sat Oct 17, 2026 (about H10:15) by ORCH. Decisions D1-D13: `PLAN.md` Section 13. Contracts: CONTRACT_VERSION 2 (`src/core/types.ts`, `docs/CONTRACTS.md`). Phase 1 builder prompts: `docs/prompts/phase1-builder-prompts.md`._
+_Last updated: Sat Oct 17, 2026 (about H10:30) by ORCH. Decisions D1-D14: `PLAN.md` Section 13. Contracts: CONTRACT_VERSION 2 (`src/core/types.ts`, `docs/CONTRACTS.md`). Phase 1 builder prompts: `docs/prompts/phase1-builder-prompts.md`._
 
 Single source of truth for who is doing what. Read `PLAN.md` first for architecture, contracts, ownership, and git rules.
 
@@ -11,9 +11,9 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 **Device testing (all lanes):** QR prototype mode is broken on Even's side, so the glasses only run **packaged Beta builds** (pack → upload at hub.evenrealities.com → Me → Beta tester; a few minutes per cycle). Iterate in the simulator and batch device checks. The workflow, including how to pack a spike page on its own, is in `README.md` → "Run on the real G2". Gate flags are set at pack time with `VITE_STEP2=1` / `VITE_STEP3=1` (`docs/G2_SMOKE.md`).
 
 **Queue by lane (now):**
-- GLASS: T-204 and T-202 are merged. Next: **the G1 run** (T-107) as soon as Sam's redeploy passes the curl check. Then help with the G2 gate prep (Step 2 on device with `VITE_STEP2=1`).
-- AI: `api/stt` is hosted (PR #50). Next: **redeploy production from `integration`** (it's crashing on an old build) and confirm both token types; stand by during G1 to add the WebView origin. Then **T-203 `api/predict`** on the same project (`GEMINI_API_KEY` is already set; use `./_x.js` ESM imports).
-- LOGIC (Codex): T-303 is merged. Next: **get #51 (T-201 part 2) green** (ORCH added the grant; re-run CI), then T-205 and the eval-04 fixture fix.
+- GLASS: T-204 and T-202 are merged. Next: **G1** (T-107) as soon as production passes the curl check, then **G2** (T-207 runbook) with a second person.
+- AI: `api/stt` (#50) and `api/predict` (#53) are merged. Next: **redeploy production from `integration`** and curl-check both token types and `/api/predict`; stand by during G1/G2 to add the WebView origin. Then Phase 3: **T-301 stall detector** (tune against T-007 fixtures).
+- LOGIC (Codex): T-201 (both parts) and T-303 are merged. Next: T-205 (mouth-shape resolver) and the eval-04 fixture fix; then help T-302 if AI is busy.
 - UI (Cursor): T-206 and T-401 part 1 are merged. Next (lower priority than Step 2): T-401 part 2, the Demo entry inside `mountCompanion` so judges can reach it in the packaged app, with a cancellable replay.
 
 **Global rules for every task (also repeated in the builder prompt):**
@@ -263,7 +263,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ### T-201 Predictor implementation
 - **Owner:** LOGIC (Codex)
-- **Status:** PART 1 MERGED (PR #31). **Part 2 (PR #51) approved in substance**: fallback v2 + shared throttle with the empty-result fix and a shared 429 cooldown. CI was red only on ownership (it swaps Step 2's import, which is GLASS-owned); ORCH granted it, so re-run CI and merge.
+- **Status:** MERGED: part 1 (PR #31) and part 2 (PR #51), fallback v2 + shared throttle + 429 cooldown. Wired in `src/main.ts` against `VITE_PREDICT_URL` with `timeoutMs: 1500` (D14).
   - **Throttle bug to avoid (found in T-204, PR #43):** `spikes/predictor/throttle.mjs` caches a prefetch only when it is non-empty, so when the model returns `[]` it **re-prefetches the same request every `minGapMs`** (wasted quota, and the next segment's prefetch is delayed, so taps miss the cache). Track `fetchedSeq`, the newest request a call finished for regardless of its result, and stop arming when `fetchedSeq === latestSeq`. Port the regression test "does not re-fetch a request that came back empty" from `src/modes/step2/step2.test.ts`. When part 2 merges, T-204 swaps its import to `src/ai/predictor` and deletes `src/modes/step2/throttle.ts`.
 - **Branch:** `logic/predictor`
 - **Depends on:** T-001 (`PREDICTOR_PROMPT.md`), S-2, T-004. Develop against `MockPredictor` and a stubbed fetch until T-203's proxy merges; do not wait on it.
@@ -287,7 +287,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ### T-203 Serverless proxy for prediction
 - **Owner:** AI
-- **Status:** READY. Shares the Vercel project with `api/stt`.
+- **Status:** MERGED (PR #53): `api/predict` (prompt v2, few-shot, 429 + Retry-After, request rebuild, metadata-only logs). Hosted with `api/stt` once Sam redeploys production from `integration`. Measured p95 ~1.15 s through Vercel.
 - **Branch:** `ai/api-predict`
 - **Depends on:** T-001
 - **Files it may EDIT:** `api/predict/**`
@@ -331,9 +331,15 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ### T-207 Gate G2: audit, integrate, smoke, tag
 - **Owner:** ORCH
-- **Status:** TODO
+- **Status:** READY after G1 passes and production `api/` is redeployed. All Step 2 code is merged (T-201, T-202, T-203, T-204) and wired in `src/main.ts`.
 - **Spec:** audit, merge in dependency order, run `docs/G2_SMOKE.md` plus a live two-person conversation test, fast-forward `main`, tag `v0.2-step2`, upload Beta. **Decision:** enable `step2Enabled` by default.
 - **Acceptance criteria (gate):** in a 5-minute live conversation, the user can ask for help and get at least one correct or acceptable suggestion within about 1.5 s on most attempts; Step 1 still passes its smoke test (regression).
+- **G2 runbook (GLASS runs it with a second person, ORCH records it):**
+  1. Production check: `curl` `POST https://nudge-seven-psi.vercel.app/api/stt/token` for **both** `batch_scribe` and `realtime_scribe` (200 + `sutkn_…`), and `POST /api/predict` with a small `PredictRequest` (200 + a JSON array), all with an allowed `origin`. Any 500 → Sam redeploys from `integration`.
+  2. Bump `app.json` above the last upload (D10). On a clean `integration`: `npm ci && npm run typecheck && npm test`, then **`VITE_STEP2=1 npm run pack`** (both URLs come from `.env.production`).
+  3. Install from Me → Beta tester. Run `docs/G2_SMOKE.md` A, B (B5/B6) and C again (Step 1 regression), then **D with a real two-person conversation for ~5 minutes**: count help taps, correct or acceptable suggestions, and rough tap-to-candidates time.
+  4. Watch for: realtime transcript actually arriving (if Step 2 never suggests anything relevant, `wss://` may be blocked by the Even whitelist → re-pack with `VITE_ROLLING_STT=batch`, PLAN §9); a rejected WebView origin in the Vercel log (ping Sam within the hour); `rate-limited` fallbacks (free tier 15/min, D11).
+  5. Record in `docs/BETA_RESULTS.md` + the G2_SMOKE table. On a pass: ORCH sets `step2Enabled` default ON in `src/config.ts`, fast-forwards `main`, tags `v0.2-step2`, keeps the `.ehpk`.
 
 ---
 
@@ -441,6 +447,7 @@ No new features after H18. Only fixes, packaging, polish, and the story.
 - H7: T-004 fixtures merged (PR #9). Follow-up filed as T-007.
 - H7: T-006 design tokens and glasses layouts merged (PR #7, after one round of changes).
 - H7: T-002 device checks done (PR #13, `docs/BETA_RESULTS.md`). QR prototype mode is broken on Even's side, so device testing uses packaged Beta builds; README and `docs/G2_SMOKE.md` updated.
+- H10:30: T-201 part 2 (#51) and T-203 `api/predict` (#53) merged. ORCH wired the real predictor in `src/main.ts` (1.5 s timeout, D14; `VITE_PREDICT_URL` in `.env.production`). **All Step 2 code is in.** G2 runbook added to T-207. Production `api/` still needs Sam's redeploy.
 - H10:15: `api/stt` hosted on Vercel (#50: ESM `.js` import fix; Sam deploys via CLI because Hobby blocks Git deploys from non-members). T-202 rolling STT (#49), T-303 keywords (#52) and dev Step 2 (#48) merged. ORCH: rolling STT wired in `main.ts`, `app.json` whitelist + `wss://`, `.env.production` with the token URL, `.vercel` ignored, grant for #51. **Production `api/stt` needs a redeploy** (500 at 10:10).
 - H10: T-401 part 2 + T-403 polish merged (PR #44); #41 closed (superseded). T-204 (PR #43) approved, pending the foundation-test update. The reference-throttle `[]` re-prefetch bug is recorded on T-201 part 2.
 - H10: T-202 reassigned AI → GLASS (grant for `glass/audio-rolling`). Grant for `glass/step2-mode` to update `src/mocks/foundation.test.ts` (it asserts the old Step 2 stub). Vercel project `nudge` exists, but its Git deployments are blocked (team membership); hosting is the G1 blocker.

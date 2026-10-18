@@ -29,7 +29,7 @@ _v2: settled by S-2 (`spikes/predictor/FINDINGS.md`)._
   - `temperature: 0.2`
   - `maxOutputTokens: 128`
   - **`thinkingConfig: { thinkingLevel: "minimal" }`** (S-2: 0 thought tokens on this model)
-- Client timeout: **1.2 s** end-to-end via `AbortSignal`, then fall back (Section 7). S-2 measured p50 ~650 ms and p95 ~880 ms before the proxy hop. If T-203 measures the total p95 above ~1.1 s, raise the timeout to 1.5 s rather than lose model answers.
+- Client timeout: **1.5 s** end-to-end via `AbortSignal`, then fall back (Section 7). Raised from 1.2 s at H10 (PLAN D14): S-2 measured p95 ~880 ms before the proxy hop, and T-203 measured **p95 ~1.15 s total through Vercel** (`iad1`), above the ~1.1 s line. `src/main.ts` passes `timeoutMs: 1500`. Step 2's prefetch hides most of this anyway.
 - **Rate limit: free tier = 15 requests/minute per project per model** (from the 429's `quotaValue`; extra keys don't help). Every call goes through the throttle in Section 10. **Never call the model directly from a mode.**
 
 ## 3. System prompt
