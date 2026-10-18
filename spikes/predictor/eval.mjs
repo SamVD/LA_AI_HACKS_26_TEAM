@@ -164,7 +164,25 @@ function body(input, fewShot) {
   }
 }
 
+// Free-tier keys are rate limited per minute. Pace calls, and on 429 wait out the server's
+// retryDelay and try again. Only the final attempt is timed, so latency stays honest.
+const RPM = Number(opt('--rpm', 14))
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
+let nextSlot = 0
 async function gemini(model, payload) {
+  for (let attempt = 0; ; attempt++) {
+    const wait = nextSlot - Date.now()
+    if (wait > 0) await sleep(wait)
+    nextSlot = Date.now() + 60000 / RPM
+    const r = await geminiOnce(model, payload)
+    if (r.status !== 429 || attempt >= 4) return { ...r, retries: attempt }
+    const delay = Number(r.error.match(/"retryDelay":"(\d+(?:\.\d+)?)s"/)?.[1] ?? 20)
+    console.log(`  429, retrying in ${Math.ceil(delay)}s`)
+    await sleep(Math.ceil(delay) * 1000 + 500)
+  }
+}
+
+async function geminiOnce(model, payload) {
   const ac = new AbortController()
   const timer = setTimeout(() => ac.abort(), HARD_TIMEOUT_MS)
   const t0 = performance.now()
@@ -177,7 +195,7 @@ async function gemini(model, payload) {
     const ttfbMs = Math.round(performance.now() - t0)
     const json = await res.json().catch(() => ({}))
     const totalMs = Math.round(performance.now() - t0)
-    if (!res.ok) return { ok: false, status: res.status, ttfbMs, totalMs, error: scrub(JSON.stringify(json.error ?? json)).slice(0, 400) }
+    if (!res.ok) return { ok: false, status: res.status, ttfbMs, totalMs, error: scrub(JSON.stringify(json.error ?? json)).slice(0, res.status === 429 ? 4000 : 400) }
     const cand = json.candidates?.[0]
     const text = (cand?.content?.parts ?? []).filter((p) => !p.thought).map((p) => p.text ?? '').join('')
     return { ok: true, status: res.status, ttfbMs, totalMs, text, finishReason: cand?.finishReason, usage: json.usageMetadata }
@@ -295,7 +313,7 @@ for (const model of OFFLINE ? [] : MODELS) {
           model, config, rep, id: c.id, shape: c.shape, inBank: c.inBank, intended: c.intendedWord,
           httpOk: r.ok, status: r.status, ttfbMs: r.ttfbMs, totalMs: r.totalMs, jsonValid, valid: v.valid, reason: v.reason, dropped: v.dropped,
           suggestions: v.items.map((i) => `${i.word}:${i.confidence.toFixed(2)}`), raw: r.ok ? r.text : r.error,
-          finishReason: r.finishReason, thoughtsTokens: r.usage?.thoughtsTokenCount ?? 0,
+          retries: r.retries, finishReason: r.finishReason, thoughtsTokens: r.usage?.thoughtsTokenCount ?? 0,
           ...s, top3At1200: inTime ? s.top3 : score(c, fbByCase.get(c.id)).top3,
         }
         rows.push(row)
