@@ -46,6 +46,7 @@ export class EnergyVad {
   private readonly floorFrames: number
   private readonly warmupFrames: number
   private readonly history: number[] = [] // recent non-digital-silence frame levels
+  private peak = -120 // loudest frame so far (diagnostics)
   private run = 0 // consecutive speech frames
   private quiet = 0 // consecutive non-speech frames while speaking
   private speaking = false
@@ -73,6 +74,7 @@ export class EnergyVad {
 
   private frame(db: number): void {
     const idx = this.frames++
+    if (db > this.peak) this.peak = db
     if (db > DIGITAL_SILENCE_DB) {
       this.history.push(db)
       if (this.history.length > this.floorFrames) this.history.shift()
@@ -103,7 +105,6 @@ export class EnergyVad {
     return this.t0Ms + frame * FRAME_MS
   }
 
-  get isSpeaking(): boolean { return this.speaking }
   /** True once speech has been confirmed at least once. */
   get heardSpeech(): boolean { return this.firstSpeechFrame >= 0 }
   /** Audio time processed so far, in ms since t0. */
@@ -114,7 +115,9 @@ export class EnergyVad {
   get speechEndMs(): number { return this.lastSpeechFrame < 0 ? -1 : (this.lastSpeechFrame + 1) * FRAME_MS }
   /** Audio silence since the last speech frame (0 while speech is ongoing). */
   get silenceMs(): number { return this.lastSpeechFrame < 0 ? this.elapsedMs : this.elapsedMs - this.speechEndMs }
+  /** Current noise floor and loudest frame, in dBFS: what to report when nothing counted as speech. */
   get noiseFloorDb(): number { return this.floorDb ?? -120 }
+  get peakDb(): number { return this.peak }
 
   private get floorDb(): number | null {
     if (!this.history.length) return null

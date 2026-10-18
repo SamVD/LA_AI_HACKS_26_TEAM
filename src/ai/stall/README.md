@@ -18,7 +18,7 @@ const detach = attachStallDetector(ctx.stt, detector, signal => {
 The T-007 fixtures make silence alone useless: some normal pauses (6.9 s) are longer than every annotated stall (2.2-4 s). So the detector combines two things:
 
 1. **Silence after speech** of at least `minSilenceMs`, measured from local VAD's `speaking: false`.
-2. **How the last utterance ended** (`ending.ts`): a function word ("pour my tea into **the**"), a filler ("take my, **um**"), a dangling comma, or a self-repair set off by commas ("a cop, **no,** for tea, a cuh").
+2. **How the last utterance ended** (`ending.ts`): a function word ("pour my tea into **the**"), a filler ("take my, **um**"), a dangling comma, or a self-repair set off by commas ("a cop, **no,** for tea, a cuh"). "like" and "thing" count only in context ("I'd **like**", "give me the **thing**"), because they also end complete sentences ("the one I like", "one more thing").
 
 Terminal punctuation only ever blocks a hint, and only when it's present: `.`/`!` count as complete, and `?` is a question, usually from the other speaker. **It can't be a positive signal: ElevenLabs Scribe drops the final period on complete statements.** That was measured in T-301: "The tea smells lovely this morning" came back without a period; only questions keep their `?`.
 

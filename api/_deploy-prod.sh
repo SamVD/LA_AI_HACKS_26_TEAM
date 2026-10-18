@@ -26,7 +26,9 @@ OUT=$(mktemp -d)
 trap 'rm -rf "$OUT"' EXIT
 git archive "$SHA" | tar -x -C "$OUT"
 mkdir -p "$OUT/.vercel" && cp .vercel/project.json "$OUT/.vercel/"
-printf '{"framework":"vite"}\n' > "$OUT/vercel.json"
+# The Vercel project has no framework preset, so the deploy names it. Merge into the repo's
+# vercel.json (ORCH's settings, e.g. git.deploymentEnabled) instead of overwriting it.
+node -e 'const fs = require("fs"); const p = process.argv[1]; const c = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, "utf8")) : {}; c.framework ??= "vite"; fs.writeFileSync(p, JSON.stringify(c, null, 2) + "\n")' "$OUT/vercel.json"
 BAD=$(cd "$OUT" && ls -a | grep -E '^\.git$|^\.env' | grep -vxE '\.env\.production|\.env\.example' || true)
 if [ -n "$BAD" ]; then echo "refusing: secret-looking files in the export: $BAD" >&2; exit 1; fi
 
@@ -34,7 +36,7 @@ if [ -n "$BAD" ]; then echo "refusing: secret-looking files in the export: $BAD"
 
 check() { # name, expected status, curl args...
   local name=$1 want=$2; shift 2
-  local got; got=$(curl -s -o /dev/null -w '%{http_code}' "$@")
+  local got; got=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "$@" || true) # 000 = no answer; keep going under set -e
   if [ "$got" = "$want" ]; then echo "  ok   $name ($got)"; else echo "  FAIL $name (got $got, want $want)"; FAILED=1; fi
 }
 FAILED=0

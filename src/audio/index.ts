@@ -15,9 +15,10 @@ type Env = Record<string, unknown>
 const defaultEnv = () => (import.meta as ImportMeta & { env?: Env }).env ?? {}
 
 /**
- * Token minter URL. Set VITE_STT_TOKEN_URL at build/pack time to the hosted
- * `api/stt/token` (a packaged build cannot reach a laptop). Dev default: the
- * spike token server (`node spikes/stt/token-server.mjs`) on the same host.
+ * Token minter URL. Packaged builds get the hosted `api/stt/token` from
+ * VITE_STT_TOKEN_URL in `.env.production`. Dev default: the spike token server
+ * (`node spikes/stt/token-server.mjs`, port 8787) on the same host, or set
+ * VITE_STT_TOKEN_URL to the hosted minter, which allows http://localhost:5173.
  */
 export function sttTokenUrl(env: Env = defaultEnv()): string {
   const v = env.VITE_STT_TOKEN_URL
@@ -27,8 +28,10 @@ export function sttTokenUrl(env: Env = defaultEnv()): string {
 }
 
 /**
- * Real STT over the glasses mic. Call after `createStartUpPageContainer` succeeds
- * (the glasses mic depends on it). ORCH wires this into src/main.ts in place of MockStt.
+ * Step-1-only STT over the glasses mic (no rolling transcript). The app itself uses
+ * `createRollingStt` from ./rolling (T-202), which builds on ElevenLabsStt; this factory
+ * serves harnesses such as spikes/stt/t104-sim. Call after `createStartUpPageContainer`
+ * succeeds (the glasses mic depends on it).
  */
 export function createElevenLabsStt(
   bridge: Pick<EvenAppBridge, 'audioControl' | 'onEvenHubEvent'>,

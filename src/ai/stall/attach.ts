@@ -4,7 +4,8 @@ import type { StallDetector, StallSignal } from './detector'
 // Wires a StallDetector to an SttService for Step 3 (T-302): speech state and
 // transcripts go in as events, a timer supplies ticks, and signals come out.
 // If the detector throws, it is detached and `onError` fires once, so the mode can
-// fall back to Step 2 behavior (T-302 spec).
+// fall back to Step 2 behavior (T-302 spec). `onStall` runs inside the same guard, so an
+// exception in the caller's own handler degrades the same way: fail quiet, never crash the mode.
 
 export interface AttachOptions {
   now?: () => number

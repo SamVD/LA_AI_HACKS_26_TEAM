@@ -61,7 +61,10 @@ export class TokenProvider {
   }
 
   private mint(): Promise<TokenResult> {
-    const p = (async (): Promise<TokenResult> => {
+    // Only the request that set `inflight` may clear it, and only after it is set: clearing it
+    // in the request's own `finally` could run first (a synchronous failure) and leave
+    // `inflight` stuck on a settled promise, after which nothing would ever mint again.
+    const p: Promise<TokenResult> = (async (): Promise<TokenResult> => {
       const ac = new AbortController()
       const timer = setTimeout(() => ac.abort(), this.timeoutMs)
       try {
@@ -81,10 +84,10 @@ export class TokenProvider {
         return { ok: false, error: aborted ? 'timeout' : 'network', detail: aborted ? 'token timeout' : 'token fetch failed' }
       } finally {
         clearTimeout(timer)
-        this.inflight = null
       }
     })()
     this.inflight = p
+    void p.then(() => { if (this.inflight === p) this.inflight = null })
     return p
   }
 }

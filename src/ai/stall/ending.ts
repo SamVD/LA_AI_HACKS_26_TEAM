@@ -32,7 +32,15 @@ export const FUNCTION_WORDS = new Set(`a an the some any my your our their its a
   and or but because if than as when while i we they he she`.split(/\s+/))
 
 /** Hesitation sounds and placeholder words people use while searching for a word. */
-export const FILLERS = new Set(['um', 'uh', 'er', 'erm', 'hmm', 'ah', 'eh', 'mm', 'like', 'thing', 'thingy', 'whatsit', 'whatchamacallit'])
+export const FILLERS = new Set(['um', 'uh', 'er', 'erm', 'hmm', 'ah', 'eh', 'mm', 'thingy', 'whatsit', 'whatchamacallit'])
+
+/**
+ * Fillers only in context, because they also end complete sentences (ORCH, #75):
+ * "like" after a verb that wants an object ("I'd like", "it looks like"), not "the one I like";
+ * "thing" as a placeholder ("give me the thing"), not "one more thing" or "a good thing".
+ */
+const LIKE_LEAD = new Set(["would", "i'd", "we'd", "you'd", "feel", "feels", "look", "looks", "sound", "sounds", "seems", "of"]) // "kind of like", "sort of like"
+const THING_LEAD = new Set(['the', 'that', 'this'])
 
 /**
  * A self-correction set off by commas inside the utterance ("a cop, no, for tea, a cuh").
@@ -52,7 +60,11 @@ export function classifyEnding(text: string, o: { contentWordEndings?: boolean }
   const w = words(t)
   const last = w[w.length - 1]
   if (!last) return { stall: false, rejected: 'empty' }
-  if (FILLERS.has(last) || (last === 'know' && w[w.length - 2] === 'you')) return { stall: true, reason: 'filler' }
+  const prev = w[w.length - 2]
+  if (FILLERS.has(last) || (last === 'know' && prev === 'you')) return { stall: true, reason: 'filler' }
+  if ((last === 'like' && prev !== undefined && LIKE_LEAD.has(prev)) || (last === 'thing' && prev !== undefined && THING_LEAD.has(prev))) {
+    return { stall: true, reason: 'filler' }
+  }
   if (FUNCTION_WORDS.has(last)) return { stall: true, reason: 'function-word' }
   // A repair in the final clause, still unterminated: "Please bring me a cop, no, for tea, a cuh".
   if (REPAIR.test(t.slice(Math.max(0, t.length - 60)))) return { stall: true, reason: 'self-repair' }

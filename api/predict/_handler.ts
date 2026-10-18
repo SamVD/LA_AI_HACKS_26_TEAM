@@ -14,6 +14,9 @@
 import type { WordCategory } from '../../src/core/types'
 import { buildModelInput, MAX_BANK, type PredictWireRequest } from '../../src/ai/predictor/input.js'
 import { EXAMPLES, PROMPT_VERSION, RESPONSE_SCHEMA, SYSTEM_PROMPT } from './_prompt.js'
+import { clientIp, corsHeaders, createOriginCheck, createRateLimiter, readBody } from '../_shared.js'
+
+export { originMatches, parseOrigins } from '../_shared.js'
 
 /** Section 2: pinned by S-2. Don't use gemini-flash-latest (moves, ~7x slower, rejects minimal thinking). */
 export const MODEL = 'gemini-3.5-flash-lite'
@@ -97,26 +100,15 @@ export function createPredictHandler(o: PredictHandlerOptions): (req: Request) =
   const fetchFn = o.fetch ?? ((...a) => fetch(...a))
   const now = o.now ?? Date.now
   const log = o.log ?? (() => {})
-  const { max, windowMs } = o.rateLimit ?? { max: 30, windowMs: 60_000 }
-  const hits = new Map<string, number[]>() // per instance; serverless instances do not share this
-
-  const originOk = (origin: string | null) =>
-    origin === null ? !!o.allowMissingOrigin : o.allowedOrigins.some(e => originMatches(origin, e))
-
-  const cors = (origin: string | null): Record<string, string> =>
-    origin === null ? {} : {
-      'access-control-allow-origin': origin,
-      'access-control-allow-methods': 'POST, OPTIONS',
-      'access-control-allow-headers': 'content-type',
-      'access-control-expose-headers': 'retry-after, server-timing',
-      'access-control-max-age': '600',
-      'timing-allow-origin': origin,
-      vary: 'origin',
-    }
+  const originOk = createOriginCheck(o.allowedOrigins, o.allowMissingOrigin)
+  const limited = createRateLimiter({ ...(o.rateLimit ?? { max: 30, windowMs: 60_000 }), now })
 
   return async function handle(req: Request): Promise<Response> {
     const t0 = now()
     const origin = req.headers.get('origin')
+    const allowed = originOk(origin)
+    // The client reads Retry-After (throttle) and Server-Timing (hop latency), so expose them.
+    const cors = corsHeaders(allowed ? origin : null, origin ? { 'access-control-expose-headers': 'retry-after, server-timing', 'timing-allow-origin': origin } : {})
     let geminiMs: number | null = null
     const respond = (status: number, body: string, extra: Record<string, string> = {}) =>
       new Response(body, {
@@ -126,30 +118,25 @@ export function createPredictHandler(o: PredictHandlerOptions): (req: Request) =
           'cache-control': 'no-store',
           'server-timing': `${geminiMs === null ? '' : `gemini;dur=${geminiMs}, `}total;dur=${now() - t0}`,
           'x-prompt-version': String(PROMPT_VERSION),
-          ...cors(originOk(origin) ? origin : null),
+          ...cors,
           ...extra,
         },
       })
     const json = (status: number, body: unknown, extra?: Record<string, string>) => respond(status, JSON.stringify(body), extra)
     const rateLimited = (ms: number) => json(429, { error: 'rate_limited', retryDelayMs: ms }, { 'retry-after': String(Math.ceil(ms / 1000)) })
 
-    if (!originOk(origin)) {
+    if (!allowed) {
       log(`predict: rejected origin ${JSON.stringify(origin)}`) // add it to PREDICT_ALLOWED_ORIGINS if legitimate
       return json(403, { error: 'origin not allowed' })
     }
-    if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors(origin) })
+    if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors })
     if (req.method !== 'POST') return json(405, { error: 'method not allowed' })
 
-    const ip = (req.headers.get('x-forwarded-for') ?? '').split(',')[0].trim() || req.headers.get('x-real-ip') || 'unknown'
-    const recent = (hits.get(ip) ?? []).filter(x => x > t0 - windowMs)
-    recent.push(t0)
-    hits.set(ip, recent)
-    if (hits.size > 10_000) hits.clear()
-    if (recent.length > max) return rateLimited(recent[recent.length - max - 1] + windowMs - t0)
+    const waitMs = limited(clientIp(req))
+    if (waitMs) return rateLimited(waitMs)
 
-    if (Number(req.headers.get('content-length') ?? 0) > MAX_BODY_BYTES) return json(413, { error: 'body over 16 KB' })
-    const raw = await req.text()
-    if (new TextEncoder().encode(raw).byteLength > MAX_BODY_BYTES) return json(413, { error: 'body over 16 KB' })
+    const raw = await readBody(req, MAX_BODY_BYTES)
+    if (raw === null) return json(413, { error: 'body over 16 KB' })
     let body: unknown
     try { body = JSON.parse(raw) } catch { return json(400, { error: 'invalid json' }) }
     const parsed = parseWireRequest(body)
@@ -198,21 +185,4 @@ export function createPredictHandler(o: PredictHandlerOptions): (req: Request) =
       clearTimeout(timer)
     }
   }
-}
-
-
-/**
- * One allow-list entry against a request Origin. Exact match, `*` (dev only), or a
- * `scheme://host:*` entry that accepts any numeric port on that exact host. The Even app
- * serves packaged builds from a local server, so the WebView's origin is
- * `http://127.0.0.1:<port>` (G1: 61976), and the port may change per launch.
- */
-export function originMatches(origin: string, entry: string): boolean {
-  if (entry === '*' || entry === origin) return true
-  if (!entry.endsWith(':*')) return false
-  const prefix = entry.slice(0, -1) // keep the ':'
-  return origin.startsWith(prefix) && /^\d{1,5}$/.test(origin.slice(prefix.length))
-}
-export function parseOrigins(v: string | undefined): string[] {
-  return (v ?? '').split(',').map(s => s.trim()).filter(Boolean)
 }
