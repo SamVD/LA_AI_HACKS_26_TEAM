@@ -152,6 +152,8 @@ Legend: ✅ merged · 🟡 in progress / review · ⬜ todo · 🚦 gate.
 | T-403 | Paper design polish | UI | 🟡 partly done (tagline, focus rings, contrast, Devpost asset index, Home copy, preview captions, Words asset hint, Step 3 demo); #80 needs a rebase | #41→#44, #47, #64, #69, #71, #83, #80 |
 | T-404 | Devpost + demo script | ORCH | 🟡 drafts merged (#113, #114). Non-G3 finishing moved to **T-406** (juannli); ORCH fills the G3-dependent `[FILL]`s after the decision | #113, #114 |
 | T-406 | Finish Devpost (team, What we learned, local demo steps, screenshot, field map, video prep) | UI (juannli + Claude) | ⬜ READY, PR by 8:15 (grant `ui/devpost-finish`) | — |
+| T-317 | StepFun predictor spike, Phase A (local; `spikes/stepfun/**` only) | AI (Sam) | ⬜ READY; **results by 8:45 AM or stop**; pass = top-3 ≥ 0.90, JSON ≥ 95%, p50 ≤ 1.2 s | — |
+| T-318 | StepFun in `api/predict` behind `PREDICT_PROVIDER` (default Gemini, auto-fallback), Phase B | AI (Sam) | ⛔ blocked on T-317 PASS; **cut-off 9:30 AM** | — |
 | T-405 | Final audit + submission | ORCH | ⬜ | — |
 
 ORCH infrastructure PRs: #2, #5, #6, #10, #12, #14, #15, #16, #19, #25, #27, #30, #32, #35, #37, #39, #42, #45, #46, #54, #55, plus this update.
@@ -217,7 +219,7 @@ There are no console logs on the device. Use the phone companion's **Preview** t
 | Person | Now | Then |
 |---|---|---|
 | **Sarah (GLASS)** | **T-312** launcher label ("Practice", "Conversation": show `ModeInfo.title` only). Then the **G3 re-run** on 0.4.4 with the tally + log export | T-402 final Beta at 7:00 (after the freeze) |
-| **Sam (AI)** | **T-311 early stall prediction (first)**; T-312 Step 3 title → "Conversation"; then T-314 speaker tagging (**ships off unless stable by 5:30**) | Support the G3 re-run |
+| **Sam (AI)** | **First: Gemini billing on the existing project** (blocker #9). Then **T-317** StepFun spike (local only, results by 8:45 or stop). T-318 only after T-317 passes (cut-off 9:30). No `api/` deploy otherwise | Help with the Devpost technical section |
 | **juannli (LOGIC via Devin + UI)** | **T-313** Step 1 short-speech filter (Devin); **T-312** phone Home (hide Step 2, Conversation copy); **T-315** export-log button | Refresh `15-phone-companion.png`; final T-403 polish |
 | **Aarav (ORCH)** | Audit T-311..T-315 as they land; flip `.env.production` (`VITE_STEP2=0`, `VITE_STEP3=1`) when T-312 is in; bump to 0.4.4; record the G3 re-run; tag `v0.3-step3` on a pass | **T-404 Devpost + demo script** (start now), T-405 submission |
 
@@ -241,6 +243,7 @@ There are no console logs on the device. Use the phone companion's **Preview** t
 
 | When | Change |
 |---|---|
+| Sun 8:00 AM | New **T-317** (StepFun spike, Phase A, local, Sam; results by 8:45) and **T-318** (StepFun behind `PREDICT_PROVIDER` in `api/predict`, Phase B, blocked on T-317; cut-off 9:30). `spikes/stepfun/**` → AI lane. Priority stays: Gemini billing, 0.4.5 build, video, Devpost |
 | Sun 7:55 AM | **G3 not passed → ship Practice + Assist (D20).** Merged #120 (re-run results: Gemini daily quota hit 7:09 AM). ORCH quick fixes: no fallback recency boost, function-word filter, junk-segment filter (non-Latin / short-quiet). `app.json` 0.4.5. #111 closed. Blocker #9: unblock Gemini (billing) |
 | Sun 6:55 AM | New **T-406** for juannli: finish the non-G3 parts of the Devpost writeup (grant `ui/devpost-finish`). No hosted judge-demo URL (Vercel root needs the bridge; no redeploys) |
 | Sun 6:50 AM | Merged #116 (T-316 `stt.level` logging, no behavior change). G3 re-run build verified from `24c8ea8` |

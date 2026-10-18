@@ -599,6 +599,74 @@ No new features after H18. Only fixes, packaging, polish, and the story.
   - touch app code.
 - **Acceptance criteria:** one PR with only the files above; the only `[FILL]`s left are the G3-dependent ones; the local demo steps were run and work; the new screenshot is committed.
 
+### T-317 StepFun predictor spike, Phase A (local test only)
+- **Owner:** AI (Sam)
+- **Status:** READY. **Results deadline 8:45 AM PT; if not done by then, stop** and report what you have.
+- **Branch:** `ai/spike-stepfun`
+- **Files it may EDIT:** `spikes/stepfun/**` only (AI lane). **Don't touch** `src/`, `api/`, `app.json`, `fixtures/`, `docs/` or anything else.
+- **Goal:** find out whether StepFun's **`step-5-preview`** can replace or back up Gemini for word prediction (StepFun prize). No app or server changes in Phase A.
+- **Secrets:**
+  - The StepFun API key goes **only** in your local `.env.local` at the repo root (already gitignored by `.env.*`). Use something like `STEPFUN_API_KEY=...`.
+  - **Never** commit it, log it, print it or put it in the app.
+  - Check `git status` before every commit.
+- **Check StepFun's own docs first, don't guess:**
+  - the exact model ID (confirm `step-5-preview` exists and how it's spelled);
+  - the endpoint and auth header;
+  - whether it supports **JSON output** (a JSON mode or schema) and how to turn it on;
+  - any request limits.
+
+  Put the doc URLs in `FINDINGS.md`.
+- **What to run:**
+  - The **same prompt** from `docs/PREDICTOR_PROMPT.md` (prompt v2: system prompt, response schema, few-shot examples) against **`fixtures/predictor-eval.json`**, the same way S-2 tested Gemini.
+  - Start from `spikes/predictor/eval.mjs`. It parses the prompt out of the doc at run time and reads the key from `.env.local`. Copy it to `spikes/stepfun/eval.mjs` and swap only the API call (endpoint, auth, request/response shape). Keep the scoring, the validator and the 1.2 s budget column identical so the numbers are comparable.
+  - Run the **few-shot** config (what we ship) and, if time allows, zero-shot. Use 2 reps.
+- **Report in `spikes/stepfun/FINDINGS.md`**, side by side with Gemini's S-2 numbers (`spikes/predictor/FINDINGS.md`):
+
+  | Model | Config | top-1 | top-3 | valid JSON | p50 ms | p95 ms |
+  |---|---|---|---|---|---|---|
+  | gemini-3.5-flash-lite (S-2) | few-shot | 0.96 | 0.98 | 1.00 | 671 | 885 |
+  | gemini-3.5-flash-lite (S-2) | zero-shot | 0.94 | 0.94 | 1.00 | 651 | 835 |
+  | step-5-preview | few-shot | ? | ? | ? | ? | ? |
+
+  Also note the cost per call, the rate limits, and any failure modes (refusals, prose instead of JSON, wrong language).
+
+  Latency must be measured **from the venue/your laptop**, as S-2 was.
+- **Pass bar (all three):** top-3 **≥ 0.90**, valid JSON **≥ 95%**, p50 latency **≤ 1.2 s**.
+- **Acceptance criteria:**
+  - a PR with only `spikes/stepfun/**` (the eval script, `results/` JSON with no key in it, `FINDINGS.md`);
+  - the table above filled in;
+  - a clear **PASS / FAIL** line against the bar;
+  - the doc links.
+
+  ORCH audits it. A PASS unlocks T-318.
+- **Priority:** below Gemini billing, the 0.4.5 final build, the video and the Devpost. Drop this first if those need you.
+
+### T-318 StepFun in `api/predict` behind a server setting, Phase B (DON'T START until T-317 passes)
+- **Owner:** AI (Sam)
+- **Status:** **BLOCKED on T-317 PASS.** **Cut-off 9:30 AM PT:** if it isn't merged, deployed and live-checked by then, it's dropped and Gemini stays the only provider.
+- **Branch:** `ai/predict-stepfun`
+- **Files it may EDIT:** `api/predict/**` only (AI lane). No `src/`, no `app.json`, no client change: the response shape stays the same JSON array.
+- **Spec:**
+  - **Server setting** `PREDICT_PROVIDER` (`gemini` | `stepfun`), **default `gemini`**. `STEPFUN_API_KEY` is set **on Vercel only**, never in the repo or the app.
+  - When `stepfun` is selected, call StepFun with the **same generated prompt** (`api/predict/_gen-prompt.mjs`, prompt v2) and validate exactly as today.
+  - **Automatic fallback to Gemini** on any StepFun error, non-2xx, invalid output or timeout. The StepFun attempt's timeout must leave room for the Gemini call inside the client's **1.5 s** budget (for example, StepFun ~700 ms, then Gemini).
+  - Log which provider answered (`provider: 'stepfun' | 'gemini-fallback' | 'gemini'`).
+  - Keep the CORS/origin check, rate limit, body cap and 429 handling untouched (`api/_shared.ts`).
+- **Tests (`api/predict/_handler.test.ts`):**
+  - default = Gemini;
+  - `stepfun` success;
+  - StepFun error → Gemini;
+  - StepFun timeout → Gemini within budget;
+  - StepFun invalid JSON → Gemini;
+  - no key ever in a response or log.
+- **Deploy:**
+  - only after T-317 PASS **and** ORCH approval;
+  - only via `bash api/_deploy-prod.sh` (D15), and only if a Vercel deploy slot is available;
+  - live-check both providers (flip `PREDICT_PROVIDER` on Vercel; an env change also needs that redeploy).
+  - If anything looks off, set `PREDICT_PROVIDER=gemini` and redeploy, or leave it unset.
+- **Acceptance criteria:** tests green; deployed; live `/api/predict` answers with StepFun and falls back to Gemini when StepFun is forced to fail; p50 through the proxy ≤ ~1.2 s.
+- **Priority:** same as T-317. Gemini billing, the 0.4.5 build, the video and the Devpost come first.
+
 ### T-405 Final audit and submission
 - **Owner:** ORCH
 - **Spec:** final audit pass; confirm tag, Beta build, Devpost, and G2 return arrangement; two full rehearsals.
