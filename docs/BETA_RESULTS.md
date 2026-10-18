@@ -213,3 +213,33 @@ Two more Conversation-mode exports (144 + 66 events). **Both ran almost entirely
 - **New, F-10**: don't auto-hint on a function-word stall ("to", "So we") unless the chunk is the wearer's (≥ -20 dB) and ≥ 1 s of speech; keep "um"/filler stalls as they are.
 - **R-2 / F-6 are now low-risk**: the -20 dB split held on every single-speaker chunk across ~10 minutes of conversation.
 - **Quota budget**: prefetching on every chunk, including partner fragments and noise, spends quota for nothing. Skip prediction for chunks < 500 ms of speech or below -20 dB.
+
+## G3b Conversation re-test on 0.4.6 (Sarah, Sun Oct 18, 8:40-8:47 AM PT)
+
+**Build:** `integration` @ `2fc148c`, v0.4.6, `VITE_STEP3=1 VITE_DEBUG=1`, Gemini back (billing). Data: one Debug-tab export (268 events): ~0.5 min of Practice, then **~6.5 min of Conversation**. Counts below come from the log; the run was shorter than the 15-minute D21 checklist, and segments A and B were mixed (some planted stalls were tapped).
+
+**Short version:** with Gemini live, **every real stall got a fitting word in the top 3**, including words outside the bank (`sunny`, `umbrella`, `foggy`). Tap help is near-instant (prefetch cache). Auto-hints helped 2 of 3 times. The full B criterion (6 planted stalls, no taps) was **not run**.
+
+### Against the D21 criteria
+
+| Part | Criterion | Measured | Verdict |
+|---|---|---|---|
+| A. Tap help | median ≤ 2.5 s; ≥ 3 of 5 fitting | **4 taps**: 3 served from the prefetch cache in **2 ms**, 1 live in **0.97 s**. Fitting: **3 of 4** (`sunny`, `umbrella`, `Rachel`); the 4th (`phone, water`) was a tap during chat, with no target word | Pass on speed; 4 taps, not 5 |
+| B. Auto-hints | ≥ 3 of 6 helped; ≤ 2 false; stall → letters ≤ 3 s | **3 auto-hints fired**. **2 helped**: "I walk my dog at the, um, um" → `park`; "San Francisco is, uh" → `foggy` ("Ooh, it does"). **1 false**: "Talk to me now. Okay, um" → `Rachel, phone, Maya`. Stall → letters: **3.2, 2.1, 2.5 s** (silence wait + transcript + prediction). 2 more stalls were skipped while paused, 1 while a hint was showing | **Not demonstrated**: 2 helped, not ≥ 3 of 6 planted; false and latency are within limits |
+| C. Pause | no hints while paused | 2 stalls logged `auto-hint skipped: paused` | Pass |
+| D. Practice | 3 words | `toothbrush` right first try; `coffee` failed after 3 "attempts" that were fragments ("T", 300 ms); `bathroom` skipped | Works, but see issue 3 |
+
+### What the log shows
+- **Gemini quality (live): very good.** Predictions that fit the stall: "no clouds, warm. It was" → `sunny, warm, nice`; "I forgot my, um" → `umbrella, hat, jacket`; "my sister" → `Rachel` (wearer's own bank entry); "dog at the, um" → `park`; "San Francisco is, uh" → `foggy, cold, sunny`; "where are you from?" → `Chicago, London, Boston`.
+- **Latency:** 41 model calls, **median 1018 ms** (917-1257). **7 timeouts (15 %)**, all at ~1.0-1.25 s; the first was the cold start. Timeouts fall back to bank words, which is where `phone, glasses` still came from (F-2 open: `timeoutMs` is still 1200).
+- **#122 quick fixes work:** `rolling.drop` removed a quiet 220 ms fragment and a Chinese hallucination ("我们是去"); the stale bank-recency loop is gone.
+- **Sample bank words leak.** Gemini offered `Maya` (a sample entry) three times, and the testers asked "Who's Maya?". The prompt spec drops `sample` entries in production (`docs/PREDICTOR_PROMPT.md` §4), but they still reach the model.
+
+### Issues for the judge build / next fixes
+1. **Raise `timeoutMs` 1200 → ~1800 (F-2).** Model median is 1018 ms, so 15 % of calls miss the cut and show bank words.
+2. **Strip `sample` bank entries** from predictor requests (and the fallback) in packaged builds, or replace them with the tester's real entries before the demo.
+3. **Practice: raise the minimum attempt to ~500 ms of speech.** Two 300 ms "T" fragments counted as wrong answers, so `coffee` failed without a real attempt (T-313's limit is 250 ms).
+4. A weak "Okay, um" in chat still fires an auto-hint with generic bank words (1 false in 6.5 min); acceptable under D21's ≤ 2.
+
+### Recommendation for the 9:30 decision
+The evidence leans toward **Conversation working with Gemini live**: fitting words on every real stall, near-instant taps, 1 false hint, and C passes. But **B wasn't run as specified**. If there's time before 9:30, one clean 8-minute B block (6 planted stalls, no taps, no pausing, partner silent during stalls) would settle it. Otherwise ORCH decides on this partial data.
