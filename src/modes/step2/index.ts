@@ -6,7 +6,7 @@
 import type { Intent, Mode, ModeContext, Suggestion, Transcript, Unsubscribe, WordEntry } from '../../core/types'
 import { CueLadder } from '../../glasses/ladder'
 import { matchWord } from '../../matching'
-import { buildRequest, withAssets } from './request'
+import { buildRequest, lettersOnly } from './request'
 import { createThrottledPredictor, type ThrottledPredictor } from '../../ai/predictor'
 
 export interface Step2Options {
@@ -90,7 +90,7 @@ export function createStep2(options: Step2Options = {}): Mode {
       await show({ kind: 'status', text: 'No suggestion yet' })
       return
     }
-    items = withAssets(found.slice(0, MAX_ITEMS), bank)
+    items = lettersOnly(found.slice(0, MAX_ITEMS))
     index = 0
     ladder.reset()
     phase = 'help'
