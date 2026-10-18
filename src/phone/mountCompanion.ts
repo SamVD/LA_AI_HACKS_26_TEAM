@@ -5,7 +5,7 @@ import { builtinBank } from '../content'
 import type { AppShell, Screen, Suggestion, Transcript, Unsubscribe, WordCategory, WordEntry } from '../core/types'
 import { applyPhoneTheme, watchThemePreference } from './theme/applyTheme'
 import { buildPersonalEntry, isPersonalCategory, validatePracticeFrame } from './personalWord'
-import { describePreviewScreen } from './preview/previewCaption'
+import { describePreviewScreen, type PreviewCaptionOptions } from './preview/previewCaption'
 import { ensurePreviewImages, renderPreviewOptions } from './preview/previewAssets'
 import { renderScreen } from './preview/renderScreen'
 import { extractKeywords } from '../ai/keywords'
@@ -139,6 +139,10 @@ export function mountCompanion(
 
   let previewGeneration = 0
 
+  const previewCaptionOptions = (): PreviewCaptionOptions => ({
+    showAssetKeys: Boolean(options.debug ?? options.devPlaylist?.length),
+  })
+
   const paintPreview = async (screen: Screen | null) => {
     const generation = ++previewGeneration
     if (!screen) {
@@ -149,7 +153,7 @@ export function mountCompanion(
     await ensurePreviewImages(screen)
     if (generation !== previewGeneration) return
     previewHost.innerHTML = renderScreen(screen, renderPreviewOptions())
-    previewKind.textContent = describePreviewScreen(screen)
+    previewKind.textContent = describePreviewScreen(screen, previewCaptionOptions())
   }
 
   const currentPreviewScreen = (): Screen | null => {
@@ -417,7 +421,7 @@ export function mountCompanion(
   const previewLead = document.createElement('p')
   previewLead.className = 'nudge-preview-lead'
   previewLead.textContent =
-    'Mirrors the glasses. Picture and mouth lines show whether each asset loaded (T-205).'
+    'Mirrors the glasses. Captions follow the cue ladder (no target word until level 3). Asset lines show loaded vs placeholder only.'
   previewPanel.append(previewLead, previewHost, previewKind)
   if (options.devPlaylist?.length) {
     const prev = document.createElement('button')

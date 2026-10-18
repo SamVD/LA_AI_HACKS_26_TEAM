@@ -2,20 +2,27 @@ import type { Screen } from '../../core/types'
 import { collectImageKeys } from './collectImageKeys'
 import { previewImageUrl } from './previewAssets'
 
-function assetLine(key: string, kind: 'picture' | 'mouth'): string {
-  const loaded = previewImageUrl(key) ? 'loaded' : 'placeholder'
-  return `${kind} ${key} (${loaded})`
+export type PreviewCaptionOptions = {
+  /** Dev harness only: include asset keys (can reveal target words at cue L1). */
+  showAssetKeys?: boolean
 }
 
-/** Companion caption under the G2 preview (dev + judges). */
-export function describePreviewScreen(screen: Screen): string {
+function assetLine(key: string, kind: 'picture' | 'mouth', showAssetKeys: boolean): string {
+  const loaded = previewImageUrl(key) ? 'loaded' : 'placeholder'
+  if (showAssetKeys) return `${kind} ${key} (${loaded})`
+  return `${kind} (${loaded})`
+}
+
+/** Companion caption under the G2 preview (user + judges). */
+export function describePreviewScreen(screen: Screen, options: PreviewCaptionOptions = {}): string {
+  const showAssetKeys = options.showAssetKeys === true
   const head = `Screen: ${screen.kind}`
   switch (screen.kind) {
     case 'cue':
       if (screen.level === 1) {
         const parts: string[] = [`cue L1`]
-        if (screen.imageKey) parts.push(assetLine(screen.imageKey, 'picture'))
-        else if (screen.mouthKey) parts.push(assetLine(screen.mouthKey, 'mouth'))
+        if (screen.imageKey) parts.push(assetLine(screen.imageKey, 'picture', showAssetKeys))
+        else if (screen.mouthKey) parts.push(assetLine(screen.mouthKey, 'mouth', showAssetKeys))
         if (screen.word) parts.push(`word hidden until L3`)
         return `${head} · ${parts.join(' · ')}`
       }
@@ -25,9 +32,11 @@ export function describePreviewScreen(screen: Screen): string {
       const item = screen.items[screen.index]
       const parts = [`candidates L${screen.level}`, `${screen.index + 1}/${screen.items.length}`]
       if (screen.level === 1 && item) {
-        if (item.mouthKey) parts.push(assetLine(item.mouthKey, 'mouth'))
-        else if (item.imageKey) parts.push(assetLine(item.imageKey, 'picture'))
+        if (item.mouthKey) parts.push(assetLine(item.mouthKey, 'mouth', showAssetKeys))
+        else if (item.imageKey) parts.push(assetLine(item.imageKey, 'picture', showAssetKeys))
         else parts.push('text only')
+      } else if (screen.level === 2 && item) {
+        parts.push(item.word.slice(0, 1))
       } else if (item) {
         parts.push(item.word)
       }
