@@ -490,7 +490,7 @@ Order and cut-offs: see `docs/ORCH_STATE.md` → **Wake-up plan**. In short: MUS
 
 ### T-313 Step 1: ignore short or background speech
 - **Owner:** LOGIC (juannli / Devin)
-- **Status:** READY
+- **Status:** MERGED (PR #105): match first, so correct answers always count; non-matching speech under 250 ms or tagged `other` is ignored.
 - **Branch:** `logic/step1-attempt-filter`
 - **Files it may EDIT:** `src/modes/step1/**`
 - **Why:** at G3, a wrong answer seemed to jump to the next item. Likely cause: short background utterances counted as wrong answers, and T-108's auto-escalate ran through the cues in seconds (#100 §4).
