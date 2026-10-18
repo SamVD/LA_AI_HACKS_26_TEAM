@@ -336,6 +336,7 @@ There are no console logs on the device. Use the phone companion's **Preview** t
 
 | When | Change |
 |---|---|
+| Sun 10:25 AM | **0.5.0 judge build (D26).** #148: tilt passed (4/4 sideways, 2/2 down, none off-screen) → `VITE_IMU=1` in `.env.production`. Speaker gate untestable (all chunks mixed) → off. Latency: set Eager on the phone for filming; shorter chunks after the hackathon |
 | Sun 10:10 AM | Merged #144 (T-407 phone cleanup) and #146 (T-319 sideways tilt = SELECT). `app.json` **0.4.9** = last test build. No open PRs |
 | Sun 10:00 AM | **D25 / T-319:** sideways head tilt = tap on a suggestion (any roll; S-3 could not split left/right). Cut-off 10:15 (T-407 extended to 10:15 too). Builds: 0.4.9 last test, **0.5.0 judge build** |
 | Sun 9:51 AM | Blocker #10 resolved: ElevenLabs upgraded, Scribe 200 from production. Sarah: one Practice word on 0.4.7, then re-run the 0.4.8 check |
