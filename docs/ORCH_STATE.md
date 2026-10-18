@@ -150,7 +150,8 @@ Legend: ✅ merged · 🟡 in progress / review · ⬜ todo · 🚦 gate.
 | T-401 | Judge demo (in-companion Demo tab) | UI | ✅ | #40, #44, #47 |
 | T-402 | Beta final + lifecycle tests | GLASS | ⬜ | — |
 | T-403 | Paper design polish | UI | 🟡 partly done (tagline, focus rings, contrast, Devpost asset index, Home copy, preview captions, Words asset hint, Step 3 demo); #80 needs a rebase | #41→#44, #47, #64, #69, #71, #83, #80 |
-| T-404 | Devpost + demo script | ORCH (drafted by juannli) | 🟡 drafts merged (#113) + ORCH fact-check fixes; **[FILL]**s wait on the G3 re-run, final build, links and names | #113 |
+| T-404 | Devpost + demo script | ORCH | 🟡 drafts merged (#113, #114). Non-G3 finishing moved to **T-406** (juannli); ORCH fills the G3-dependent `[FILL]`s after the decision | #113, #114 |
+| T-406 | Finish Devpost (team, What we learned, local demo steps, screenshot, field map, video prep) | UI (juannli + Claude) | ⬜ READY, PR by 8:15 (grant `ui/devpost-finish`) | — |
 | T-405 | Final audit + submission | ORCH | ⬜ | — |
 
 ORCH infrastructure PRs: #2, #5, #6, #10, #12, #14, #15, #16, #19, #25, #27, #30, #32, #35, #37, #39, #42, #45, #46, #54, #55, plus this update.
@@ -238,6 +239,7 @@ There are no console logs on the device. Use the phone companion's **Preview** t
 
 | When | Change |
 |---|---|
+| Sun 6:55 AM | New **T-406** for juannli: finish the non-G3 parts of the Devpost writeup (grant `ui/devpost-finish`). No hosted judge-demo URL (Vercel root needs the bridge; no redeploys) |
 | Sun 6:50 AM | Merged #116 (T-316 `stt.level` logging, no behavior change). G3 re-run build verified from `24c8ea8` |
 | Sun 6:35 AM | Decided: **measure before building T-314.** New T-316 (log-only `stt.level {speechDb, peakDb, floorDb, speechMs, text}` per utterance), grant `logic/speaker-levels`, goes into the G3 re-run build; the runbook adds a speaker-labelling step (4b). T-314 on hold |
 | Sun 6:30 AM | T-404 drafts merged (#113, `docs/DEVPOST.md`, `docs/DEMO_SCRIPT.md`); ORCH fact-check fixes applied (T-314 not built, SVG preview, v3 gallery, 55 pictures, D16 mic advice, `c_p`, 797 tests) |
