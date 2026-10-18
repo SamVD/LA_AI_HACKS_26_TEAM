@@ -1,5 +1,5 @@
 import type { Screen } from '../../core/types'
-import { candidateDisplay } from './candidateLetters'
+import { revealWord } from '../../glasses/ladder'
 import { collectImageKeys } from './collectImageKeys'
 import { previewImageUrl } from './previewAssets'
 
@@ -33,8 +33,7 @@ export function describePreviewScreen(screen: Screen, options: PreviewCaptionOpt
       const item = screen.items[screen.index]
       const parts = [`candidates L${screen.level}`, `${screen.index + 1}/${screen.items.length}`]
       if (item) {
-        if (screen.level === 3) parts.push(item.word)
-        else parts.push(candidateDisplay(item.word, screen.level))
+        parts.push(revealWord(item.word, screen.level))
       }
       return `${head} · ${parts.join(' · ')}`
     }

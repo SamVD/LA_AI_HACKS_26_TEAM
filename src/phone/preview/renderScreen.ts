@@ -1,6 +1,6 @@
 import type { Screen } from '../../core/types'
+import { revealWord } from '../../glasses/ladder'
 import { glassesCanvas } from '../theme/tokens'
-import { candidateDisplay } from './candidateLetters'
 
 const W = glassesCanvas.width
 const H = glassesCanvas.height
@@ -109,7 +109,7 @@ export function renderScreen(screen: Screen, opts?: RenderScreenOptions): string
       const item = screen.items[screen.index]
       const meta = [`${screen.index + 1}/${screen.items.length}`, `L${screen.level}`]
       if (item) {
-        const line = candidateDisplay(item.word, screen.level)
+        const line = revealWord(item.word, screen.level)
         parts.push(g2Lines(16, screen.level === 1 ? 72 : 108, [line, ...meta]))
       }
       break
