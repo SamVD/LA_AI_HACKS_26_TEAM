@@ -2,6 +2,7 @@
 // Pure: no SDK imports, so every rule here is unit-tested in Node.
 import { getTextWidth, measureTextWrap, pxTruncate } from '@evenrealities/pretext'
 import type { Screen } from '../core/types'
+import { revealWord } from './ladder'
 
 export const SCREEN_W = 576
 export const SCREEN_H = 288
@@ -146,12 +147,10 @@ export function layoutScreen(screen: Screen, opts: LayoutOptions = { images: fal
     case 'candidates': {
       const item = screen.items[screen.index]
       if (!item) return { texts: [centered('main', { x: 8, y: 108, w: 560, h: 81 }, 'No suggestions')], images: [] }
+      // Letters first (CONTRACT_VERSION 3, D18): no picture or mouth shape in Steps 2-3,
+      // and the word is only complete at level 3.
       const position = `${screen.index + 1}/${screen.items.length}`
-      if (screen.level === 1) {
-        return withPicture(item.mouthKey ?? item.imageKey, opts, { x: 16, y: 54, w: 180, h: 108 }, { x: 208, y: 54, w: 360, h: 135 }, `${position}\nTap for a letter`)
-      }
-      const head = screen.level === 2 ? [...item.word][0] : item.word
-      return { texts: centeredLines({ x: 8, y: 99, w: 560, h: 108 }, [head, position]), images: [] }
+      return { texts: centeredLines({ x: 8, y: 99, w: 560, h: 108 }, [revealWord(item.word, screen.level), position]), images: [] }
     }
 
     case 'menu': {
