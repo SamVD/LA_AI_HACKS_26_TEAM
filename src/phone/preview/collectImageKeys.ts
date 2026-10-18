@@ -1,6 +1,6 @@
 import type { Screen } from '../../core/types'
 
-/** Asset keys referenced by a Screen for cue L1 / candidates L1 previews. */
+/** Asset keys referenced by a Screen for Step 1 cue L1 previews (not candidates; v3 is letters-only). */
 export function collectImageKeys(screen: Screen): string[] {
   const keys = new Set<string>()
   const add = (key?: string) => {
@@ -12,14 +12,8 @@ export function collectImageKeys(screen: Screen): string[] {
       add(screen.imageKey)
       add(screen.mouthKey)
       break
-    case 'candidates': {
-      const item = screen.items[screen.index]
-      if (item) {
-        add(item.imageKey)
-        add(item.mouthKey)
-      }
+    case 'candidates':
       break
-    }
     default:
       break
   }

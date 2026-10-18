@@ -125,7 +125,7 @@ export async function runJudgeDemo(
   await paint(
     host,
     helpScreen,
-    hintTrigger === 'tap' ? 'after help tap' : 'after auto-hint',
+    hintTrigger === 'tap' ? 'after help tap (letters L1)' : 'after auto-hint (letters L1)',
   )
 }
 

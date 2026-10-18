@@ -43,8 +43,8 @@ describe('describePreviewScreen', () => {
       items: [{ word: 'cup', confidence: 0.9, source: 'bank' }],
     })
     expect(c2).toContain('candidates L2')
-    expect(c2).toContain('c')
-    expect(c2).not.toContain('cup')
+    expect(c2).toContain('c u _')
+    expect(c2).not.toMatch(/\bcup\b/)
   })
 
   it('shows the word at cue L3 and candidates L3', () => {
