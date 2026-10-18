@@ -1,38 +1,66 @@
-# LA_AI_HACKS_26_TEAM
+# Nudge
 
-Team workspace for the LA Hacks 2026 AI Hackathon.
+A quiet word-finding aid for people with aphasia, built as an Even Hub app for the **Even G2** glasses (LA Hacks 2026). It is a Vite + TypeScript web app that runs inside the Even phone app's WebView and draws on the glasses through `@evenrealities/even_hub_sdk`.
 
-## Goal
-Set up a clean collaborative repository for the team with **no starter application code**.
+Team plan and task board: `PLAN.md` and `TASKS.md`. G2 display numbers: [`docs/DISPLAY_LIMITS.md`](docs/DISPLAY_LIMITS.md). Even's SDK docs (read-only copy, for every tool including Cursor and Codex): [`docs/vendor/even-skills/`](docs/vendor/even-skills/).
 
-## Team Collaboration Setup
+## Setup
 
-### 1) Branching
-- Keep `main` stable.
-- Create feature branches from `main`:
-  - `feature/<short-description>`
-  - `docs/<short-description>`
-  - `chore/<short-description>`
+Needs Node 20+.
 
-### 2) Pull Requests
-- Open a PR for every change.
-- Keep PRs focused and small.
-- Request at least one teammate review before merging.
+```bash
+npm install
+```
 
-### 3) Project Organization
-This repo starts with planning and collaboration assets only:
+## Scripts
 
-- `docs/ideas/` for brainstorms and rough concepts
-- `docs/decisions/` for final decisions and rationale
-- `docs/meeting-notes/` for sync notes and action items
-- `tasks/` for lightweight task tracking files
+| Command | What it does |
+|---|---|
+| `npm run dev` | Vite dev server on port 5173, bound to your LAN so the phone can reach it |
+| `npm run simulate` | Opens the Even G2 desktop simulator pointed at `http://localhost:5173` (run `dev` first) |
+| `npm run typecheck` | `tsc --noEmit` |
+| `npm test` | Vitest (passes with zero tests) |
+| `npm run build` | Typecheck + production build into `dist/` |
+| `npm run pack` | Build, then package `dist/` into `nudge.ehpk` for Even Hub |
 
-### 4) Working Agreement
-- Track decisions in writing.
-- Keep ownership clear with assignees in PRs/issues.
-- Avoid committing secrets, API keys, or credentials.
+## Run in the simulator
 
-## Next Steps
-- Add issue labels and milestones.
-- Create the first task list in `tasks/`.
-- Define demo scope and assign owners.
+```bash
+npm run dev
+npm run simulate
+```
+
+The simulator window shows the 576x288 glasses display. Click in it to tap; the console logs `[nudge] click event`. Double-tap exits.
+
+If port 5173 is busy, run `npx vite --port 5174` and `npx evenhub-simulator http://localhost:5174`.
+
+To script the simulator (screenshots, injected taps, console logs) add `--automation-port 9898`; see `docs/vendor/even-skills/simulator-automation/SKILL.md`.
+
+## Run on the real G2 (QR over LAN)
+
+1. Laptop and phone on the same Wi-Fi. Venue Wi-Fi often blocks device-to-device traffic; a phone hotspot works.
+2. `npm run dev`
+3. Find your laptop's LAN IP (Windows: `ipconfig`, look for IPv4 Address; macOS: `ipconfig getifaddr en0`).
+4. `npx evenhub qr --url http://<your-ip>:5173`
+5. In the Even app, scan the QR code. The glasses show "Hello Nudge"; edits hot-reload.
+
+## Package and upload a Beta build
+
+```bash
+npm run pack
+```
+
+This writes `nudge.ehpk` (gitignored). Upload it to an EvenHub Beta group at the Even Hub developer portal, add the testers' phone-account emails, then install it on the phone from **Me → Beta tester**.
+
+The pack script stamps against SDK `0.0.12` (`--sdk-ver 0.0.12`), which is the version the vendored docs describe; `app.json` sets `min_app_version` to the floor the CLI requires for it.
+
+## Rules (short version, full rules in `PLAN.md`)
+
+- Branch `<lane>/<slug>` (`glass/`, `ai/`, `ui/`, `logic/`, `orch/`), PR into `integration`, never commit to `main`.
+- Edit only the files on your task card.
+- Never commit secrets, API keys or audio. `.env.local` is gitignored; `.env.example` lists variable names.
+- Only `src/glasses/` and `src/audio/capture` import the Even SDK.
+
+## Repo folders kept from setup
+
+- `docs/ideas/`, `docs/decisions/`, `docs/meeting-notes/`, `tasks/`
