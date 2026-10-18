@@ -33,6 +33,7 @@ describe('phone theme', () => {
   it('meets 7:1 contrast for essential text pairs (dark + light)', () => {
     for (const theme of [phoneThemeDark, phoneThemeLight]) {
       expect(contrastRatio(theme.color.text, theme.color.bg)).toBeGreaterThanOrEqual(7)
+      expect(contrastRatio(theme.color.textMuted, theme.color.bg)).toBeGreaterThanOrEqual(7)
       expect(contrastRatio(theme.color.onAccent, theme.color.accent)).toBeGreaterThanOrEqual(7)
       expect(contrastRatio(theme.color.danger, theme.color.bg)).toBeGreaterThanOrEqual(7)
     }

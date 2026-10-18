@@ -1,16 +1,32 @@
 import './theme/tokens.css'
 import './companion.css'
-import type { AppShell, Screen, WordCategory, WordEntry } from '../core/types'
+import { builtinBank } from '../content'
+import type { AppShell, Screen, Suggestion, Transcript, Unsubscribe, WordCategory, WordEntry } from '../core/types'
 import { applyPhoneTheme, watchThemePreference } from './theme/applyTheme'
+import { buildPersonalEntry, isPersonalCategory } from './personalWord'
+import { ensurePreviewImages, renderPreviewOptions } from './preview/previewAssets'
 import { renderScreen } from './preview/renderScreen'
 import { formatStep1ItemLine, summarizeStep1Session } from './sessionSummary'
+
+export type CompanionDebugState = {
+  transcripts: Transcript[]
+  suggestions: Suggestion[]
+}
+
+export type CompanionDebugSource = {
+  subscribe(cb: (state: CompanionDebugState) => void): Unsubscribe
+}
 
 export type CompanionMountOptions = {
   /** Dev harness: cycle fixture screens when no mode is active. */
   devPlaylist?: Screen[]
+  /** Dev harness: live transcript and predictor output. */
+  debug?: CompanionDebugSource
 }
 
-type TabId = 'home' | 'preview' | 'summary' | 'words'
+type TabId = 'home' | 'preview' | 'summary' | 'words' | 'debug'
+
+const builtinIds = new Set(builtinBank().map(entry => entry.id))
 
 function isPersonalEntry(entry: WordEntry): boolean {
   return (
@@ -55,6 +71,7 @@ export function mountCompanion(
   const previewPanel = document.createElement('section')
   const summaryPanel = document.createElement('section')
   const wordsPanel = document.createElement('section')
+  const debugPanel = document.createElement('section')
 
   const previewHost = document.createElement('div')
   previewHost.className = 'nudge-glasses-frame'
@@ -71,30 +88,65 @@ export function mountCompanion(
   const wordBankBody = document.createElement('div')
   wordBankBody.className = 'nudge-word-bank'
 
+  const wordForm = document.createElement('form')
+  wordForm.className = 'nudge-word-form nudge-card'
+  wordForm.innerHTML = `
+    <h2>Add personal word</h2>
+    <label class="nudge-field">
+      <span>Word</span>
+      <input name="word" type="text" required autocomplete="off" class="nudge-input" />
+    </label>
+    <label class="nudge-field">
+      <span>Category</span>
+      <select name="category" class="nudge-input">
+        <option value="person">Person</option>
+        <option value="medication">Medication</option>
+        <option value="place">Place</option>
+        <option value="other">Other</option>
+      </select>
+    </label>
+    <label class="nudge-field">
+      <span>Tags (comma-separated)</span>
+      <input name="tags" type="text" placeholder="daughter, morning" class="nudge-input" />
+    </label>
+    <button type="submit" class="nudge-btn">Save word</button>
+    <p class="nudge-form-hint" data-form-hint hidden></p>
+  `
+
+  const debugTranscript = document.createElement('div')
+  debugTranscript.className = 'nudge-debug-block'
+  const debugSuggestions = document.createElement('div')
+  debugSuggestions.className = 'nudge-debug-block'
+
   const playlistRow = document.createElement('div')
   playlistRow.className = 'nudge-playlist-row'
   playlistRow.hidden = !options.devPlaylist?.length
 
-  const setPreviewSvg = (screen: Screen | null) => {
+  let previewGeneration = 0
+
+  const paintPreview = async (screen: Screen | null) => {
+    const generation = ++previewGeneration
     if (!screen) {
       previewHost.innerHTML = ''
       previewKind.textContent = 'No screen yet'
       return
     }
-    previewHost.innerHTML = renderScreen(screen)
+    await ensurePreviewImages(screen)
+    if (generation !== previewGeneration) return
+    previewHost.innerHTML = renderScreen(screen, renderPreviewOptions())
     previewKind.textContent = `Screen: ${screen.kind}`
   }
 
-  const refreshPreview = () => {
-    if (shell.activeMode() && followLive) {
-      setPreviewSvg(shell.lastScreen())
-      return
-    }
+  const currentPreviewScreen = (): Screen | null => {
+    if (shell.activeMode() && followLive) return shell.lastScreen()
     if (options.devPlaylist?.length && !shell.activeMode()) {
-      setPreviewSvg(options.devPlaylist[playlistIndex])
-      return
+      return options.devPlaylist[playlistIndex]
     }
-    setPreviewSvg(shell.lastScreen())
+    return shell.lastScreen()
+  }
+
+  const refreshPreview = () => {
+    void paintPreview(currentPreviewScreen())
   }
 
   const refreshHome = () => {
@@ -185,14 +237,75 @@ export function mountCompanion(
       ul.className = 'nudge-word-list'
       for (const entry of entries.sort((a, b) => a.word.localeCompare(b.word))) {
         const li = document.createElement('li')
+        li.className = 'nudge-word-row'
+        const label = document.createElement('span')
         const personal = isPersonalEntry(entry) ? ' · Personal' : ''
-        li.textContent = `${entry.word}${personal}`
+        label.textContent = `${entry.word}${personal}`
+        li.append(label)
+        const removable = entry.id.startsWith('p-') && !builtinIds.has(entry.id)
+        if (removable) {
+          const remove = document.createElement('button')
+          remove.type = 'button'
+          remove.className = 'nudge-btn nudge-btn--ghost nudge-btn--compact'
+          remove.textContent = 'Remove'
+          remove.addEventListener('click', () => {
+            void shell.store.removeWord(entry.id).then(() => refreshWords())
+          })
+          li.append(remove)
+        }
         ul.append(li)
       }
       section.append(ul)
       wordBankBody.append(section)
     }
   }
+
+  const refreshDebug = (state: CompanionDebugState) => {
+    debugTranscript.replaceChildren()
+    const tHead = document.createElement('h2')
+    tHead.textContent = 'Live transcript'
+    debugTranscript.append(tHead)
+    const tList = document.createElement('ul')
+    tList.className = 'nudge-word-list nudge-debug-list'
+    if (!state.transcripts.length) {
+      const empty = document.createElement('p')
+      empty.className = 'nudge-debug-empty'
+      empty.textContent = 'Start a mode to see mock transcript lines.'
+      debugTranscript.append(empty)
+    } else {
+      for (const line of state.transcripts.slice().reverse()) {
+        const li = document.createElement('li')
+        const finalMark = line.isFinal ? '' : ' (partial)'
+        const err = line.error ? ` [${line.error}]` : ''
+        li.textContent = `${line.text || '—'}${finalMark}${err}`
+        tList.append(li)
+      }
+      debugTranscript.append(tList)
+    }
+
+    debugSuggestions.replaceChildren()
+    const sHead = document.createElement('h2')
+    sHead.textContent = 'Last suggestions'
+    debugSuggestions.append(sHead)
+    const sList = document.createElement('ul')
+    sList.className = 'nudge-word-list nudge-debug-list'
+    if (!state.suggestions.length) {
+      const empty = document.createElement('p')
+      empty.className = 'nudge-debug-empty'
+      empty.textContent = 'Predictor has not run yet.'
+      debugSuggestions.append(empty)
+    } else {
+      for (const item of state.suggestions) {
+        const li = document.createElement('li')
+        const pct = Math.round(item.confidence * 100)
+        li.textContent = `${item.word} · ${pct}% · ${item.source}`
+        sList.append(li)
+      }
+      debugSuggestions.append(sList)
+    }
+  }
+
+  let lastDebug: CompanionDebugState = { transcripts: [], suggestions: [] }
 
   const showTab = (id: TabId) => {
     activeTab = id
@@ -205,17 +318,22 @@ export function mountCompanion(
     previewPanel.hidden = id !== 'preview'
     summaryPanel.hidden = id !== 'summary'
     wordsPanel.hidden = id !== 'words'
+    debugPanel.hidden = id !== 'debug'
     if (id === 'summary') void refreshSummary()
     if (id === 'words') void refreshWords()
     if (id === 'preview') refreshPreview()
+    if (id === 'debug') refreshDebug(lastDebug)
   }
 
-  for (const tab of [
-    { id: 'home' as TabId, label: 'Home' },
-    { id: 'preview' as TabId, label: 'Preview' },
-    { id: 'summary' as TabId, label: 'Step 1' },
-    { id: 'words' as TabId, label: 'Words' },
-  ]) {
+  const tabs: Array<{ id: TabId; label: string }> = [
+    { id: 'home', label: 'Home' },
+    { id: 'preview', label: 'Preview' },
+    { id: 'summary', label: 'Step 1' },
+    { id: 'words', label: 'Words' },
+  ]
+  if (options.debug) tabs.push({ id: 'debug', label: 'Debug' })
+
+  for (const tab of tabs) {
     const btn = document.createElement('button')
     btn.type = 'button'
     btn.className = 'nudge-tab'
@@ -262,9 +380,36 @@ export function mountCompanion(
     previewPanel.append(playlistRow)
   }
   summaryPanel.append(summaryBody)
-  wordsPanel.append(wordBankBody)
+  wordsPanel.append(wordForm, wordBankBody)
+  debugPanel.append(debugTranscript, debugSuggestions)
 
-  panels.append(homePanel, previewPanel, summaryPanel, wordsPanel)
+  panels.append(homePanel, previewPanel, summaryPanel, wordsPanel, debugPanel)
+
+  const formHint = wordForm.querySelector<HTMLParagraphElement>('[data-form-hint]')!
+  wordForm.addEventListener('submit', event => {
+    event.preventDefault()
+    const data = new FormData(wordForm)
+    const word = String(data.get('word') ?? '').trim()
+    const category = String(data.get('category') ?? 'other') as WordCategory
+    const tagsRaw = String(data.get('tags') ?? '')
+    const tags = tagsRaw
+      .split(',')
+      .map(t => t.trim().toLowerCase())
+      .filter(Boolean)
+    if (!word) return
+    if (!isPersonalCategory(category)) {
+      formHint.hidden = false
+      formHint.textContent = 'Choose a personal category.'
+      return
+    }
+    const entry = buildPersonalEntry(word, category, tags)
+    void shell.store.addWord(entry).then(() => {
+      formHint.hidden = false
+      formHint.textContent = `Saved “${entry.word}”.`
+      wordForm.reset()
+      void refreshWords()
+    })
+  })
 
   const header = document.createElement('header')
   header.className = 'nudge-card'
@@ -277,13 +422,18 @@ export function mountCompanion(
     if (activeTab === 'preview') refreshPreview()
   })
 
+  const unsubDebug = options.debug?.subscribe(state => {
+    lastDebug = state
+    if (activeTab === 'debug') refreshDebug(state)
+  })
+
   showTab('home')
   refreshHome()
   refreshPreview()
   void refreshWords()
-
   return () => {
     unsubScreen()
+    unsubDebug?.()
     unwatchTheme()
     root.replaceChildren()
     root.className = ''
