@@ -1,0 +1,26 @@
+{
+  "package_id": "com.lahacks.nudge.wssprobe",
+  "edition": "202601",
+  "name": "Nudge wss probe",
+  "version": "0.0.1",
+  "min_app_version": "2.2.5",
+  "min_sdk_version": "0.0.12",
+  "entrypoint": "index.html",
+  "permissions": [
+    {
+      "name": "g2-microphone",
+      "desc": "Blocker #2 test: streams 8 s of speech to the speech-to-text service to check live transcripts. Audio is never stored."
+    },
+    {
+      "name": "network",
+      "desc": "Blocker #2 test: checks which secure WebSocket and HTTPS hosts the Even app lets this page reach. Audio is never stored.",
+      "whitelist": [
+        "https://nudge-seven-psi.vercel.app",
+        "https://api.elevenlabs.io",
+        "wss://api.elevenlabs.io",
+        "wss://ws.postman-echo.com"
+      ]
+    }
+  ],
+  "supported_languages": ["en"]
+}

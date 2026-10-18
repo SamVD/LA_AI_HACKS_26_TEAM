@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>wss probe</title>
+  <style>
+    body { font: 15px/1.45 system-ui, sans-serif; margin: 16px; background: #fff; color: #111 }
+    h1 { font-size: 20px; margin: 0 0 6px }
+    #status { font-weight: 600; margin: 8px 0 }
+    pre { white-space: pre-wrap; word-break: break-word; background: #f3f4f6; padding: 10px; border-radius: 8px; font-size: 12px }
+    button { font: inherit; padding: 8px 14px; border-radius: 8px; border: 1px solid #999; background: #fff }
+    @media (prefers-color-scheme: dark) { body { background: #111; color: #eee } pre { background: #1e2126 } button { background: #222; color: #eee } }
+  </style>
+</head>
+<body>
+  <h1>Nudge wss:// probe (blocker #2)</h1>
+  <p>Results also show on the glasses. Tap the glasses to run again; double-tap to exit.</p>
+  <div id="status">Starting...</div>
+  <button id="copy">Copy results</button>
+  <pre id="results"></pre>
+  <script type="module" src="./main.ts"></script>
+</body>
+</html>
