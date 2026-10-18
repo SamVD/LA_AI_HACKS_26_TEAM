@@ -13,6 +13,8 @@ Two small features, **both off by default behind a flag**, built in parallel whi
 | **T-305** head tilt | juannli | `glass/imu-tilt` | `VITE_IMU=1` | While suggestions show: **look down = next, look up = previous** (same as a swipe). No left/right (D9). Ignored on every other screen |
 | **T-314** speaker gate | Sam | `ai/speaker-gate` | `VITE_SPEAKER_GATE=1` | Chunks quieter than **−20 dB** are tagged the partner (`other`); a partner chunk never triggers or keeps a Conversation hint |
 
+**Status:** ✅ T-314 merged (#138; juannli built it). ✅ T-305 merged (#137, after one fix: calibrate only when suggestions first appear). `app.json` **0.4.8**: Sarah can pack the feature test build.
+
 **Timeline (all times AM):**
 
 | When | What |
@@ -321,6 +323,8 @@ There are no console logs on the device. Use the phone companion's **Preview** t
 
 | When | Change |
 |---|---|
+| Sun 9:35 AM | Merged #137 (T-305 head tilt, fix: arm on entry only) and **0.4.8** for the feature check |
+| Sun 9:33 AM | Merged #138 (T-314 speaker gate, flag off by default; non-blocking: `speechDb` −120 would tag `other`). #137 (T-305) changes requested: arm on entry to `candidates` only. 0.4.8 bump staged |
 | Sun 9:30 AM | **D24 / T-407:** phone companion cleanup for Cursor (`ui/phone-cleanup`, cut-off 10:10, joins 0.4.9). From the tester suggestions: no Step 1 tab, Words → Word Bank, Home = Practice + Conversation only, Preview caption "Mirrors the glasses.", Step 3 card folded into Conversation → Hint settings |
 | Sun 9:20 AM | **G3 PASSES on G3b (D23).** Merged #134 (Sarah: B clean block 3/3 helped, 0 false, ≤ 2.9 s). 0.4.7: `VITE_STEP3=1`, predictor timeout 1.5 → **2 s** (15 % of calls timed out), `dropSamples: true` (no more "Maya"). Main fast-forwarded, tag `v0.3-step3`. Known: Practice counts 300 ms fragments |
 | Sun 9:05 AM | **D22:** two flag-gated late features. **T-305** head tilt (juannli, `VITE_IMU`) and **T-314** speaker gate at −20 dB (Sam, `VITE_SPEAKER_GATE`). Cut-off 9:45; feature test build 0.4.8 at 10:00; **judge build 0.4.9** at 10:20 either way; 0.4.7 is the safe filming build. Grant `ai/speaker-gate` → `src/main.ts` |
