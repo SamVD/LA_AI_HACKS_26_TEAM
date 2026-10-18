@@ -356,7 +356,20 @@ export function mountCompanion(
     tabBar.append(btn)
   }
 
-  homePanel.append(modeList)
+  const judgeDemoCard = document.createElement('section')
+  judgeDemoCard.className = 'nudge-card nudge-home-demo'
+  judgeDemoCard.innerHTML = `
+    <h2>Judge demo</h2>
+    <p class="nudge-home-demo-lead">Scripted conversation stall for the booth — no second person required.</p>
+  `
+  const openDemoBtn = document.createElement('button')
+  openDemoBtn.type = 'button'
+  openDemoBtn.className = 'nudge-btn nudge-btn--ghost'
+  openDemoBtn.textContent = 'Open judge demo'
+  openDemoBtn.addEventListener('click', () => showTab('demo'))
+  judgeDemoCard.append(openDemoBtn)
+
+  homePanel.append(judgeDemoCard, modeList)
   previewPanel.append(previewHost, previewKind)
   if (options.devPlaylist?.length) {
     const prev = document.createElement('button')
@@ -447,7 +460,10 @@ export function mountCompanion(
 
   const header = document.createElement('header')
   header.className = 'nudge-card'
-  header.innerHTML = `<h1>Nudge</h1>`
+  header.innerHTML = `
+    <h1>Nudge</h1>
+    <p class="nudge-tagline">Quiet word-finding help on the glasses. This page stays calm.</p>
+  `
   root.append(header, tabBar, panels)
 
   const unsubScreen = shell.onScreen(() => {
