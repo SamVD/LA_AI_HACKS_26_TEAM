@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Mode, Transcript, WordEntry } from '../../core/types'
 import { builtinBank } from '../../content'
 import { createMockContext, MemoryStore, MockStt, MockUI } from '../../mocks'
-import { createPracticeMode, EMPTY_PRACTICE_MESSAGE, maskWord, practiceItems, type PracticeResult } from './index'
+import { createPracticeMode, EMPTY_PRACTICE_MESSAGE, practiceItems, type PracticeResult } from './index'
 
 const cup = builtinBank().find(entry => entry.id === 'cup')!
 const water = builtinBank().find(entry => entry.id === 'water')!
@@ -72,10 +72,6 @@ describe('practice selection and masking', () => {
     expect(practiceItems(builtinBank(), rng())).toEqual(practiceItems(builtinBank(), rng()))
     expect(practiceItems(builtinBank(), rng())).not.toEqual(practiceItems(builtinBank(), () => 0))
   })
-  it.each([['cup', 'c_p'], ['spoon', 's___n'], ['at', 'a_'], ['a', 'a_'],
-    ['ice cream', 'i__ ____m'], ['ice-cream', 'i__-____m'], ['café', 'c__é'], ['', '']])('masks %s as %s', (word, expected) => {
-    expect(maskWord(word)).toBe(expected)
-  })
 })
 
 describe('practice mode', () => {
@@ -102,21 +98,23 @@ describe('practice mode', () => {
     await settle()
     expect(s.ui.screens.slice(0, 3)).toEqual([
       { kind: 'prompt', sentence: cup.frames[0] },
-      { kind: 'cue', level: 1, word: 'cup', imageKey: 'cup', sentence: cup.frames[0] },
-      { kind: 'cue', level: 2, word: 'cup', masked: 'c_p', sentence: cup.frames[0] },
+      { kind: 'cue', level: 1, word: 'cup', sentence: cup.frames[0] },
+      { kind: 'cue', level: 2, word: 'cup', imageKey: 'cup', sentence: cup.frames[0] },
     ])
     expect(transcribe).toHaveBeenCalledOnce()
     await s.advance(40)
     expect(s.context.logs.find(log => log.event === 'step1.result')?.data).toMatchObject({ solvedAtCue: 2 })
   })
-  it('skips image-less personal targets to masked letters, then reveals the word', async () => {
+  it('walks the whole ladder for image-less personal targets — the picture step still gives an attempt', async () => {
     const custom = { ...cup, id: 'custom', word: 'lantern' }
     const s = setup([custom])
     await s.mode.enter(s.context)
     s.ui.emit('SELECT')
     await settle()
-    expect(s.ui.last()).toMatchObject({ kind: 'cue', level: 2, masked: 'l_____n' })
+    expect(s.ui.last()).toEqual({ kind: 'cue', level: 1, word: 'lantern', sentence: cup.frames[0] })
     s.ui.emit('SELECT')
+    await settle()
+    expect(s.ui.last()).toEqual({ kind: 'cue', level: 2, word: 'lantern', imageKey: undefined, sentence: cup.frames[0] })
     s.ui.emit('SELECT')
     await settle()
     expect(s.ui.last()).toMatchObject({ kind: 'cue', level: 3, word: 'lantern' })
@@ -177,47 +175,52 @@ describe('practice mode', () => {
     expect(s.ui.last()).toEqual({ kind: 'feedback', ok: true, word: 'cup' })
     expect(s.context.logs.find(log => log.event === 'step1.result')?.data).toMatchObject({ solvedAtCue: 2, attempts: 2 })
   })
-  it('auto-escalates a wrong answer from the prompt to the picture cue', async () => {
+  it('auto-escalates a wrong answer from the prompt to the masked sentence cue', async () => {
     const s = setup([cup], ['nonsense', 'cup'])
     await s.mode.enter(s.context)
     await s.advance(40)
     expect(s.ui.last()).toEqual({ kind: 'feedback', ok: false, word: 'nonsense' })
     await s.advance(1200)
-    expect(s.ui.last()).toEqual({ kind: 'cue', level: 1, word: 'cup', imageKey: 'cup', sentence: cup.frames[0] })
+    expect(s.ui.last()).toEqual({ kind: 'cue', level: 1, word: 'cup', sentence: cup.frames[0] })
     await s.advance(40)
     expect(s.ui.last()).toEqual({ kind: 'feedback', ok: true, word: 'cup' })
     expect(s.context.logs.find(log => log.event === 'step1.result')?.data).toMatchObject({ solvedAtCue: 1, attempts: 2 })
   })
-  it('skips the picture cue on auto-escalation for image-less personal targets', async () => {
+  it('gives image-less targets the same masked sentence at cue 2, then solves', async () => {
     const custom = { ...cup, id: 'custom', word: 'lantern' }
-    const s = setup([custom], ['nonsense', 'lantern'])
+    const s = setup([custom], ['nonsense', 'nonsense', 'lantern'])
     await s.mode.enter(s.context)
-    await s.advance(40)
-    await s.advance(1200)
-    expect(s.ui.last()).toMatchObject({ kind: 'cue', level: 2, masked: 'l_____n' })
+    await s.advance(40) // Wrong at L0 → feedback.
+    await s.advance(1240) // L1, then wrong at L1 → feedback.
+    await s.advance(1200) // L2 (image-less: same masked sentence, still an attempt).
+    expect(s.ui.last()).toMatchObject({ kind: 'cue', level: 2, word: 'lantern' })
     await s.advance(40)
     expect(s.ui.last()).toEqual({ kind: 'feedback', ok: true, word: 'lantern' })
     expect(s.context.logs.find(log => log.event === 'step1.result')?.data).toMatchObject({ solvedAtCue: 2 })
   })
-  it('auto-escalates to the word after wrong answers at the prompt and masked cue', async () => {
-    const s = setup([cup], ['nonsense', 'nonsense', 'nonsense', 'cup'])
+  it('shows the answer after a wrong answer at the last cue, then moves on unsolved', async () => {
+    const s = setup(undefined, ['nonsense', 'nonsense', 'nonsense'])
     await s.mode.enter(s.context)
     await s.advance(40) // Wrong at L0 → L1.
     await s.advance(1240) // Feedback 1200ms, then wrong at L1 → L2.
-    await s.advance(1240) // Feedback 1200ms, then wrong at L2 → L3.
-    await s.advance(1200) // L3 shown after the wrong-at-L2 feedback delay.
-    expect(s.ui.screens.filter(screen => screen.kind === 'cue').map(screen => screen.level)).toEqual([1, 2, 3])
-    await s.advance(40)
-    expect(s.ui.last()).toEqual({ kind: 'feedback', ok: true, word: 'cup' })
-    expect(s.context.logs.find(log => log.event === 'step1.result')?.data).toMatchObject({ solvedAtCue: 3, attempts: 4 })
+    await s.advance(1240) // Feedback 1200ms, then wrong at L2 → answer.
+    expect(s.ui.screens.filter(screen => screen.kind === 'cue').map(screen => screen.level)).toEqual([1, 2])
+    await s.advance(1200)
+    expect(s.ui.last()).toMatchObject({ kind: 'cue', level: 3, word: 'cup' })
+    await s.advance(3000) // The answer holds 3 s, then the next item.
+    expect(s.ui.last()).toEqual({ kind: 'prompt', sentence: water.frames[0] })
+    expect(s.context.logs.find(log => log.event === 'step1.result')?.data).toMatchObject({ solvedAtCue: null, attempts: 3 })
   })
-  it('advances unsolved after three wrong answers at cue 3', async () => {
-    const s = setup([cup], ['nonsense', 'nonsense', 'nonsense'])
+  it('shows the answer when the ladder is tapped through, never listens during it, and moves on unsolved', async () => {
+    const s = setup([cup])
+    const transcribe = vi.spyOn(s.stt, 'transcribeUtterance')
     await s.mode.enter(s.context)
     for (let i = 0; i < 3; i++) s.ui.emit('SELECT')
     await vi.runAllTimersAsync()
     const item = (await s.store.getSessions('step1'))[0].items[0] as PracticeResult
-    expect(item).toMatchObject({ solvedAtCue: null, attempts: 3, skipped: false })
+    expect(item).toMatchObject({ solvedAtCue: null, attempts: 0, skipped: false })
+    expect(s.ui.screens.filter(screen => screen.kind === 'cue').map(screen => screen.level)).toEqual([1, 2, 3])
+    expect(transcribe).toHaveBeenCalledTimes(1) // the in-flight listen is abandoned, never restarted
     expect(s.ui.last()).toMatchObject({ kind: 'status', text: 'Done! 0 of 1. 0 without help. Tap for more, double-tap to leave.' })
   })
   it('ignores a non-matching utterance under 250 ms — cue and attempt count unchanged', async () => {

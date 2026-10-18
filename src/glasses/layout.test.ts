@@ -2,7 +2,7 @@ import { measureTextWrap } from '@evenrealities/pretext'
 import { describe, expect, it } from 'vitest'
 import type { Screen, WordEntry } from '../core/types'
 import words from '../content/words.json'
-import { MAX_CONTENT, SCREEN_H, SCREEN_W, lineCount, layoutScreen, pageSignature, spaceLetters, type PageSpec } from './layout'
+import { MAX_CONTENT, SCREEN_H, SCREEN_W, letterMask, lineCount, layoutScreen, pageSignature, type PageSpec } from './layout'
 
 const items = [
   { word: 'cup', confidence: 0.9, source: 'bank' as const, imageKey: 'cup', mouthKey: 'open' },
@@ -13,8 +13,8 @@ const screens: Screen[] = [
   { kind: 'blank' },
   { kind: 'prompt', sentence: 'You drink from a ____.' },
   { kind: 'cue', level: 1, word: 'cup', imageKey: 'cup', sentence: 'You drink from a ____.' },
-  { kind: 'cue', level: 1, word: 'cup' },
-  { kind: 'cue', level: 2, word: 'cup', masked: 'c_p' },
+  { kind: 'cue', level: 1, word: 'ice cream', sentence: 'You put ____ in the drink.' },
+  { kind: 'cue', level: 2, word: 'cup', imageKey: 'cup', sentence: 'You drink from a ____.' },
   { kind: 'cue', level: 2, word: 'cup' },
   { kind: 'cue', level: 3, word: 'cup' },
   { kind: 'feedback', ok: true, word: 'cup' },
@@ -71,11 +71,11 @@ describe('layoutScreen content', () => {
     ])
   })
 
-  it('never shows the word before cue level 3', () => {
+  it('never shows the word before cue level 3 (T-320)', () => {
     const word = 'cupboard'
     for (const images of [false, true]) {
       for (const level of [1, 2] as const) {
-        const page = layoutScreen({ kind: 'cue', level, word, imageKey: 'x', masked: 'c______d', sentence: 'Plates go in the ____.' }, { images })
+        const page = layoutScreen({ kind: 'cue', level, word, imageKey: 'x', sentence: 'Plates go in the ____.' }, { images })
         expect(allContent(page)).not.toContain(word)
       }
       for (const level of [1, 2] as const) {
@@ -83,17 +83,34 @@ describe('layoutScreen content', () => {
         expect(allContent(page)).not.toContain(word)
       }
     }
-    expect(allContent(layoutScreen({ kind: 'cue', level: 3, word }))).toBe(word)
+    expect(allContent(layoutScreen({ kind: 'cue', level: 3, word }))).toContain(`The word was "${word}"`)
   })
 
-  it('spaces letters for level 2 and falls back to a first-letter mask', () => {
-    expect(spaceLetters('c_p')).toBe('c _ p')
-    expect(allContent(layoutScreen({ kind: 'cue', level: 2, word: 'cup', masked: 'c_p' }))).toBe('c _ p')
-    expect(allContent(layoutScreen({ kind: 'cue', level: 2, word: 'cup' }))).toBe('c _ _')
+  it('puts the letter mask in the sentence blank at levels 1-2 (T-320)', () => {
+    expect(allContent(layoutScreen({ kind: 'cue', level: 1, word: 'cup', sentence: 'You drink from a ____.' }))).toBe('You drink from a c _ _.')
+    expect(allContent(layoutScreen({ kind: 'cue', level: 2, word: 'cup', sentence: 'You drink from a ____.' }))).toBe('You drink from a c _ _.')
+    expect(allContent(layoutScreen({ kind: 'cue', level: 2, word: 'cup', masked: 'c_p', sentence: 'You drink from a ____.' }))).toBe('You drink from a c _ p.')
+    expect(allContent(layoutScreen({ kind: 'cue', level: 1, word: 'ice cream', sentence: 'You put ____ in it.' }))).toBe('You put i c e   c _ _ _ _ in it.')
+  })
+
+  it.each([['park', 'p___'], ['cup', 'c__'], ['ice cream', 'ice c____'], ['ice-cream', 'ice-c____'], ['Maya Chen', 'Maya C___'], ['a', 'a']])('masks %s as %s', (word, expected) => {
+    expect(letterMask(word)).toBe(expected)
+  })
+
+  it('cue level 3 is the answer: two centered lines naming the word (T-320)', () => {
+    expect(allContent(layoutScreen({ kind: 'cue', level: 3, word: 'park' }))).toBe('Not this time\nThe word was "park"')
+  })
+
+  it('shows no picture at cue level 1, and level 2 without an asset is the same text layout', () => {
+    const l1 = layoutScreen({ kind: 'cue', level: 1, word: 'cup', imageKey: 'cup', sentence: 'You drink from a ____.' }, { images: true })
+    expect(l1.images).toEqual([])
+    const l2NoKey = layoutScreen({ kind: 'cue', level: 2, word: 'cup', sentence: 'You drink from a ____.' }, { images: true })
+    expect(l2NoKey.images).toEqual([])
+    expect(allContent(l2NoKey)).toBe(allContent(l1))
   })
 
   it('shows a picture slot only when images are wired and a key exists', () => {
-    const cue: Screen = { kind: 'cue', level: 1, word: 'cup', imageKey: 'cup', sentence: 'You drink from a ____.' }
+    const cue: Screen = { kind: 'cue', level: 2, word: 'cup', imageKey: 'cup', sentence: 'You drink from a ____.' }
     expect(layoutScreen(cue, { images: true }).images).toEqual([expect.objectContaining({ imageKey: 'cup', w: 200, h: 120 })])
     expect(layoutScreen(cue, { images: false }).images).toEqual([])
   })

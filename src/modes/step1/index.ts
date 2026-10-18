@@ -24,20 +24,6 @@ interface Session {
 
 export const EMPTY_PRACTICE_MESSAGE = 'No practice words. Add a word with a sentence frame.'
 
-/** Keep spaces/hyphens and reveal the first and last letter of the target. */
-export function maskWord(word: string): string {
-  const characters = [...word]
-  const isLetter = (char: string) => /[\p{L}\p{N}]/u.test(char)
-  const count = characters.filter(isLetter).length
-  let seen = 0
-  return characters.map(char => {
-    if (!isLetter(char)) return char
-    seen++
-    if (seen === 1) return count === 1 ? `${char}_` : char
-    return count > 2 && seen === count ? char : '_'
-  }).join('')
-}
-
 /** Rotate categories, discard sample/invalid frames and deduplicate words. */
 export function practiceItems(bank: WordEntry[], random: () => number = Math.random): PracticeItem[] {
   const groups = new Map<WordEntry['category'], PracticeItem[]>()
@@ -86,7 +72,6 @@ class Practice {
   private cue: 0 | 1 | 2 | 3 = 0
   private attempted = false
   private recorded = false
-  private wrongAtFull = 0
 
   constructor(private ctx: ModeContext, private random: () => number) {}
 
@@ -101,7 +86,8 @@ class Practice {
       } else if (intent === 'SELECT') {
         if (this.phase === 'active' && this.cue < 3) {
           this.escalate()
-          this.run(() => this.showCurrent(this.generation))
+          // At cue 3 the tap asks for the answer; below it the in-flight recording keeps running.
+          this.run(() => this.cue === 3 ? this.answer() : this.showCurrent(this.generation))
         } else if (this.phase === 'error') {
           this.phase = 'active'
           const token = ++this.generation
@@ -199,7 +185,6 @@ class Practice {
     this.result = undefined
     this.recorded = false
     this.attempted = false
-    this.wrongAtFull = 0
     this.cue = 0
     if (!this.current) { await this.finishSession(token); return }
     this.phase = 'active'
@@ -220,9 +205,11 @@ class Practice {
   private screen(): Screen {
     const { entry, frame } = this.current!
     if (this.cue === 0) return { kind: 'prompt', sentence: frame }
-    if (this.cue === 1) return { kind: 'cue', level: 1, word: entry.word, imageKey: resolveAssets(entry).imageKey, sentence: frame }
-    if (this.cue === 2) return { kind: 'cue', level: 2, word: entry.word, masked: maskWord(entry.word), sentence: frame }
-    return { kind: 'cue', level: 3, word: entry.word, sentence: frame }
+    // T-320: L1 puts the first-letter mask in the sentence (no picture); L2 adds
+    // the picture beside it; the layout inserts the mask. Cue 3 is the answer.
+    if (this.cue === 1) return { kind: 'cue', level: 1, word: entry.word, sentence: frame }
+    if (this.cue === 2) return { kind: 'cue', level: 2, word: entry.word, imageKey: resolveAssets(entry).imageKey, sentence: frame }
+    return { kind: 'cue', level: 3, word: entry.word }
   }
 
   private async showCurrent(token: number): Promise<boolean> {
@@ -231,7 +218,25 @@ class Practice {
 
   private escalate() {
     this.cue = Math.min(3, this.cue + 1) as 1 | 2 | 3
-    if (this.cue === 1 && !resolveAssets(this.current!.entry).imageKey) this.cue = 2
+  }
+
+  /** Show the current cue and keep listening, or — at cue 3 — run the answer step. */
+  private async showCueOrAnswer(token: number): Promise<void> {
+    if (this.cue === 3) { await this.answer(); return }
+    if (await this.showCurrent(token)) this.run(() => this.listen(token))
+  }
+
+  /**
+   * T-320: cue 3 is 'Not this time / The word was "…"' held 3 s, then the next
+   * item. No attempt is scored here: an in-flight listen (e.g. a tap over an
+   * open recording) must not resolve, and the mic is released for the hold.
+   */
+  private async answer(): Promise<void> {
+    const token = ++this.generation
+    this.clearTimer()
+    await this.stopStt()
+    this.record() // solvedAtCue stays null: the answer counts as not solved
+    if (await this.showCurrent(token)) this.later(3000, token, () => this.nextItem())
   }
 
   private record(skipped = false) {
@@ -276,9 +281,8 @@ class Practice {
       return
     }
     if (transcript.error === 'no-speech' || !transcript.text.trim()) {
-      if (this.cue === 3) { this.record(); await this.nextItem(); return }
       this.escalate()
-      if (await this.showCurrent(token)) this.run(() => this.listen(token))
+      await this.showCueOrAnswer(token)
       return
     }
     // T-313: match first — a correct answer always counts, even a crisp
@@ -306,15 +310,13 @@ class Practice {
         this.later(1500, token, () => this.nextItem())
       }
     } else {
-      if (this.cue === 3) this.wrongAtFull++
-      const exhausted = this.wrongAtFull >= 3
-      if (exhausted) this.record()
+      // A wrong answer at the last cue goes straight to the answer screen (T-320);
+      // the 3-strikes wrongAtFull loop is gone.
       if (await this.show({ kind: 'feedback', ok: false, word: transcript.text }, token)) {
         this.later(1200, token, async () => {
-          if (exhausted) { await this.nextItem(); return }
           this.escalate()
           this.phase = 'active'
-          if (await this.showCurrent(token)) this.run(() => this.listen(token))
+          await this.showCueOrAnswer(token)
         })
       }
     }

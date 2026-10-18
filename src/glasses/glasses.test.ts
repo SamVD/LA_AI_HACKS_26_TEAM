@@ -65,8 +65,8 @@ describe('GlassesUI rendering', () => {
       return { key, width, height, png: new Uint8Array(4) }
     })
     const ui = createGlassesUI(fake.hub, { images })
-    await ui.show({ kind: 'cue', level: 1, word: 'cup', imageKey: 'slow', sentence: 'You drink from a ____.' })
-    await ui.show({ kind: 'cue', level: 1, word: 'mug', imageKey: 'fast', sentence: 'Coffee goes in a ____.' })
+    await ui.show({ kind: 'cue', level: 2, word: 'cup', imageKey: 'slow', sentence: 'You drink from a ____.' })
+    await ui.show({ kind: 'cue', level: 2, word: 'mug', imageKey: 'fast', sentence: 'Coffee goes in a ____.' })
     release()
     await flush(); await flush()
     const sent = fake.calls.filter(c => c.op === 'image')
@@ -77,7 +77,7 @@ describe('GlassesUI rendering', () => {
   it('renders text-only when the image source has nothing', async () => {
     const fake = createFakeHub()
     const ui = createGlassesUI(fake.hub, { images: async () => null })
-    await ui.show({ kind: 'cue', level: 1, word: 'cup', imageKey: 'none', sentence: 'x ____' })
+    await ui.show({ kind: 'cue', level: 2, word: 'cup', imageKey: 'none', sentence: 'x ____' })
     await flush()
     expect(fake.calls.filter(c => c.op === 'image')).toHaveLength(0)
   })
