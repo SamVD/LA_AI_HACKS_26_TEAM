@@ -7,7 +7,7 @@ import type { Intent, Mode, ModeContext, Suggestion, Transcript, Unsubscribe, Wo
 import { CueLadder } from '../../glasses/ladder'
 import { matchWord } from '../../matching'
 import { buildRequest, withAssets } from './request'
-import { createThrottledPredictor, type ThrottledPredictor } from './throttle'
+import { createThrottledPredictor, type ThrottledPredictor } from '../../ai/predictor'
 
 export interface Step2Options {
   /** Hide the suggestions after this long without a touchpad gesture. */

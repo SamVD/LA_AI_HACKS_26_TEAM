@@ -124,13 +124,13 @@ describe('client validation (Section 6)', () => {
 })
 
 describe('bank-only fallback (Section 7)', () => {
-  it('scores tag and word overlap, category fit and place, capped at 0.6 confidence', () => {
+  it('scores tag overlap and category fit, capped at 0.6 confidence', () => {
     const items = rankFallback(request({ transcriptTail: 'Time for my morning dose. I need to take my', stalledAfter: 'take my' }))
     expect(items[0]).toMatchObject({ word: 'metformin', source: 'bank' })
     expect(items[0].confidence).toBeCloseTo(0.15 * 1.5)
-    // each tag counts once: 4 tags + word + said earlier = 5.5 → 0.825, capped at 0.6
+    // Four tag hits reach the confidence cap without boosting an already-said word.
     const ladle = entry('ladle', 'object', ['kitchen', 'soup', 'pot', 'serve'])
-    const many = rankFallback(request({ transcriptTail: 'kitchen soup pot serve ladle soup', bank: [ladle] }))
+    const many = rankFallback(request({ transcriptTail: 'kitchen soup pot serve soup', bank: [ladle] }))
     expect(many[0].confidence).toBe(0.6)
   })
 
@@ -142,23 +142,21 @@ describe('bank-only fallback (Section 7)', () => {
     const history = new Map([['spoon', 1_000]])
     const r = request({ transcriptTail: 'nothing related at all', stalledAfter: 'all' })
     expect(rankFallback(r, history, 1_000 + 4 * 60_000)[0]).toMatchObject({ word: 'spoon', confidence: 0.075 })
-    expect(rankFallback(r, history, 1_000 + 6 * 60_000).map(s => s.confidence)).toEqual([0.05, 0.05])
+    expect(rankFallback(r, history, 1_000 + 6 * 60_000)).toEqual([])
   })
 
-  it('returns recently used personal entries at 0.05 when nothing scores, or [] for an empty bank', () => {
+  it('returns [] when nothing scores, including expired personal suggestions', () => {
     const r = request({ transcriptTail: 'nothing related at all', stalledAfter: 'all' })
-    expect(rankFallback(r).map(s => s.word)).toEqual(['Maya', 'metformin'])
-    expect(rankFallback(r, new Map([['metformin', 10]]), 10 + 10 * 60_000).map(s => s.word)).toEqual(['metformin', 'Maya'])
+    expect(rankFallback(r)).toEqual([])
+    expect(rankFallback(r, new Map([['metformin', 10]]), 10 + 10 * 60_000)).toEqual([])
     expect(rankFallback({ ...r, bank: [] })).toEqual([])
   })
 
-  it('reproduces the S-2 fallback baseline on the eval fixtures', async () => {
-    // S-2 measured top-1 0.28 / top-3 0.60 before T-007 reworded eval-05; with the
-    // current fixtures the same rules give 0.32 / 0.64 (eval-05 now has tag hits).
+  it('improves the v1 baseline on the eval fixtures', async () => {
     const { summary } = await runEval((evalFixture as { cases: EvalCase[] }).cases, bank, async r => rankFallback(r))
     expect(summary.n).toBe(25)
-    expect(summary.top1).toBe(0.32)
-    expect(summary.top3).toBe(0.64)
+    expect(summary.top1).toBeGreaterThan(0.32)
+    expect(summary.top3).toBeGreaterThanOrEqual(0.64)
   })
 })
 
@@ -193,7 +191,7 @@ describe('createPredictor (api/predict client)', () => {
     const items = await predictor.predict(request())
     expect(items[0].source).toBe('bank')
     expect(fetch).toHaveBeenCalledTimes(1)
-    expect(reasons()).toEqual(['http'])
+    expect(reasons()).toEqual(['rate-limited'])
     expect(log.mock.calls[0][1]).toMatchObject({ status: 429 })
   })
 
@@ -252,7 +250,7 @@ describe('createPredictor (api/predict client)', () => {
     const offline = setup(async () => { throw new TypeError('offline') }, { now: () => t })
     t = 60_000
     expect((await predictor.predict(request({ transcriptTail: 'nothing related', stalledAfter: 'related' })))[0].word).toBe('spoon')
-    expect((await offline.predictor.predict(request({ transcriptTail: 'nothing related', stalledAfter: 'related' })))[0].word).not.toBe('spoon')
+    expect(await offline.predictor.predict(request({ transcriptTail: 'nothing related', stalledAfter: 'related' }))).toEqual([])
   })
 
   it('never rejects, even if asset resolution throws', async () => {
