@@ -18,6 +18,7 @@
         "tsconfig*.json",
         ".gitignore",
         ".env.example",
+        ".env.production",
         ".github/**",
         "README.md",
         "CONTRIBUTING.md",
@@ -74,6 +75,11 @@
     }
   },
   "branchGrants": {
+    "logic/predictor-v2": [
+      "src/modes/step2/index.ts",
+      "src/modes/step2/step2.test.ts",
+      "src/modes/step2/throttle.ts"
+    ],
     "glass/step2-mode": [
       "src/mocks/foundation.test.ts"
     ],
