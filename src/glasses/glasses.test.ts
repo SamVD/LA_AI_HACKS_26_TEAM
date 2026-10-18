@@ -287,7 +287,7 @@ describe('bridge key-value store', () => {
 })
 
 describe('head tilt (T-305)', () => {
-  const imu = (x: number) => ({ sysEvent: { eventType: 8, imuData: { x } } })
+  const imu = (x: number, y?: number) => ({ sysEvent: { eventType: 8, imuData: y === undefined ? { x } : { x, y } } })
   const cand: Screen = { kind: 'candidates', items: [], index: 0, level: 1 }
 
   /** A mode that shows `screen` and records the intents it receives. */
@@ -305,7 +305,7 @@ describe('head tilt (T-305)', () => {
     })
     await shell.startMode('step1')
     await flush()
-    const look = async (x: number, n: number) => { for (let i = 0; i < n; i++) { fake.fire(imu(x)); await flush() } }
+    const look = async (x: number, n: number, y?: number) => { for (let i = 0; i < n; i++) { fake.fire(imu(x, y)); await flush() } }
     return { fake, seen, look }
   }
 
@@ -341,12 +341,21 @@ describe('head tilt (T-305)', () => {
     expect(seen).toEqual(['NEXT'])
   })
 
+  it('on candidates: a sideways head tilt sends SELECT like a tap (T-319)', async () => {
+    const { seen, look } = await tiltBoot(cand, { imuEnabled: true })
+    await look(0.03, 10, -0.16) // rest, so the detector calibrates the roll axis
+    await look(-0.08, 6, -0.64) // ear toward the shoulder
+    await look(0.03, 10, -0.16)
+    expect(seen).toEqual(['SELECT'])
+  })
+
   it.each([['blank', { kind: 'blank' } as Screen], ['status', { kind: 'status', text: 'x' } as Screen]])(
     'on %s: tilts dispatch nothing', async (_, screen) => {
       const { seen, look } = await tiltBoot(screen, { imuEnabled: true })
       await look(0.03, 10)
       await look(-0.25, 8)
       await look(0.3, 8)
+      await look(-0.08, 6, -0.64) // T-319: sideways roll doesn't escape the candidates gate either
       expect(seen).toEqual([])
     })
 

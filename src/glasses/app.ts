@@ -52,9 +52,10 @@ export async function startApp(opts: AppOptions) {
   unsubscribe = opts.hub.onEvent(event => {
     const intent = toIntent(event)
     if (intent) { ui.dispatch(intent); return }
-    const imu = event.sysEvent?.imuData as { x?: number } | undefined
+    const imu = event.sysEvent?.imuData as { x?: number; y?: number } | undefined
     if (tilt && imu) {
-      const dir = tilt.sample(imu.x ?? 0, now())
+      // T-319: y is the roll axis — a sideways tilt fires SELECT like a tap.
+      const dir = tilt.sample(imu.x ?? 0, now(), imu.y ?? 0)
       if (dir && shell.lastScreen()?.kind === 'candidates') {
         log('imu.tilt', { dir, kind: 'candidates' })
         ui.dispatch(dir)
