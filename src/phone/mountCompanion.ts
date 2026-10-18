@@ -22,6 +22,7 @@ import { createHintLog } from './sessionLog'
 import { readStep3Settings, writeStep3Settings, type Step3Sensitivity } from './step3Settings'
 import { eventLog } from '../debug/eventLog'
 import { exportSessionLogJson, formatEventLogCount } from './eventLogExport'
+import { companionShowsDebugTab } from './pipelineDebug'
 
 export type CompanionDebugState = {
   transcripts: Transcript[]
@@ -70,6 +71,13 @@ export function mountCompanion(
   const unwatchTheme = watchThemePreference()
   root.className = 'nudge-phone nudge-demo-shell'
   root.replaceChildren()
+
+  const viteEnv = (import.meta as ImportMeta & { env?: Record<string, unknown> }).env
+  const showDebugTab = companionShowsDebugTab(
+    Boolean(options.debug),
+    typeof location === 'undefined' ? '' : location.search,
+    viteEnv?.VITE_DEBUG === '1',
+  )
 
   let activeTab: TabId = 'home'
   let playlistIndex = 0
@@ -457,7 +465,10 @@ export function mountCompanion(
       void refreshWordAssetHint()
     }
     if (id === 'preview') refreshPreview()
-    if (id === 'debug') refreshDebug(lastDebug)
+    if (id === 'debug') {
+      refreshSessionLogCount()
+      if (options.debug) refreshDebug(lastDebug)
+    }
   }
 
   const tabs: Array<{ id: TabId; label: string }> = [
@@ -467,7 +478,7 @@ export function mountCompanion(
     { id: 'summary', label: 'Step 1' },
     { id: 'words', label: 'Words' },
   ]
-  if (options.debug) tabs.push({ id: 'debug', label: 'Debug' })
+  if (showDebugTab) tabs.push({ id: 'debug', label: 'Debug' })
 
   for (const tab of tabs) {
     const btn = document.createElement('button')
@@ -563,7 +574,7 @@ export function mountCompanion(
   })
   sessionLogCard.append(sessionLogCount, exportLogBtn, sessionLogStatus)
 
-  homePanel.append(buildCapability, homeLead, judgeDemoCard, step3Card, modeList, sessionLogCard)
+  homePanel.append(buildCapability, homeLead, judgeDemoCard, step3Card, modeList)
   const previewLead = document.createElement('p')
   previewLead.className = 'nudge-preview-lead'
   previewLead.textContent =
@@ -604,7 +615,10 @@ export function mountCompanion(
   }
   summaryPanel.append(summaryBody)
   wordsPanel.append(wordForm, wordBankBody)
-  debugPanel.append(debugTranscript, debugKeywords, debugSuggestions)
+  if (showDebugTab) {
+    debugPanel.append(sessionLogCard)
+    if (options.debug) debugPanel.append(debugTranscript, debugKeywords, debugSuggestions)
+  }
 
   panels.append(homePanel, demoPanel, previewPanel, summaryPanel, wordsPanel, debugPanel)
 
@@ -717,20 +731,22 @@ export function mountCompanion(
     if (activeTab === 'debug') refreshDebug(state)
   })
 
-  const unsubEventLog = eventLog.subscribe(() => {
-    refreshSessionLogCount()
-  })
+  const unsubEventLog = showDebugTab
+    ? eventLog.subscribe(() => {
+        refreshSessionLogCount()
+      })
+    : undefined
 
   showTab('home')
   refreshHome()
   refreshPreview()
   refreshStep3()
-  refreshSessionLogCount()
+  if (showDebugTab) refreshSessionLogCount()
   void refreshWords()
   return () => {
     demoBinding.reset()
     unsubScreen()
-    unsubEventLog()
+    unsubEventLog?.()
     unsubDebug?.()
     unwatchTheme()
     root.replaceChildren()
