@@ -281,8 +281,23 @@ class Practice {
       if (await this.showCurrent(token)) this.run(() => this.listen(token))
       return
     }
-    this.result!.attempts++
+    // T-313: match first — a correct answer always counts, even a crisp
+    // ~200 ms one-syllable reply. Only non-matching speech is filtered:
+    // partner speech ('other'; absent = wearer, contract v4) and background
+    // fragments under 250 ms, which auto-escalated the cue at G3.
     const match = matchWord(transcript.text, this.current.entry.word, 1)
+    if (!match.ok) {
+      const utteranceMs = transcript.tEndMs - transcript.tStartMs
+      const ignoredReason = transcript.speaker === 'other'
+        ? 'other-speaker'
+        : utteranceMs < 250 ? 'too-short' : null
+      if (ignoredReason) {
+        this.ctx.log('step1 ignored', { reason: ignoredReason, ms: utteranceMs })
+        if (await this.showCurrent(token)) this.run(() => this.listen(token))
+        return
+      }
+    }
+    this.result!.attempts++
     this.phase = 'feedback'
     if (match.ok) {
       this.result!.solvedAtCue = this.cue

@@ -9,14 +9,21 @@ const water = builtinBank().find(entry => entry.id === 'water')!
 const kitchen = builtinBank().find(entry => entry.id === 'kitchen')!
 const active: Mode[] = []
 const settle = () => vi.advanceTimersByTimeAsync(0)
+// T-313: non-matching utterances under 250 ms don't count — fixtures default to a 400 ms attempt.
 const transcript = (text: string, error?: Transcript['error']): Transcript =>
-  ({ text, error, isFinal: true, tStartMs: 0, tEndMs: 40 })
+  ({ text, error, isFinal: true, tStartMs: 0, tEndMs: 400 })
 
 function setup(words = [cup, water, kitchen], utterances: string[] = []) {
   const ui = new MockUI()
   const store = new MemoryStore(words)
   const context = createMockContext({ ui, store })
   const stt = new MockStt(undefined, { utterances, now: context.now, utteranceDelayMs: 40 })
+  // Scripted utterances read as 400 ms attempts (≥ the T-313 250 ms minimum).
+  const realTranscribe = stt.transcribeUtterance.bind(stt)
+  stt.transcribeUtterance = async options => {
+    const t = await realTranscribe(options)
+    return { ...t, tStartMs: t.tEndMs - 400 }
+  }
   context.stt = stt
   const mode = createPracticeMode({ random: () => 0 })
   active.push(mode)
@@ -212,6 +219,61 @@ describe('practice mode', () => {
     const item = (await s.store.getSessions('step1'))[0].items[0] as PracticeResult
     expect(item).toMatchObject({ solvedAtCue: null, attempts: 3, skipped: false })
     expect(s.ui.last()).toMatchObject({ kind: 'status', text: 'Done! 0 of 1. 0 without help. Tap for more, double-tap to leave.' })
+  })
+  it('ignores a non-matching utterance under 250 ms — cue and attempt count unchanged', async () => {
+    const s = setup([cup])
+    vi.spyOn(s.stt, 'transcribeUtterance')
+      .mockResolvedValueOnce({ ...transcript('um'), tEndMs: 150 })
+      .mockResolvedValueOnce(transcript('cup'))
+    await s.mode.enter(s.context)
+    await settle()
+    expect(s.context.logs.find(log => log.event === 'step1 ignored')?.data)
+      .toMatchObject({ reason: 'too-short', ms: 150 })
+    await settle()
+    expect(s.ui.last()).toEqual({ kind: 'feedback', ok: true, word: 'cup' })
+    expect(s.context.logs.find(log => log.event === 'step1.result')?.data)
+      .toMatchObject({ solvedAtCue: 0, attempts: 1 })
+    expect(s.ui.screens.filter(screen => screen.kind === 'cue')).toHaveLength(0)
+  })
+  it('ignores speech tagged as the partner (speaker: other)', async () => {
+    const s = setup([cup])
+    vi.spyOn(s.stt, 'transcribeUtterance')
+      .mockResolvedValueOnce({ ...transcript('nonsense'), speaker: 'other' })
+      .mockResolvedValueOnce(transcript('cup'))
+    await s.mode.enter(s.context)
+    await settle()
+    expect(s.context.logs.find(log => log.event === 'step1 ignored')?.data)
+      .toMatchObject({ reason: 'other-speaker' })
+    await settle()
+    expect(s.ui.last()).toEqual({ kind: 'feedback', ok: true, word: 'cup' })
+    expect(s.context.logs.find(log => log.event === 'step1.result')?.data)
+      .toMatchObject({ solvedAtCue: 0, attempts: 1 })
+  })
+  it('still counts a 250 ms wrong answer and auto-escalates (T-108 unchanged)', async () => {
+    const s = setup([cup])
+    vi.spyOn(s.stt, 'transcribeUtterance')
+      .mockResolvedValueOnce({ ...transcript('nonsense'), tEndMs: 250 })
+      .mockResolvedValueOnce(transcript('cup'))
+    await s.mode.enter(s.context)
+    await settle()
+    expect(s.context.logs.some(log => log.event === 'step1 ignored')).toBe(false)
+    await s.advance(1200)
+    expect(s.ui.screens.filter(screen => screen.kind === 'cue').map(screen => screen.level)).toEqual([1])
+    await settle()
+    expect(s.ui.last()).toEqual({ kind: 'feedback', ok: true, word: 'cup' })
+    expect(s.context.logs.find(log => log.event === 'step1.result')?.data)
+      .toMatchObject({ solvedAtCue: 1, attempts: 2 })
+  })
+  it('accepts a correct answer at 200 ms and records solvedAtCue', async () => {
+    const s = setup([cup])
+    vi.spyOn(s.stt, 'transcribeUtterance')
+      .mockResolvedValueOnce({ ...transcript('cup'), tEndMs: 200 })
+    await s.mode.enter(s.context)
+    await settle()
+    expect(s.context.logs.some(log => log.event === 'step1 ignored')).toBe(false)
+    expect(s.ui.last()).toEqual({ kind: 'feedback', ok: true, word: 'cup' })
+    expect(s.context.logs.find(log => log.event === 'step1.result')?.data)
+      .toMatchObject({ solvedAtCue: 0, attempts: 1 })
   })
   it.each(['mic-denied', 'network', 'timeout', 'unknown'] as const)('shows %s and SELECT retries', async error => {
     const s = setup([cup])
