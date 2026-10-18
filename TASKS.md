@@ -1,12 +1,18 @@
 # Nudge Task Board
 
-_Last updated: Sat Oct 17, 2026 (about H6) by ORCH. Contracts are frozen at CONTRACT_VERSION 1 (`src/core/types.ts`, `docs/CONTRACTS.md`)._
+_Last updated: Sat Oct 17, 2026 (about H7) by ORCH. Contracts are frozen at CONTRACT_VERSION 1 (`src/core/types.ts`, `docs/CONTRACTS.md`)._
 
 Single source of truth for who is doing what. Read `PLAN.md` first for architecture, contracts, ownership, and git rules.
 
 **Lanes:** ORCH = orchestrator (Claude). GLASS = Claude Code #2. AI = Claude Code #3. UI = Cursor. LOGIC = Codex/ChatGPT. Branch format: `<lane>/<slug>`, PR into `integration`.
 
 **Status values:** TODO, READY, IN_PROGRESS, IN_REVIEW, CHANGES_REQUESTED, APPROVED, MERGED, BLOCKED.
+
+**Queue by lane (now):**
+- GLASS: T-002 G2 + Beta checks and the T-003 simulator boot check, then S-3 (**all before H8**), then T-101.
+- AI: S-1, then S-2, then T-104 (needs S-1 + S-3).
+- LOGIC (Codex): T-103, then T-106, then T-102, then T-007.
+- UI (Cursor): T-105.
 
 **Global rules for every task (also repeated in the builder prompt):**
 - Read anything. Edit only the files listed on your card. If you need a change elsewhere, stop and say so in your reply.
@@ -23,7 +29,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ### T-002 Scaffold from the Even minimal template
 - **Owner:** GLASS (Claude Code)
-- **Status:** IN_PROGRESS. Code merged to `integration` (PR #3, audited). Still open: steps 3 and 7 (real G2 via QR, Beta install). **Do these before H8.**
+- **Status:** IN_PROGRESS. Code merged to `integration` (PR #3, audited). Still open: steps 3 and 7 (real G2 via QR, Beta install), plus a simulator boot check of T-003's wiring (`npm run dev` + `npm run simulate`; console shows `[nudge:screen] … step1 not built yet`). **Do these before H8.**
 - **Branch:** `glass/scaffold`
 - **Depends on:** none
 - **Files it may EDIT:** repo root config (`package.json`, lockfile, `app.json`, `vite.config.*`, `tsconfig*`, `.gitignore`, `README.md`), `src/main.ts`, `docs/vendor/**`, `docs/DISPLAY_LIMITS.md`. *(These move to ORCH ownership when this task merges.)*
@@ -61,7 +67,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ### T-003 Mocks, stub modes, registry, config, CI, ownership check
 - **Owner:** LOGIC (Codex)
-- **Status:** READY
+- **Status:** MERGED (PR #8). CI and `check-ownership` are live on every PR.
 - **Branch:** `logic/foundation`
 - **Depends on:** T-001, T-002 (both merged)
 - **Files it may EDIT:** `src/main.ts`, `src/config.ts`, `src/modes/index.ts`, `src/modes/step1/index.ts`, `src/modes/step2/index.ts`, `src/modes/step3/index.ts` *(stubs only; their owners replace the contents later)*, `src/mocks/**`, `.github/workflows/ci.yml`, `.github/CODEOWNERS`, `scripts/check-ownership.*`
@@ -84,7 +90,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ### T-004 Fixtures and word bank seed
 - **Owner:** LOGIC (Codex)
-- **Status:** READY
+- **Status:** MERGED (PR #9). Realism follow-up is T-007.
 - **Branch:** `logic/fixtures`
 - **Depends on:** T-001
 - **Files it may EDIT:** `fixtures/**`, `src/content/words.json`
@@ -111,7 +117,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ### S-2 Spike: Gemini predictor against fixtures
 - **Owner:** AI (Claude Code)
-- **Status:** TODO (prompt is merged; waiting on T-004)
+- **Status:** READY (T-004 merged)
 - **Branch:** `ai/spike-predictor` (writes only `spikes/predictor/**`)
 - **Depends on:** T-001, T-004
 - **Spec:** run `docs/PREDICTOR_PROMPT.md` against `fixtures/predictor-eval.json` with the fastest Gemini tier. Report accuracy at top-1 and top-3, p50/p95 latency, and JSON-validity rate. Confirm current model ID from Gemini docs. Recommend prompt changes to ORCH.
@@ -127,12 +133,29 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ### T-006 Design tokens and glasses layout sketches
 - **Owner:** UI (Cursor)
-- **Status:** READY
+- **Status:** MERGED (PR #7). Contrast nits for T-403 are in the PR #7 review.
 - **Branch:** `ui/design-tokens`
 - **Depends on:** T-002 (reads `docs/DISPLAY_LIMITS.md`)
 - **Files it may EDIT:** `src/phone/theme/**`, `docs/design/**`
 - **Spec:** design tokens for the phone companion UI (large type, high contrast, calm: the users are stroke survivors and caregivers). Layout sketches for each `Screen` kind at 576x288. Check what the Paper challenge requires (read its "View Additional Information") and note it in `docs/design/PAPER.md`.
 - **Acceptance criteria:** tokens file used by a demo component; sketches cover all 7 Screen kinds.
+
+### T-007 Fixture realism (follow-up to T-004)
+- **Owner:** LOGIC (Codex)
+- **Status:** READY (lower priority than T-103, T-106 and T-102; **must merge before T-301 starts**)
+- **Branch:** `logic/fixtures-v2`
+- **Depends on:** T-004
+- **Files it may EDIT:** `fixtures/**`
+- **Read for context:** the PR #9 review (follow-up items 1-4), `src/mocks/fixtures.ts`, `docs/PREDICTOR_PROMPT.md` Section 8.
+- **Spec:**
+  1. Stop sharing one timing skeleton across the conversations. Vary the length (20-90 s), the number of turns, the wording, and the pause lengths. Include normal pauses (end of a sentence, between turns) that are **longer** than some stall silences, so a pure silence threshold cannot separate them.
+  2. Add at least 2 conversations with more than one stall and 1 conversation with no stall at all (keep the 8 existing shapes).
+  3. Define `stalls[].tMs` as the time of the last `speaking: false` before the stall (when the user stops speaking), and fix the existing files. Document this in `fixtures/README.md`.
+  4. Rewrite the filler-stall dialogue so it doesn't give away the answer ("sample tablet starting with lisi"). Relabel or rewrite eval cases tagged `clean-stall` that are really circumlocution.
+  5. Extend `fixtures/fixtures.test.ts` to check rule 3 and that no two conversations share an identical timing skeleton.
+- **Acceptance criteria:**
+  - [ ] At least 11 conversations; tests pass; the stall rule is documented.
+  - [ ] No silence threshold splits stall pauses from non-stall pauses perfectly across the set (add a test that proves it).
 
 **Phase 0 exit:** T-001, T-002, T-003, T-004 merged to `integration`; spikes S-1, S-2, S-3 reported; ORCH reviews findings and updates `PLAN.md` before Phase 1 begins.
 
@@ -144,7 +167,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ### T-101 Glasses renderer, input mapper, cue ladder, lifecycle
 - **Owner:** GLASS
-- **Status:** TODO
+- **Status:** READY
 - **Branch:** `glass/renderer`
 - **Depends on:** T-001, T-002, T-003
 - **Files it may EDIT:** `src/glasses/**` (excluding `src/glasses/imu/`)
@@ -159,7 +182,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ### T-102 Step 1 engine and mode
 - **Owner:** LOGIC (Codex)
-- **Status:** TODO
+- **Status:** READY
 - **Branch:** `logic/step1-mode`
 - **Depends on:** T-001, T-003, T-004 (matcher from T-103 is imported through its interface)
 - **Files it may EDIT:** `src/modes/step1/**`
@@ -171,7 +194,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ### T-103 Fuzzy matcher
 - **Owner:** LOGIC (Codex)
-- **Status:** TODO
+- **Status:** READY
 - **Branch:** `logic/matcher`
 - **Depends on:** T-001
 - **Files it may EDIT:** `src/matching/**`
@@ -180,7 +203,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ### T-104 Audio capture, VAD, and utterance STT
 - **Owner:** AI
-- **Status:** TODO
+- **Status:** TODO (waiting on S-1 and S-3)
 - **Branch:** `ai/audio-utterance`
 - **Depends on:** T-001, T-002, S-1, S-3
 - **Files it may EDIT:** `src/audio/**` (excluding `src/audio/rolling/`), `api/stt/**`. `app.json` permissions (`g2-microphone` or `phone-microphone`, `network` with the proxy URL whitelisted) are requested in the PR description; ORCH adds them.
@@ -192,7 +215,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ### T-105 Phone companion v1 and Screen preview
 - **Owner:** UI (Cursor)
-- **Status:** TODO
+- **Status:** READY
 - **Branch:** `ui/companion-v1`
 - **Depends on:** T-003, T-006
 - **Files it may EDIT:** `src/phone/**`
@@ -201,7 +224,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ### T-106 Picture and mouth-shape assets, store
 - **Owner:** LOGIC (Codex)
-- **Status:** TODO
+- **Status:** READY
 - **Branch:** `logic/assets-store`
 - **Depends on:** T-002 (reads `docs/DISPLAY_LIMITS.md`), T-004
 - **Files it may EDIT:** `src/content/assets/**`, `src/content/index.ts`, `src/store/**`, `scripts/make-assets.*`
@@ -295,7 +318,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 - **Owner:** AI
 - **Status:** TODO
 - **Branch:** `ai/stall`
-- **Depends on:** T-202
+- **Depends on:** T-202, T-007
 - **Files it may EDIT:** `src/ai/stall/**`
 - **Spec:** combine speech state (silence after speech), transcript signals (ends on a connective or filler, unfinished sentence) and an optional cheap model check, behind a pure interface `StallDetector.onEvent(...) -> StallSignal | null`. Thresholds in config, starting guesses only. Includes a cooldown and a max-hints-per-minute cap.
 - **Acceptance criteria:** precision/recall script over the fixtures; false auto-hints in the replayed non-stall segments stay under a target ORCH sets at G2 from data.
@@ -384,6 +407,10 @@ No new features after H18. Only fixes, packaging, polish, and the story.
 - H5: `PLAN.md` and `TASKS.md` merged to `main` (PR #2). `integration` created from `main`.
 - H6: T-002 scaffold code merged to `integration` (PR #3, audited; G2 and Beta checks still open).
 - H6: T-001 contracts merged to `integration` (PR #4): `src/core/types.ts` (CONTRACT_VERSION 1), `OWNERS.json`, `docs/CONTRACTS.md`, `docs/G2_SMOKE.md`, `docs/PREDICTOR_PROMPT.md`. Includes T-005.
+- H6: Phase 0 builder prompts merged (PR #6, `docs/prompts/phase0-builder-prompts.md`).
+- H7: T-003 foundation merged (PR #8): mocks, registry, config, CI, `check-ownership`.
+- H7: T-004 fixtures merged (PR #9). Follow-up filed as T-007.
+- H7: T-006 design tokens and glasses layouts merged (PR #7, after one round of changes).
 
 ---
 
