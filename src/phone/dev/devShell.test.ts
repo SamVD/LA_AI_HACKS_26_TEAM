@@ -6,7 +6,7 @@ describe('createDevShell', () => {
     const { shell } = createDevShell()
     const modes = shell.modes()
     expect(modes.find(m => m.id === 'step1')?.enabled).toBe(true)
-    expect(modes.find(m => m.id === 'step2')?.enabled).toBe(false)
+    expect(modes.find(m => m.id === 'step2')?.enabled).toBe(true)
 
     const seen: string[] = []
     shell.onScreen(s => seen.push(s.kind))
@@ -20,5 +20,10 @@ describe('createDevShell', () => {
 
     await shell.leaveMode()
     expect(shell.activeMode()).toBe(null)
+
+    await shell.startMode('step2')
+    expect(shell.activeMode()).toBe('step2')
+    expect(shell.lastScreen()?.kind).toBe('blank')
+    await shell.leaveMode()
   })
 })
