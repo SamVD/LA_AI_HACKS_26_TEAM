@@ -8,6 +8,7 @@ export type HubCall =
   | { op: 'upgrade'; id: number; name: string; content: string }
   | { op: 'image'; id: number; name: string; bytes: number }
   | { op: 'exit' }
+  | { op: 'imu'; on: boolean }
 
 export function createFakeHub() {
   const calls: HubCall[] = []
@@ -19,6 +20,7 @@ export function createFakeHub() {
     async upgradeText(id, name, content) { calls.push({ op: 'upgrade', id, name, content }); return true },
     async sendImage(id, name, png) { calls.push({ op: 'image', id, name, bytes: png.byteLength }); return true },
     async exitDialog() { calls.push({ op: 'exit' }) },
+    async imuControl(on) { calls.push({ op: 'imu', on }); return true },
     onEvent(cb) {
       const listener = cb as (e: HubEventLike) => void
       listeners.add(listener)
