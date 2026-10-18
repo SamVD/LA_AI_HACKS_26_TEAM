@@ -181,6 +181,9 @@ export class ElevenLabsStt implements SttService {
       return fail(r.error, tStartMs, tEndMs)
     }
     this.log('stt.utterance', { sttMs, audioMs: Math.round(pcm.byteLength / BYTES_PER_MS), end: reason, chars: r.text.length })
+    // T-316: per-utterance loudness for the wearer/partner gap (decides T-314). Log-only; `text` lets
+    // the tester label who spoke. In-memory eventLog export only — no audio leaves the device.
+    this.log('stt.level', { speechDb: vad.speechDb, peakDb: Math.round(vad.peakDb), floorDb: Math.round(vad.noiseFloorDb), speechMs: tEndMs - tStartMs, end: reason, text: r.text })
     return { text: r.text, isFinal: true, tStartMs, tEndMs }
   }
 

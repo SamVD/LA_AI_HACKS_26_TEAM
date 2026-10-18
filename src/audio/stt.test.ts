@@ -116,6 +116,33 @@ describe('ElevenLabsStt.transcribeUtterance', () => {
     expect(entry.peakDb).toBeLessThanOrEqual(-53)
   })
 
+  it('logs stt.level once per transcribed utterance with loudness fields (T-316)', async () => {
+    const { stt, mic, log } = setup()
+    const p = stt.transcribeUtterance(OPTS)
+    await mic.play(synth([quiet(300), word(500), quiet(1300)]))
+    await p
+    const levels = log.filter(([e]) => e === 'stt.level')
+    expect(levels).toHaveLength(1)
+    const d = levels[0][1] as { speechDb: number; peakDb: number; floorDb: number; speechMs: number; end: string; text: string }
+    expect(d.speechDb).toBeGreaterThanOrEqual(-16)
+    expect(d.speechDb).toBeLessThanOrEqual(-14)
+    expect(d.peakDb).toBeGreaterThanOrEqual(-17)
+    expect(d.floorDb).toBeGreaterThanOrEqual(-45)
+    expect(d.floorDb).toBeLessThanOrEqual(-35)
+    expect(d.speechMs).toBeGreaterThanOrEqual(450)
+    expect(d.speechMs).toBeLessThanOrEqual(560)
+    expect(d.end).toBe('silence')
+    expect(d.text).toBe('cup')
+  })
+
+  it('does not log stt.level when the utterance never reaches STT', async () => {
+    const { stt, mic, log } = setup()
+    const p = stt.transcribeUtterance({ maxMs: 3000, endSilenceMs: 1200 })
+    await mic.play(synth([quiet(3100)]))
+    await p
+    expect(log.some(([e]) => e === 'stt.level')).toBe(false)
+  })
+
   it('sends what it has when maxMs cuts off ongoing speech', async () => {
     const { stt, mic, f } = setup()
     const p = stt.transcribeUtterance({ maxMs: 2000, endSilenceMs: 1200 })
