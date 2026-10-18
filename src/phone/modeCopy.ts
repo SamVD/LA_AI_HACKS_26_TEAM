@@ -4,8 +4,7 @@ import type { ModeId } from '../core/types'
 export const MODE_HOME_LEAD: Record<ModeId, string> = {
   step1: 'Practice word-finding on the G2.',
   step2: 'Glasses stay blank in conversation; tap the touchpad when you need a word.',
-  step3:
-    'Same as Assist, but the glasses can offer a quiet hint after a pause. Swipe on a blank display to pause auto-hints.',
+  step3: 'Hints appear on their own after a pause; tap anytime for help.',
 }
 
 export function modeDisabledLead(id: ModeId): string {

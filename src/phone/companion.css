@@ -86,6 +86,19 @@ a.nudge-btn {
   color: var(--nudge-text);
 }
 
+.nudge-session-log-count {
+  margin: 0 0 var(--nudge-space-3);
+  font-size: var(--nudge-font-md);
+  font-weight: 600;
+  color: var(--nudge-text);
+}
+
+.nudge-session-log-status {
+  margin: var(--nudge-space-3) 0 0;
+  font-size: var(--nudge-font-sm);
+  color: var(--nudge-success);
+}
+
 .nudge-home-lead,
 .nudge-mode-lead {
   margin: 0 0 var(--nudge-space-3);
