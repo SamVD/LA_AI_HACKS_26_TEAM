@@ -55,7 +55,8 @@
       "intendedWord": "hospital",
       "acceptable": [
         "hospital",
-        "clinic"
+        "clinic",
+        "Sunrise Clinic"
       ],
       "inBank": false
     },

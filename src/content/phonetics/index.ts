@@ -33,9 +33,9 @@ export function mouthKeyFor(word: string, firstSound?: string): string | undefin
     .trim().toLowerCase().replace(/^\/+|\/+$/g, '')
   if (!raw) return undefined
 
-  // Silent initial letters are resolved by their pronounced onset.
+  // Silent initial letters are resolved by their pronounced onset. Words with a
+  // silent h (hour, honest, heir, herb) need no rule: h already resolves 'open'.
   const sound = /^(?:kn|gn|wr|ps)/.test(raw) ? raw :
-    /^(?:hour|honest|honor|heir|herb)/.test(raw) ? raw.slice(/^(?:hour|honest|honor|heir|herb)/.exec(raw)![0].length) || 'ah' :
     /^one(?:\b|$)/.test(raw) || /^once(?:\b|$)/.test(raw) ? 'w' :
     /^(?:use|user|usual|unicorn|university|unit|Europe|eulogy)/i.test(raw) ? 'y' :
     // Hard g before e/i keeps the back sound (gift, girl, get, gear).
