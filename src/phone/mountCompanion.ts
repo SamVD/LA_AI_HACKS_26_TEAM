@@ -5,6 +5,7 @@ import { builtinBank } from '../content'
 import type { AppShell, Screen, Suggestion, Transcript, Unsubscribe, WordCategory, WordEntry } from '../core/types'
 import { applyPhoneTheme, watchThemePreference } from './theme/applyTheme'
 import { buildPersonalEntry, isPersonalCategory, validatePracticeFrame } from './personalWord'
+import { describePreviewScreen } from './preview/previewCaption'
 import { ensurePreviewImages, renderPreviewOptions } from './preview/previewAssets'
 import { renderScreen } from './preview/renderScreen'
 import { extractKeywords } from '../ai/keywords'
@@ -148,7 +149,7 @@ export function mountCompanion(
     await ensurePreviewImages(screen)
     if (generation !== previewGeneration) return
     previewHost.innerHTML = renderScreen(screen, renderPreviewOptions())
-    previewKind.textContent = `Screen: ${screen.kind}`
+    previewKind.textContent = describePreviewScreen(screen)
   }
 
   const currentPreviewScreen = (): Screen | null => {
