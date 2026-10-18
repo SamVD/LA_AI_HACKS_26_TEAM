@@ -1,6 +1,6 @@
 # Nudge Task Board
 
-_Last updated: Sun Oct 18, 2026 (about H14) by ORCH. **G1 and G2 PASSED; G3 HELD (D19).** `main` = `v0.2-step2` = `ae2294d`. CONTRACT_VERSION 4 (`speaker?`). **Code freeze 06:00 (H18).** Current snapshot: `docs/ORCH_STATE.md`. Decisions D1-D19: `PLAN.md` Section 13._
+_Last updated: Sun Oct 18, 2026 (about H14) by ORCH. **G1 and G2 PASSED; G3 HELD (D19).** `main` = `v0.2-step2` = `ae2294d`. CONTRACT_VERSION 4 (`speaker?`). **Code freeze 7:00 AM** (after the 1:45-3:45 break; see ORCH_STATE → Wake-up plan). Current snapshot: `docs/ORCH_STATE.md`. Decisions D1-D19: `PLAN.md` Section 13._
 
 Single source of truth for who is doing what. Read `PLAN.md` first for architecture, contracts, ownership, and git rules.
 

@@ -211,7 +211,7 @@ There are no console logs on the device. Use the phone companion's **Preview** t
 
 | Person | Now | Then |
 |---|---|---|
-| **Sarah (GLASS)** | **T-312** launcher label ("Practice", "Conversation": show `ModeInfo.title` only). Then the **G3 re-run** on 0.4.4 with the tally + log export | T-402 final Beta after the 06:00 freeze |
+| **Sarah (GLASS)** | **T-312** launcher label ("Practice", "Conversation": show `ModeInfo.title` only). Then the **G3 re-run** on 0.4.4 with the tally + log export | T-402 final Beta at 7:00 (after the freeze) |
 | **Sam (AI)** | **T-311 early stall prediction (first)**; T-312 Step 3 title → "Conversation"; then T-314 speaker tagging (**ships off unless stable by 5:30**) | Support the G3 re-run |
 | **juannli (LOGIC via Devin + UI)** | **T-313** Step 1 short-speech filter (Devin); **T-312** phone Home (hide Step 2, Conversation copy); **T-315** export-log button | Refresh `15-phone-companion.png`; final T-403 polish |
 | **Aarav (ORCH)** | Audit T-311..T-315 as they land; flip `.env.production` (`VITE_STEP2=0`, `VITE_STEP3=1`) when T-312 is in; bump to 0.4.4; record the G3 re-run; tag `v0.3-step3` on a pass | **T-404 Devpost + demo script** (start now), T-405 submission |
