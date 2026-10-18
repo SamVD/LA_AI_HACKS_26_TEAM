@@ -12,8 +12,8 @@
 // Every response carries Server-Timing (gemini;dur, total;dur) so the client can measure the hop.
 
 import type { WordCategory } from '../../src/core/types'
-import { buildModelInput, MAX_BANK, type PredictWireRequest } from '../../src/ai/predictor/input'
-import { EXAMPLES, PROMPT_VERSION, RESPONSE_SCHEMA, SYSTEM_PROMPT } from './_prompt'
+import { buildModelInput, MAX_BANK, type PredictWireRequest } from '../../src/ai/predictor/input.js'
+import { EXAMPLES, PROMPT_VERSION, RESPONSE_SCHEMA, SYSTEM_PROMPT } from './_prompt.js'
 
 /** Section 2: pinned by S-2. Don't use gemini-flash-latest (moves, ~7x slower, rejects minimal thinking). */
 export const MODEL = 'gemini-3.5-flash-lite'
