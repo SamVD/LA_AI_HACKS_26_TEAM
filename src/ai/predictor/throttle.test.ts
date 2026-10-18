@@ -267,3 +267,58 @@ describe('S-2 throttle scenarios', () => {
     throttle.stop()
   })
 })
+
+describe('early prediction (T-311)', () => {
+  it('starts a call at once, skipping the 5 s gap, and the help that follows shares or hits it', async () => {
+    const { throttle, calls } = setup()
+    throttle.onFinal(request(0))
+    await vi.advanceTimersByTimeAsync(1000)
+    const early = throttle.onFinal(request(1), true)
+    expect(early).toBeInstanceOf(Promise)
+    await settle()
+    expect(calls.map(c => [c.at, c.request.transcriptTail])).toEqual([[0, 'segment 0'], [1000, 'segment 1']])
+    const shared = throttle.onHelp(request(1)) // in flight
+    await vi.advanceTimersByTimeAsync(650)
+    expect(await shared).toEqual(items('segment 1'))
+    expect(await throttle.onHelp(request(1))).toEqual(items('segment 1')) // cache hit
+    expect(calls).toHaveLength(2)
+    throttle.stop()
+  })
+
+  it('a non-early final still waits for the gap', async () => {
+    const { throttle, calls } = setup()
+    throttle.onFinal(request(0))
+    await vi.advanceTimersByTimeAsync(1000)
+    expect(throttle.onFinal(request(1), false)).toBeUndefined()
+    await vi.advanceTimersByTimeAsync(3999)
+    expect(calls).toHaveLength(1)
+    await vi.advanceTimersByTimeAsync(1)
+    expect(calls).toHaveLength(2)
+    throttle.stop()
+  })
+
+  it('does not call twice for the same request', async () => {
+    const { throttle, calls } = setup()
+    throttle.onFinal(request(0), true)
+    await settle()
+    expect(throttle.onFinal(request(0), true)).toBeUndefined() // in flight
+    await vi.advanceTimersByTimeAsync(650)
+    expect(throttle.onFinal(request(0), true)).toBeUndefined() // cached
+    expect(calls).toHaveLength(1)
+    throttle.stop()
+  })
+
+  it('keeps the window cap and the tap reserve: early calls stop at limit - reserve', async () => {
+    start()
+    const predict = vi.fn(async () => items())
+    const throttle = createThrottledPredictor({ predict }, { now: Date.now, limit: 5, reserve: 2, fallback: () => items('bank') })
+    for (let i = 0; i < 3; i++) { throttle.onFinal(request(i), true); await settle() }
+    expect(predict).toHaveBeenCalledTimes(3)
+    expect(throttle.onFinal(request(3), true)).toBeUndefined() // falls back to the paced prefetch
+    await settle()
+    expect(predict).toHaveBeenCalledTimes(3)
+    expect(await throttle.onHelp(request(3))).toBeTruthy() // the reserve is still there for a tap
+    expect(predict).toHaveBeenCalledTimes(4)
+    throttle.stop()
+  })
+})

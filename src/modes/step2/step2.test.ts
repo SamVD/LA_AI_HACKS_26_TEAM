@@ -257,6 +257,56 @@ describe('request and throttle', () => {
 
 // T-208: with batch STT (D17) a tap ends the segment being spoken (stt.flush) so the
 // request includes the words just said, waiting at most ~1.2 s.
+describe('Step 2 early prediction on a stall-like final (T-311)', () => {
+  function earlySetup() {
+    const ui = new MockUI()
+    const subs = new Set<(t: Transcript) => void>()
+    const stt: SttService = {
+      async start() {}, async stop() {},
+      onTranscript(cb) { subs.add(cb); return () => { subs.delete(cb) } },
+      onSpeechState() { return () => {} },
+      async transcribeUtterance() { return { text: '', isFinal: true, tStartMs: 0, tEndMs: 0, error: 'no-speech' } },
+    }
+    const predictor = slowPredictor({ 'the tea into the': suggest('mug', 'kettle'), 'It is fine': suggest('nope') }, 1000)
+    const ctx = createMockContext({
+      ui, stt, now: Date.now, predictor,
+      flags: { step2Enabled: true, step3Enabled: false, imuEnabled: false, mockServices: true },
+    })
+    const emit = (text: string) => { for (const cb of [...subs]) cb({ text, isFinal: true, tStartMs: Date.now() - 500, tEndMs: Date.now() }) }
+    return { ui, ctx, mode: createStep2(), predictor, emit, last: () => ui.last() as Screen }
+  }
+
+  it('a final that ends on a function word starts Gemini now, and the tap shares that one call', async () => {
+    const { ui, ctx, mode, predictor, emit, last } = earlySetup()
+    await mode.enter(ctx)
+    emit('First one.')
+    await tick(100)
+    emit('I pour the tea into the')
+    await tick(0)
+    expect(predictor.calls.map(c => c.stalledAfter)).toEqual(['First one.', 'the tea into the'])
+    expect(predictor.calls).toHaveLength(2) // the 5 s gap was skipped
+    await tick(400) // tap while the early call is in flight
+    ui.emit('SELECT')
+    await tick(700)
+    expect(predictor.calls).toHaveLength(2) // shared, not a third call
+    expect(last().kind).toBe('candidates')
+    expect(ctx.logs.some(l => l.event === 'step2 early-predict')).toBe(true)
+    await mode.exit()
+  })
+
+  it('a complete sentence waits for the paced prefetch', async () => {
+    const { ctx, mode, predictor, emit } = earlySetup()
+    await mode.enter(ctx)
+    emit('First one.')
+    await tick(100)
+    emit('It is fine.')
+    await tick(100)
+    expect(predictor.calls).toHaveLength(1)
+    expect(ctx.logs.some(l => l.event === 'step2 early-predict')).toBe(false)
+    await mode.exit()
+  })
+})
+
 describe('Step 2 flush on a help tap (T-208)', () => {
   /** A rolling STT whose flush() emits the segment the user was still speaking. */
   class FlushingStt implements SttService {

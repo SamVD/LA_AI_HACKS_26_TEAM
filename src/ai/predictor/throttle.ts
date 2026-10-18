@@ -15,7 +15,12 @@ export interface ThrottleOptions {
 }
 
 export interface ThrottledPredictor {
-  onFinal(request: PredictRequest): void
+  /**
+   * `early` (T-311: the final ends like a stall) skips the `minGapMs` spacing and calls now,
+   * but still respects the prefetch cap (window minus tap reserve). Returns the call's
+   * promise when one started, else undefined (cache hit, shared call, or no room).
+   */
+  onFinal(request: PredictRequest, early?: boolean): Promise<Suggestion[]> | void
   onHelp(request?: PredictRequest): Promise<Suggestion[]>
   /** Permanently dispose on mode exit. Create a new limiter on the next enter. */
   stop(): void
@@ -108,9 +113,16 @@ export function createThrottledPredictor(predictor: PredictorService, opts: Thro
   }
 
   return {
-    onFinal(request) {
+    onFinal(request, early) {
       if (stopped) return
-      select(request)
+      const target = select(request)
+      if (early && !pending.has(target.key) && !(cache?.key === target.key && now() - cache.at <= cacheMaxAgeMs)) {
+        prune()
+        if (now() >= rateLimitedUntil(predictor) && calls.length < prefetchCap) {
+          clearTimer()
+          return call(target)
+        }
+      }
       arm()
     },
     async onHelp(request) {
