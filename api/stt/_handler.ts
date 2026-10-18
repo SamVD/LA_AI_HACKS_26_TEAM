@@ -11,7 +11,7 @@ export type TokenType = (typeof TOKEN_TYPES)[number]
 
 export interface TokenHandlerOptions {
   apiKey: string | undefined
-  /** Exact origins allowed, for example `http://localhost:5173`. `*` allows any (dev only). `null` matches the literal "null" origin some WebViews send. */
+  /** Allowed origins: exact (`http://localhost:5173`), `scheme://host:*` for any port on that host (`http://127.0.0.1:*`, the Even app), `*` for any (dev only), `null` for the literal "null" origin. */
   allowedOrigins: string[]
   /** Accept requests that carry no Origin header (native WebViews may omit it). */
   allowMissingOrigin?: boolean
@@ -32,7 +32,7 @@ export function createTokenHandler(o: TokenHandlerOptions): (req: Request) => Pr
   const hits = new Map<string, number[]>() // per instance; serverless instances do not share this
 
   const originOk = (origin: string | null) =>
-    origin === null ? !!o.allowMissingOrigin : o.allowedOrigins.includes('*') || o.allowedOrigins.includes(origin)
+    origin === null ? !!o.allowMissingOrigin : o.allowedOrigins.some(e => originMatches(origin, e))
 
   const cors = (origin: string | null): Record<string, string> =>
     origin === null ? {} : {
@@ -97,7 +97,20 @@ export function createTokenHandler(o: TokenHandlerOptions): (req: Request) => Pr
   }
 }
 
-/** STT_ALLOWED_ORIGINS="http://localhost:5173,http://192.168.1.5:5173,null" */
+/**
+ * One allow-list entry against a request Origin. Exact match, `*` (dev only), or a
+ * `scheme://host:*` entry that accepts any numeric port on that exact host. The Even app
+ * serves packaged builds from a local server, so the WebView's origin is
+ * `http://127.0.0.1:<port>` (G1: 61976), and the port may change per launch.
+ */
+export function originMatches(origin: string, entry: string): boolean {
+  if (entry === '*' || entry === origin) return true
+  if (!entry.endsWith(':*')) return false
+  const prefix = entry.slice(0, -1) // keep the ':'
+  return origin.startsWith(prefix) && /^\d{1,5}$/.test(origin.slice(prefix.length))
+}
+
+/** STT_ALLOWED_ORIGINS="http://localhost:5173,http://127.0.0.1:*,null" */
 export function parseOrigins(v: string | undefined): string[] {
   return (v ?? '').split(',').map(s => s.trim()).filter(Boolean)
 }
