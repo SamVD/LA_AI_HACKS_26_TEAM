@@ -1,6 +1,6 @@
 # Nudge Task Board
 
-_Last updated: Sun Oct 18, 2026 (about H14) by ORCH. **G1 and G2 PASSED; G3 HELD (D19).** `main` = `v0.2-step2` = `ae2294d`. CONTRACT_VERSION 4 (`speaker?`). **Code freeze 06:00 (H18).** Current snapshot: `docs/ORCH_STATE.md`. Decisions D1-D19: `PLAN.md` Section 13._
+_Last updated: Sun Oct 18, 2026 (about H14) by ORCH. **G1 and G2 PASSED; G3 HELD (D19).** `main` = `v0.2-step2` = `ae2294d`. CONTRACT_VERSION 4 (`speaker?`). **Code freeze 7:00 AM** (after the 1:45-3:45 break; see ORCH_STATE → Wake-up plan). Current snapshot: `docs/ORCH_STATE.md`. Decisions D1-D19: `PLAN.md` Section 13._
 
 Single source of truth for who is doing what. Read `PLAN.md` first for architecture, contracts, ownership, and git rules.
 
@@ -457,9 +457,9 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ---
 
-## Phase 3b G3 refinements (H14 to H18, D19) → G3 re-run → freeze 06:00
+## Phase 3b G3 refinements (3:45-7:00 AM after the team break, D19) → G3 re-run ~5:15 → freeze 7:00
 
-Order: **T-311 first**, then T-312 and T-313 in parallel, T-314 only if stable by **05:00**, T-315 alongside. Then the tallied G3 re-run (T-306) on one upload (0.4.4). **Code freeze 06:00 (H18).** `v0.2-step2` stays the fallback demo.
+Order and cut-offs: see `docs/ORCH_STATE.md` → **Wake-up plan**. In short: MUST are T-311 (by 5:15), T-312 (by 5:00), T-315 (by 5:15), then the G3 re-run (~5:15, 0.4.4). SHOULD is T-313 (drop if not merged by 5:30). DROP FIRST is T-314 (only if stable by 5:30). **Code freeze 7:00.** Fallbacks: `v0.2-step2` (`ae2294d`) and `backup-g3-working` (`34e46db`).
 
 ### T-311 Early stall prediction (latency, free tier)
 - **Owner:** AI (Sam)
@@ -501,7 +501,7 @@ Order: **T-311 first**, then T-312 and T-313 in parallel, T-314 only if stable b
   - Keep the 3-wrong-at-L3 rule and T-108.
 - **Acceptance criteria:** tests: a 150 ms utterance is ignored and the cue is unchanged; a 400 ms wrong answer escalates as today; an `other` utterance is ignored; silence behavior is unchanged.
 
-### T-314 Speaker tagging by loudness (cut-off 05:00)
+### T-314 Speaker tagging by loudness (cut-off 5:30)
 - **Owner:** AI (Sam)
 - **Status:** READY after T-311
 - **Branch:** `ai/speaker-gate`
@@ -510,7 +510,7 @@ Order: **T-311 first**, then T-312 and T-313 in parallel, T-314 only if stable b
 - **Spec:**
   - Tag each speech burst and transcript `wearer` or `other` from its level on the glasses mic: the wearer is much louder than a partner about 1 m away. Use a margin over the running speech level and log `stt.speaker {db, speaker}`.
   - The stall detector only treats silence after **wearer** speech as a stall. Other speech still goes into the transcript (useful context).
-  - **If it isn't stable on the device by 05:00, it ships off** (flag or default threshold that tags everything `wearer`).
+  - **If it isn't stable on the device by 5:30, it ships off** (flag or default threshold that tags everything `wearer`).
 - **Acceptance criteria:** unit tests with synthetic levels; a G3 re-run where the partner's pauses don't trigger hints (T-315 log shows the `speaker` tags).
 
 ### T-315 Lean pipeline log export
