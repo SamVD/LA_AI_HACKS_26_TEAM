@@ -46,6 +46,9 @@ describe('UI and registered modes', () => {
     const last = ui.last()
     if (id === 'step1') {
       expect(last).toEqual({ kind: 'status', text: EMPTY_PRACTICE_MESSAGE })
+    } else if (id === 'step2') {
+      // The default mock flags have step2Enabled off, so Step 2 shows its "off" status.
+      expect(last).toEqual({ kind: 'status', text: 'Step 2 is turned off.\nDouble-tap to go back.' })
     } else {
       expect(last).toEqual({ kind: 'status', text: `${id} not built yet` })
     }
