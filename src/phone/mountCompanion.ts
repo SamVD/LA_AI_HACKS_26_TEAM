@@ -3,7 +3,7 @@ import './companion.css'
 import type { AppShell, Screen, WordCategory, WordEntry } from '../core/types'
 import { applyPhoneTheme, watchThemePreference } from './theme/applyTheme'
 import { renderScreen } from './preview/renderScreen'
-import { summarizeStep1Session } from './sessionSummary'
+import { formatStep1ItemLine, summarizeStep1Session } from './sessionSummary'
 
 export type CompanionMountOptions = {
   /** Dev harness: cycle fixture screens when no mode is active. */
@@ -165,7 +165,7 @@ export function mountCompanion(
     list.className = 'nudge-word-list'
     for (const item of stats.items) {
       const li = document.createElement('li')
-      li.textContent = `${item.word} · cue ${item.solvedAtCue}`
+      li.textContent = formatStep1ItemLine(item)
       list.append(li)
     }
     summaryBody.append(list)
@@ -207,6 +207,7 @@ export function mountCompanion(
     wordsPanel.hidden = id !== 'words'
     if (id === 'summary') void refreshSummary()
     if (id === 'words') void refreshWords()
+    if (id === 'preview') refreshPreview()
   }
 
   for (const tab of [
@@ -272,6 +273,7 @@ export function mountCompanion(
 
   const unsubScreen = shell.onScreen(() => {
     if (shell.activeMode()) followLive = true
+    refreshHome()
     if (activeTab === 'preview') refreshPreview()
   })
 

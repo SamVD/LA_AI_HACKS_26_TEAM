@@ -40,14 +40,24 @@ describe('renderScreen', () => {
   })
 
   it('hides candidate word at level 1 and shows first letter at level 2', () => {
+    const cueL1 = renderScreen({
+      kind: 'cue',
+      level: 1,
+      word: 'cup',
+      imageKey: 'cup-line',
+      sentence: 'You drink from a ____.',
+    })
+    expect(cueL1).not.toContain('>cup</text>')
+
     const l1 = renderScreen({
       kind: 'candidates',
       level: 1,
       index: 0,
-      items: [{ word: 'cup', confidence: 1, imageKey: 'cup', source: 'bank' }],
+      items: [{ word: 'cup', confidence: 1, mouthKey: 'round-lips', source: 'bank' }],
     })
     expect(l1).toContain('1/1')
     expect(l1).toContain('L1')
+    expect(l1).not.toContain('>cup</text>')
 
     const l2 = renderScreen({
       kind: 'candidates',

@@ -3,7 +3,7 @@ import { createDevShell } from './devShell'
 
 describe('createDevShell', () => {
   it('lists modes from flags and runs step1 through onScreen', async () => {
-    const shell = createDevShell([])
+    const { shell } = createDevShell([])
     const modes = shell.modes()
     expect(modes.find(m => m.id === 'step1')?.enabled).toBe(true)
     expect(modes.find(m => m.id === 'step2')?.enabled).toBe(false)

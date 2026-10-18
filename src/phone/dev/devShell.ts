@@ -5,7 +5,12 @@ import { createMockContext, MemoryStore } from '../../mocks'
 import type { ModeContext } from '../../core/types'
 import { PreviewUI } from './previewUi'
 
-export function createDevShell(seedBank: WordEntry[]): AppShell {
+export type DevShell = {
+  shell: AppShell
+  previewUi: PreviewUI
+}
+
+export function createDevShell(seedBank: WordEntry[]): DevShell {
   const store = new MemoryStore(seedBank)
   let active: ModeId | null = null
   let context: ModeContext | null = null
@@ -62,5 +67,5 @@ export function createDevShell(seedBank: WordEntry[]): AppShell {
     store,
   }
 
-  return shell
+  return { shell, previewUi: ui }
 }

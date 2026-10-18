@@ -95,3 +95,13 @@
   margin: 0 0 var(--nudge-space-4);
   color: var(--nudge-text-muted);
 }
+
+.nudge-intent-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin-top: var(--nudge-space-6);
+  padding-top: var(--nudge-space-4);
+  border-top: 1px solid var(--nudge-border);
+}

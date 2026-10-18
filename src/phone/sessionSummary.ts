@@ -1,8 +1,12 @@
 import type { SessionRecord } from '../core/types'
 
+export type Step1ItemStatus = 'solved' | 'skipped' | 'not-solved'
+
 export interface Step1ItemSummary {
   word: string
-  solvedAtCue: number
+  status: Step1ItemStatus
+  /** Present when status is `solved`. */
+  solvedAtCue?: 0 | 1 | 2 | 3
 }
 
 export interface Step1SessionSummary {
@@ -16,11 +20,19 @@ function readItem(raw: unknown): Step1ItemSummary | null {
   const record = raw as Record<string, unknown>
   const word = typeof record.word === 'string' ? record.word : null
   if (!word) return null
-  const solvedAtCue =
-    typeof record.solvedAtCue === 'number' && Number.isFinite(record.solvedAtCue)
-      ? record.solvedAtCue
-      : 0
-  return { word, solvedAtCue }
+
+  if (record.skipped === true) {
+    return { word, status: 'skipped' }
+  }
+
+  const cue = record.solvedAtCue
+  if (cue === null || cue === undefined) {
+    return { word, status: 'not-solved' }
+  }
+  if (typeof cue === 'number' && cue >= 0 && cue <= 3 && Number.isFinite(cue)) {
+    return { word, status: 'solved', solvedAtCue: cue as 0 | 1 | 2 | 3 }
+  }
+  return { word, status: 'not-solved' }
 }
 
 export function summarizeStep1Session(session: SessionRecord): Step1SessionSummary {
@@ -29,7 +41,14 @@ export function summarizeStep1Session(session: SessionRecord): Step1SessionSumma
     const item = readItem(raw)
     if (item) items.push(item)
   }
-  const solved = items.length
-  const solvedWithoutHelp = items.filter(i => i.solvedAtCue === 0).length
+  const solvedItems = items.filter(i => i.status === 'solved')
+  const solved = solvedItems.length
+  const solvedWithoutHelp = solvedItems.filter(i => i.solvedAtCue === 0).length
   return { solved, solvedWithoutHelp, items }
+}
+
+export function formatStep1ItemLine(item: Step1ItemSummary): string {
+  if (item.status === 'skipped') return `${item.word} · skipped`
+  if (item.status === 'not-solved') return `${item.word} · not solved`
+  return `${item.word} · cue ${item.solvedAtCue}`
 }

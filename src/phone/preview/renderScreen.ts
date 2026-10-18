@@ -71,17 +71,19 @@ export function renderScreen(screen: Screen, opts?: RenderScreenOptions): string
       parts.push(g2Lines(16, 108, [screen.sentence]))
       break
     case 'cue': {
-      const rows: string[] = []
-      if (screen.sentence) rows.push(screen.sentence)
-      if (screen.level === 1 && screen.imageKey) {
-        parts.push(imageBox(16, 54, 200, 120, screen.imageKey, opts))
-        rows.push(screen.word)
+      if (screen.level === 1) {
+        const rows: string[] = []
+        if (screen.sentence) rows.push(screen.sentence)
+        const visualKey = screen.imageKey ?? screen.mouthKey
+        if (visualKey) {
+          parts.push(imageBox(16, 54, 200, 120, visualKey, opts))
+        }
+        if (rows.length) parts.push(g2Lines(16, 27, rows))
       } else if (screen.level === 2 && screen.masked) {
-        rows.push(spacedMasked(screen.masked))
+        parts.push(g2Lines(16, 117, [spacedMasked(screen.masked)]))
       } else {
-        rows.push(screen.word)
+        parts.push(g2Lines(16, 117, [screen.word]))
       }
-      parts.push(g2Lines(screen.level === 1 ? 232 : 16, screen.level === 1 ? 72 : 117, rows))
       break
     }
     case 'feedback':
@@ -95,9 +97,12 @@ export function renderScreen(screen: Screen, opts?: RenderScreenOptions): string
     case 'candidates': {
       const item = screen.items[screen.index]
       const meta = [`${screen.index + 1}/${screen.items.length}`, `L${screen.level}`]
-      if (screen.level === 1 && item?.imageKey) {
-        parts.push(imageBox(16, 54, 180, 108, item.imageKey, opts))
-        parts.push(g2Lines(208, 72, meta))
+      if (screen.level === 1 && item) {
+        const visualKey = item.mouthKey ?? item.imageKey
+        if (visualKey) {
+          parts.push(imageBox(16, 54, 180, 108, visualKey, opts))
+        }
+        parts.push(g2Lines(visualKey ? 208 : 16, 72, meta))
         break
       } else if (screen.level === 2 && item) {
         parts.push(g2Lines(16, 108, [item.word.slice(0, 1), ...meta]))
