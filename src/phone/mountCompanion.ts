@@ -7,6 +7,7 @@ import { applyPhoneTheme, watchThemePreference } from './theme/applyTheme'
 import { buildPersonalEntry, isPersonalCategory, validatePracticeFrame } from './personalWord'
 import { ensurePreviewImages, renderPreviewOptions } from './preview/previewAssets'
 import { renderScreen } from './preview/renderScreen'
+import { extractKeywords } from '../ai/keywords'
 import { bindJudgeDemo } from './demo/bindJudgeDemo'
 import { MODE_HOME_LEAD, modeDisabledLead } from './modeCopy'
 import { formatStep1ItemLine, summarizeStep1Session } from './sessionSummary'
@@ -128,6 +129,8 @@ export function mountCompanion(
   debugTranscript.className = 'nudge-debug-block'
   const debugSuggestions = document.createElement('div')
   debugSuggestions.className = 'nudge-debug-block'
+  const debugKeywords = document.createElement('div')
+  debugKeywords.className = 'nudge-debug-block'
 
   const playlistRow = document.createElement('div')
   playlistRow.className = 'nudge-playlist-row'
@@ -276,6 +279,37 @@ export function mountCompanion(
   }
 
   const refreshDebug = (state: CompanionDebugState) => {
+    void (async () => {
+      debugKeywords.replaceChildren()
+      const kHead = document.createElement('h2')
+      kHead.textContent = 'Keywords (T-303 preview)'
+      debugKeywords.append(kHead)
+      const finals = state.transcripts.filter(t => t.isFinal && !t.error)
+      if (!finals.length) {
+        const empty = document.createElement('p')
+        empty.className = 'nudge-debug-empty'
+        empty.textContent = 'Final transcript lines needed for keyword extraction.'
+        debugKeywords.append(empty)
+        return
+      }
+      const bank = await shell.store.getBank()
+      const items = extractKeywords(finals, bank, { n: 8 })
+      if (!items.length) {
+        const empty = document.createElement('p')
+        empty.className = 'nudge-debug-empty'
+        empty.textContent = 'No keywords matched yet.'
+        debugKeywords.append(empty)
+        return
+      }
+      const kList = document.createElement('ul')
+      kList.className = 'nudge-word-list nudge-debug-list'
+      for (const item of items) {
+        const li = document.createElement('li')
+        li.textContent = `${item.word} · ${item.kind} · ${item.source}`
+        kList.append(li)
+      }
+      debugKeywords.append(kList)
+    })()
     debugTranscript.replaceChildren()
     const tHead = document.createElement('h2')
     tHead.textContent = 'Live transcript'
@@ -415,7 +449,7 @@ export function mountCompanion(
   }
   summaryPanel.append(summaryBody)
   wordsPanel.append(wordForm, wordBankBody)
-  debugPanel.append(debugTranscript, debugSuggestions)
+  debugPanel.append(debugTranscript, debugKeywords, debugSuggestions)
 
   panels.append(homePanel, demoPanel, previewPanel, summaryPanel, wordsPanel, debugPanel)
 
