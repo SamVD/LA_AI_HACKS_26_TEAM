@@ -1,6 +1,6 @@
 # Nudge Task Board
 
-_Last updated: Sat Oct 17, 2026 (about H11:30) by ORCH. **G1 PASSED: `main` = `v0.1-step1` = `4b13180`.** **Current snapshot of every task, PR, decision and blocker: `docs/ORCH_STATE.md`.** Decisions D1-D16: `PLAN.md` Section 13. Contracts: CONTRACT_VERSION 2 (`src/core/types.ts`, `docs/CONTRACTS.md`). Phase 1 builder prompts: `docs/prompts/phase1-builder-prompts.md`._
+_Last updated: Sun Oct 18, 2026 (about H13) by ORCH. **G2 PASSED (D18): `main` = `v0.2-step2` = `ae2294d`** (0.4.2, batch STT). CONTRACT_VERSION 3 (`SttService.flush?`, letters-first candidates). **Current snapshot of every task, PR, decision and blocker: `docs/ORCH_STATE.md`.** Decisions D1-D18: `PLAN.md` Section 13._
 
 Single source of truth for who is doing what. Read `PLAN.md` first for architecture, contracts, ownership, and git rules.
 
@@ -340,7 +340,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ### T-207 Gate G2: audit, integrate, smoke, tag
 - **Owner:** ORCH
-- **Status:** **READY NOW**: pack from `integration` at or after `82e487d` (`app.json` 0.4.0). All Step 2 code is merged and wired; production `api/` is live. Include G2_SMOKE A3, A5 and A7 (not reported at G1), plus a Step 1 pass to check T-108 (a wrong answer now moves up one cue).
+- **Status:** **PASSED (H13, D18)** on function: 0.4.2 (`a0052a5`, batch STT) followed the conversation; Step 1 + T-108 regression clean (#90). Latency (≤ ~1.5 s) not demonstrated → T-208. `main` → `ae2294d`, tag `v0.2-step2`; D17 makes a plain `npm run pack` reproduce it (#91).
 - **Spec:** audit, merge in dependency order, run `docs/G2_SMOKE.md` plus a live two-person conversation test, fast-forward `main`, tag `v0.2-step2`, upload Beta. **Decision:** enable `step2Enabled` by default.
 - **Acceptance criteria (gate):** in a 5-minute live conversation, the user can ask for help and get at least one correct or acceptable suggestion within about 1.5 s on most attempts; Step 1 still passes its smoke test (regression).
 - **G2 runbook (GLASS runs it with a second person, ORCH records it):**
@@ -349,6 +349,48 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
   3. Install from Me → Beta tester. Run `docs/G2_SMOKE.md` A, B (B5/B6) and C again (Step 1 regression), then **D with a real two-person conversation for ~5 minutes**: count help taps, correct or acceptable suggestions, and rough tap-to-candidates time.
   4. Watch for: realtime transcript actually arriving (if Step 2 never suggests anything relevant, `wss://` may be blocked by the Even whitelist → re-pack with `VITE_ROLLING_STT=batch`, PLAN §9); a rejected WebView origin in the Vercel log (ping Sam within the hour); `rate-limited` fallbacks (free tier 15/min, D11).
   5. Record in `docs/BETA_RESULTS.md` + the G2_SMOKE table. On a pass: ORCH sets `step2Enabled` default ON in `src/config.ts`, fast-forwards `main`, tags `v0.2-step2`, keeps the `.ehpk`.
+
+### T-208 Step 2 latency: flush the batch segment on a help tap (G2 finding)
+- **Owner:** AI (Sam)
+- **Status:** READY
+- **Branch:** `ai/flush-on-tap` (OWNERS grant: `src/modes/step2/index.ts`, `src/modes/step2/step2.test.ts`)
+- **Depends on:** CONTRACT_VERSION 3 (`SttService.flush?`), D17
+- **Files it may EDIT:** `src/audio/**`, plus the grant above
+- **Why:** with batch rolling STT (D17), the newest words are only transcribed after a ~0.8 s pause, so a tap right after "um um" took ~2-3 s on the G2 (#90).
+- **Spec:**
+  1. `RollingStt.flush()`: in batch mode, end the segment being recorded **now**, transcribe it and emit its final through `onTranscript`, then resolve. Resolve at once when no speech is buffered. In realtime mode, send a manual commit or resolve at once. Never rejects; the batch loop keeps running afterwards.
+  2. Step 2 `help()`: `await ctx.stt.flush?.()` with a **cap of about 1200 ms** (`Promise.race`), then build the request from the updated finals. Don't flush when the last final is under ~300 ms old.
+  3. Optional, if measurements support it: lower the batch `segmentSilenceMs` from 800 to about 500 so prefetch sees words sooner. Don't raise the 15/min Gemini pressure (D11): prefetch stays throttled.
+- **Acceptance criteria:** unit tests for flush with speech buffered, nothing buffered, the cap firing and the loop continuing; a Step 2 test that a tap includes the words spoken just before it. On the device (next pack, 0.4.3 or higher): **10 help taps right after a hesitation, median tap-to-candidates ≤ ~1.5-2 s** (stopwatch tally in `docs/BETA_RESULTS.md`).
+- **Order:** land before T-209 touches `src/modes/step2/index.ts` (small diff, so it lands first).
+
+### T-209 Steps 2-3: letters-first hint ladder (G2 change request, scoped by D18)
+- **Owner:** GLASS (Sarah)
+- **Status:** READY (start on `src/glasses/**`; touch `src/modes/step2/**` after T-208 merges)
+- **Branch:** `glass/letters-ladder`
+- **Depends on:** CONTRACT_VERSION 3 (`candidates` levels), T-208 for `src/modes/step2/index.ts`
+- **Files it may EDIT:** `src/glasses/**`, `src/modes/step2/**`
+- **Spec:** `candidates` levels per `docs/CONTRACTS.md` v3:
+  - L1 = first letter + blanks: `s _ _ _ _`
+  - L2 = first ⌈n/2⌉ letters then blanks: `s u n _ _`
+  - L3 = the full word
+
+  **No picture or mouth shape** for candidates: Step 2 stops attaching `imageKey`/`mouthKey` to suggestions, and the layout drops the image slot for candidates. Gestures stay as they are:
+  - tap (SELECT) reveals more;
+  - swipe (NEXT/PREV) goes to the next suggestion at L1;
+  - speech, double-tap or the 20 s timeout clears.
+
+  **No tilt left/right (D9 stands).** Multi-word suggestions keep their spaces visible; names keep their capital. Step 3 wraps Step 2, so it inherits the change with no AI-lane edits.
+- **Acceptance criteria:** ladder/layout tests for 1-, 2-, 5- and 8-letter words and a two-word suggestion; the Step 2 tests are updated; the 576x288 render fits (check `docs/DISPLAY_LIMITS.md`). On the device: a tap shows `s _ _ _ _`, tap → `s u n _ _`, tap → `sunny`, and a swipe gives the next word at L1.
+- **Follow-up:** T-210 (UI) aligns the phone preview and the judge demo.
+
+### T-210 Phone preview + judge demo: letters-first candidates
+- **Owner:** UI (juannli)
+- **Status:** READY after T-209 merges (the shape is fixed by CONTRACT v3, so work can start against the contract)
+- **Branch:** `ui/letters-preview`
+- **Files it may EDIT:** `src/phone/**`
+- **Spec:** `renderScreen`/`previewCaption` show candidates as L1 `s _ _ _ _`, L2 `s u n _ _`, L3 `sunny` (no picture or mouth line for candidates). The judge demo's help screen and copy match ("a tap shows the first letter").
+- **Acceptance criteria:** the preview matches the glasses layout at each level; caption tests are updated.
 
 ---
 

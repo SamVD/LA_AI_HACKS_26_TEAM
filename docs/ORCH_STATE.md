@@ -2,19 +2,19 @@
 
 The orchestrator's single snapshot of where Nudge stands. **ORCH updates this after every gate (G1, G2, G3, final) and after any merge that changes a gate's readiness.** Detailed task cards live in `TASKS.md`, decisions in `PLAN.md` §13, contracts in `docs/CONTRACTS.md`.
 
-_Last updated: **Sun Oct 18, 2026, 12:10 AM PT (hackathon hour ~H12:10 of 24)** by ORCH (aaravj9). **G1 PASSED. G2 running on 0.4.2 (batch rolling STT).** Vercel deploy quota exhausted (blocker #7)._
+_Last updated: **Sun Oct 18, 2026, 12:20 AM PT (hackathon hour ~H13 of 24)** by ORCH (aaravj9). **G1 and G2 PASSED. `main` = `v0.2-step2` = `ae2294d`.** CONTRACT_VERSION 3._
 
 ## Snapshot
 
 | Item | Value |
 |---|---|
-| `integration` | after #85 (AI cleanup), #78 (T-302 Step 3) and this PR (Step 3 settings wiring). typecheck, build and **752 tests** pass. The G2 gate tag will point at the tested build's lineage (`a0052a5` + 0.4.2 + D17), not this tip |
-| `main` | **`4b13180`** (fast-forwarded at G1; the build Sarah tested) |
-| Tags | **`v0.1-step1` → `4b13180`** (G1). Next: `v0.2-step2` at G2, `v0.3-step3` at G3 |
-| `app.json` version | **0.4.2** = the G2 build on the device (`a0052a5`, `VITE_STEP2=1 VITE_ROLLING_STT=batch`). The portal rejected re-uploading 0.4.0. **Next upload must be 0.4.3 or higher** (D10) |
-| Contracts | `CONTRACT_VERSION 2` |
+| `integration` | after #80, #89, #90, #91 (gate) and this PR (contract v3, T-208/T-209/T-210). typecheck, build, 754 tests |
+| `main` | **`ae2294d`** (fast-forwarded at G2: the tested 0.4.2 code + D17 + D18; a plain `npm run pack` reproduces it byte-for-byte) |
+| Tags | `v0.1-step1` → `4b13180` (G1); **`v0.2-step2` → `ae2294d`** (G2). Next: `v0.3-step3` at G3 |
+| `app.json` version | **0.4.2** = the G2 build. **Next upload: 0.4.3 or higher** (D10); ORCH bumps it before the G3 pack |
+| Contracts | **`CONTRACT_VERSION 3`**: `SttService.flush?()` (T-208) and letters-first `candidates` levels (T-209). All lanes: merge `integration` |
 | Production `api/` | `https://nudge-seven-psi.vercel.app`, redeployed by Sam with the WebView origin. At 10:54 PM: `127.0.0.1:<any port>` preflight 204, **but `null` and `file://` also 204, so it's looser than intended**; tighten after #61 (see blockers) |
-| Open PRs | #80 (T-403 polish, juannli): content OK, **needs a rebase** after #82 |
+| Open PRs | #88 (juannli): superseded by #80 except for a comment; rebase or close |
 | Open issues | none (#73 closed by #76) |
 
 ## Gates
@@ -22,7 +22,7 @@ _Last updated: **Sun Oct 18, 2026, 12:10 AM PT (hackathon hour ~H12:10 of 24)** 
 | Gate | What it proves | Status | Blocker / next action |
 |---|---|---|---|
 | **G1: Step 1 on the real G2** | Practice: 10 prompts, cue ladder, √/× feedback, lock/resume, mic denial, exit | ✅ **PASSED (H11:15, #68)**: real speech graded on the G2; lock, exit, B5, B6 pass; A4 accepted via unit tests (D16). Tagged `v0.1-step1` | Done. A3/A5/A7 carried to G2 |
-| **G2: Step 2 in a live conversation** | Help tap → good suggestion in ≤ ~1.5 s on most attempts; Step 1 regression | **RUNNING on 0.4.2 (batch rolling STT).** With the default realtime STT, Step 2 got no transcript on the G2 (bank-only suggestions): blocker #2, `wss://` likely blocked | Sarah + a second person run T-207 (`VITE_STEP2=1 npm run pack`); include A3/A5/A7 and the T-108 Step 1 check. Risk: `wss://` whitelist → batch fallback |
+| **G2: Step 2 in a live conversation** | Help tap → good suggestion in ≤ ~1.5 s on most attempts; Step 1 regression | ✅ **PASSED on function (H13, D18, #90/#91)**: 0.4.2 batch followed the conversation ("warm and um um" → "sunny"); Step 1 + T-108 clean. **Latency not demonstrated** (the tester said 2-3 s) | Tagged `v0.2-step2`. Latency → **T-208**; ladder request → **T-209/T-210** |
 | **G3: Step 3 ambient hints** | Auto-hints after a stall, no false-hint spam in a 10-minute soak | **Code complete** (H12:10): T-301 (#75, #85), T-302 (#78), T-303, T-304 (#82, #83) merged; companion Pause/Sensitivity wired into the detector (this PR). **Ready to run after G2**: pack from `integration` with `VITE_STEP3=1`, 0.4.3+ | After G2. Ships flag-off unless it passes (PLAN §2) |
 | **Final** | Beta `.ehpk` + Devpost by **H22 (10 AM Sunday)** | Not started (T-402, T-404, T-405) | Demo assets (T-401) are done |
 
@@ -56,7 +56,10 @@ Legend: ✅ merged · 🟡 in progress / review · ⬜ todo · 🚦 gate.
 | T-204 | Step 2 Assist mode | GLASS | ✅ | #43 |
 | T-205 | Mouth-shape resolver + 25 pictures | LOGIC (Devin) | ✅ | #62, #70 |
 | T-206 | Companion v2 (personal words, debug) | UI | ✅ (Debug tab dev-only until the shell exposes transcripts) | #24, #36, #48 |
-| T-207 | 🚦 Gate G2 | ORCH + GLASS | **READY TO RUN** from `82e487d` | — |
+| T-207 | 🚦 Gate G2 | ORCH + GLASS | ✅ **PASSED** (D18), tagged `v0.2-step2` | #90, #91 |
+| T-208 | Step 2 latency: flush the batch segment on a tap | AI (Sam) | ⬜ READY (grant `ai/flush-on-tap`) | — |
+| T-209 | Letters-first hint ladder (Steps 2-3) | GLASS (Sarah) | ⬜ READY (after T-208 for `step2/index.ts`) | — |
+| T-210 | Phone preview + demo: letters-first | UI (juannli) | ⬜ after T-209 | — |
 | T-301 | Stall detector | AI (Sam) | ✅ 0 false hints on fixtures, recall 11/12; contextual like/thing (#85) | #75, #85 |
 | T-302 | Step 3 mode | AI (Sam) | ✅ merged; swipe pause; key words log-only | #78 |
 | T-303 | Keyword extractor | LOGIC | ✅ | #52 |
@@ -91,13 +94,15 @@ ORCH infrastructure PRs: #2, #5, #6, #10, #12, #14, #15, #16, #19, #25, #27, #30
 | D14 | Predictor timeout 1.5 s (measured p95 ~1.15 s through Vercel); real predictor wired |
 | D15 | Production `api/` only from merged `integration` or a gate tag, via `bash api/_deploy-prod.sh`; never `vercel --prod` from a checkout |
 | D16 | G1 passes; mic-denied (A4) accepted via unit tests, since the device can't trigger it; A4 reworded; A3/A5/A7 run at G2 |
+| D17 | Packaged builds default to batch rolling STT and Step 2 on (`.env.production`); realtime stays in the code until `wss://` works on the device |
+| D18 | G2 passes on function; latency is a known issue (T-208); ladder request scoped to letters-first (T-209), no tilt left/right (D9 stands) |
 
 ## Blockers and risks
 
 | # | Item | Impact | Owner | Mitigation |
 |---|---|---|---|---|
 | 1 | ~~Packaged WebView origin unknown; production origins too loose~~ **Resolved (H11:45):** production now answers `127.0.0.1:<port>` and `localhost:5173` preflights with 204, and `null` and `file://` with 403 (checked live) | — | Sam | Done |
-| 2 | **`wss://` likely blocked on the G2** (H11:30: realtime build gave Step 2 no transcript, so suggestions were bank-only) | Step 2 hears nothing on the device | GLASS | **Applied:** 0.4.2 is packed with `VITE_ROLLING_STT=batch` (PLAN §9; verified in the bundle). If G2 passes on it, ORCH makes batch the default for packaged builds (`.env.production`, D17) so every pack and the `v0.2-step2` tag reproduce it |
+| 2 | **Realtime `wss://` STT gets no transcript on the G2.** The cause is **unconfirmed**: the whitelist entry is correct (`wss://api.elevenlabs.io` matches `realtime.ts`'s URL exactly), and the simulator works end to end (#89). Suspects: the Even app's matching or CSP for `wss://`, WebSockets unsupported, or the realtime token step | Steps 2-3 run on batch (D17), at the cost of latency | AI / GLASS | **Mitigated by D17.** Optional: run #89's probe on the device (5 min) to decide whether realtime is worth reviving; check the Vercel log for `realtime_scribe` token mints during the 0.4.0 run |
 | 3 | Gemini **free tier 15 req/min, daily cap unknown** | Suggestions fall back to bank-only under load | AI | Throttle (D11); check AI Studio → Rate limits before the demo; billing would remove it |
 | 4 | **Vercel Hobby** blocks Git deploys from non-members; only Sam can deploy | A deploy bottleneck | AI | D15: only `bash api/_deploy-prod.sh` (merged commits, auto-checks). A `vercel --prod` from a checkout caused the 9-minute 500 outage (05:07-05:16 UTC, issue #56) |
 | 5 | Single-device team (one G2) and minutes-long pack/upload cycles | Slow device iteration | GLASS | Simulator first; batch device checks; G1 and G2 back to back when possible |
@@ -125,10 +130,10 @@ There are no console logs on the device. Use the phone companion's **Preview** t
 
 | Person | Now | Then |
 |---|---|---|
-| **Sarah (GLASS)** | **Pack G2 from `integration` `82e487d`** (`VITE_STEP2=1 npm run pack`, 0.4.0) and run T-207 with a second person; include A3/A5/A7 and a Step 1 pass for T-108 | T-305 only if time allows |
-| **Sam (AI)** | Be on call for G2 (Vercel log: predict errors, 429s). **Disconnect Git in Vercel (Project → Settings → Git)** so old branches stop using quota. **No `api/` redeploys** before the demo (#85's refactor stays undeployed; blocker #7) | Support G3 (tune `minSilenceMs` from the soak) |
-| **juannli (LOGIC via Devin + UI)** | **Rebase #80** on `integration`. Hide the Step 3 card unless Step 3 is enabled; drop `contentWordEndings` from `eager` (#82 review) | Final T-403 polish |
-| **Aarav (ORCH)** | Record G2. On a pass, merge the staged gate PR: D17 `.env.production` (`VITE_ROLLING_STT=batch`, `VITE_STEP2=1`; a plain pack = 0.4.2), fast-forward `main` and tag `v0.2-step2`. Then bump to 0.4.3 for the G3 pack | T-404 Devpost + demo script |
+| **Sarah (GLASS)** | **T-209** letters-first ladder (`src/glasses/**` first; `step2/index.ts` after T-208 merges) | G3 run (T-306) with a `VITE_STEP3=1` pack at 0.4.3+; optional #89 probe; T-402 final Beta |
+| **Sam (AI)** | **T-208** flush on tap (grant `ai/flush-on-tap`). Turn off Git deploys in Vercel. No `api/` redeploys before the demo | Support G3 (tune `minSilenceMs` from the soak) |
+| **juannli (LOGIC via Devin + UI)** | Rebase or close #88. **T-210** preview + demo letters-first (after T-209) | Final T-403 polish |
+| **Aarav (ORCH)** | Audit T-208/T-209/T-210; bump `app.json` to 0.4.3 for the G3 pack (with T-208/T-209 in if they've landed); run G3 (T-306) | T-404 Devpost + demo script, T-405 final submission |
 
 ## Loose ends (non-blocking)
 
@@ -150,6 +155,7 @@ There are no console logs on the device. Use the phone companion's **Preview** t
 
 | When | Change |
 |---|---|
+| Sun 12:20 AM (H13) | **G2 PASSED** (D18, #91): `main` → `ae2294d`, tag `v0.2-step2`; D17 batch default. CONTRACT_VERSION 3 (`flush?`, letters-first candidates). New: T-208 (Sam), T-209 (Sarah), T-210 (juannli). Merged #80, #89, #90. Blocker #2 reworded: the cause is unconfirmed, and the whitelist entry is correct |
 | Sun 12:10 AM (H12:10) | Merged #85 (AI cleanup: token wedge fix, `stt.no-speech` diagnostics, shared `api/` helpers, not deployed) and #78 (T-302). ORCH wired the companion's Step 3 Pause/Sensitivity into the detector. **G3 code complete** |
 | Sat 11:55 PM (H11:55) | Merged #82 (T-304) and #83 (Step 3 demo); #80 needs a rebase; #78 approved (waiting on ready). D17 approved by aaravj9 for a G2 pass; gate PR staged |
 | Sat 11:45 PM (H11:45) | Found the Vercel Hobby quota exhausted (blocker #7). Added `vercel.json` to stop Git preview deploys; production unaffected. Blocker #1 resolved (origins tightened, checked live) |
