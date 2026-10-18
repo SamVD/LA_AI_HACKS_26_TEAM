@@ -20,6 +20,8 @@ import {
 import { describeWordAssetHint } from './words/wordAssetHint'
 import { createHintLog } from './sessionLog'
 import { readStep3Settings, writeStep3Settings, type Step3Sensitivity } from './step3Settings'
+import { eventLog } from '../debug/eventLog'
+import { exportSessionLogJson, formatEventLogCount } from './eventLogExport'
 
 export type CompanionDebugState = {
   transcripts: Transcript[]
@@ -242,6 +244,7 @@ export function mountCompanion(
     modeList.replaceChildren()
     const active = shell.activeMode()
     for (const mode of shell.modes()) {
+      if (mode.id === 'step2' && step3InBuild()) continue
       const card = document.createElement('article')
       card.className = 'nudge-card nudge-mode-card'
       const title = document.createElement('h2')
@@ -524,7 +527,43 @@ export function mountCompanion(
   homeLead.className = 'nudge-home-lead'
   homeLead.textContent =
     'Start a mode for the glasses. This page stays calm and shows a live preview when a mode is running.'
-  homePanel.append(buildCapability, homeLead, judgeDemoCard, step3Card, modeList)
+
+  const sessionLogCard = document.createElement('section')
+  sessionLogCard.className = 'nudge-card nudge-session-log'
+  sessionLogCard.innerHTML = `
+    <h2>Session log</h2>
+    <p class="nudge-home-demo-lead">Pipeline events from this glasses session (STT, help taps, auto-hints). Export and paste into the G3 results PR.</p>
+  `
+  const sessionLogCount = document.createElement('p')
+  sessionLogCount.className = 'nudge-session-log-count'
+  const exportLogBtn = document.createElement('button')
+  exportLogBtn.type = 'button'
+  exportLogBtn.className = 'nudge-btn'
+  exportLogBtn.textContent = 'Export session log'
+  const sessionLogStatus = document.createElement('p')
+  sessionLogStatus.className = 'nudge-session-log-status'
+  sessionLogStatus.hidden = true
+  const refreshSessionLogCount = () => {
+    sessionLogCount.textContent = formatEventLogCount(eventLog.entries().length)
+  }
+  exportLogBtn.addEventListener('click', () => {
+    void (async () => {
+      exportLogBtn.disabled = true
+      try {
+        const via = await exportSessionLogJson(eventLog.toJSON())
+        sessionLogStatus.hidden = false
+        sessionLogStatus.textContent =
+          via === 'clipboard'
+            ? 'Copied to clipboard.'
+            : 'Download started (clipboard was not available).'
+      } finally {
+        exportLogBtn.disabled = false
+      }
+    })()
+  })
+  sessionLogCard.append(sessionLogCount, exportLogBtn, sessionLogStatus)
+
+  homePanel.append(buildCapability, homeLead, judgeDemoCard, step3Card, modeList, sessionLogCard)
   const previewLead = document.createElement('p')
   previewLead.className = 'nudge-preview-lead'
   previewLead.textContent =
@@ -678,14 +717,20 @@ export function mountCompanion(
     if (activeTab === 'debug') refreshDebug(state)
   })
 
+  const unsubEventLog = eventLog.subscribe(() => {
+    refreshSessionLogCount()
+  })
+
   showTab('home')
   refreshHome()
   refreshPreview()
   refreshStep3()
+  refreshSessionLogCount()
   void refreshWords()
   return () => {
     demoBinding.reset()
     unsubScreen()
+    unsubEventLog()
     unsubDebug?.()
     unwatchTheme()
     root.replaceChildren()
