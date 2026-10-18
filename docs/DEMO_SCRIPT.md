@@ -21,7 +21,7 @@ _T-404, ORCH. Two uses: (1) the **2–3 minute Devpost video**, (2) the **live j
 | 0:15–0:30 | G2 on, glasses display **blank** (screen recording from the glasses view or a photo through the lens). | "Nudge is for the Even G2. The display stays blank until you need it. That's the whole idea." |
 | 0:30–1:05 | **Practice (Step 1).** Prompt with the blank → wearer says the word → √. Then a stuck one: tap → picture → `c_p` → word. | "Practice: fill in the blank out loud. If you're stuck, help climbs the way a speech therapist would cue: a picture, the first letters, then the word." |
 | 1:05–1:55 | **Conversation.** Two people talking; wearer stalls on "um um"; wearer taps; glasses show `s _ _ _ _`; tap → `s u n _ _`; tap → `sunny`; wearer says it and the display clears. Cut to the phone preview mirroring the same screens. | "In a real conversation, Nudge listens through the glasses mic, reads the last few seconds, and predicts the word. It shows the first letter before the whole word, so you get to find it yourself." |
-| 1:55–2:10 | **[FILL, only if Step 3 ships ON]** Stall with no tap; hint appears by itself. Otherwise cut this beat. | "It can also notice the stall and offer help on its own." |
+| 1:55–2:10 | **Cut (D20: Conversation ships off).** Was: stall with no tap; hint appears by itself. | "It can also notice the stall and offer help on its own." |
 | 2:10–2:30 | Phone companion Home: personal words, sensitivity, hint log. End on the blank glasses. | "A caregiver sets it up on the phone, with the person's own names, medications and places. Speech-to-text by ElevenLabs, word prediction by Gemini. Quiet until it matters. This is Nudge." |
 
 ### Shoot plan (T-406)
@@ -33,11 +33,11 @@ _T-404, ORCH. Two uses: (1) the **2–3 minute Devpost video**, (2) the **live j
 | 0:00–0:15 Aphasia hook | **Now**, no build needed | Phone camera, two people |
 | 0:15–0:30 Blank display | **Now** | G2 on, nothing shown |
 | 0:30–1:05 Practice | **Now** (Step 1 passed G1) | G2 plus phone preview |
-| 1:05–1:55 Assist tap (`s _ _ _ _` → `sunny`) | **Now** (Step 2 passed G2) | G2, two people |
-| 1:55–2:10 Auto-hint | **Wait** for the final build and the G3 decision | Cut if Step 3 ships off |
+| 1:05–1:55 Assist tap (`s _ _ _ _` → `sunny`) | **After Gemini billing** (quota blocked until ~4:59 PM; footage shot before it would show fallback words) | G2, two people |
+| 1:55–2:10 Auto-hint | **Cut** (D20: Conversation ships off) | — |
 | 2:10–2:30 Phone companion | **Now** for Home and Words; re-shoot Home if the build strip changes | Screen recording |
 
-Shoot the **now** beats first, then slot the Conversation auto-hint in if it ships.
+Shoot the **now** beats first; the Conversation auto-hint beat is cut (D20: Conversation ships off).
 
 Video rules: **say once on screen or in voice that the phone Demo tab is a scripted replay**, if it appears. Don't show the API keys, `.env.local`, or the Vercel dashboard. Record at least two takes of the conversation beat; the first is usually the stiffest.
 

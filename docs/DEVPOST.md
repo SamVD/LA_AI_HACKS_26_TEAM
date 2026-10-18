@@ -177,7 +177,7 @@ TypeScript, Vite, Even Hub SDK (`@evenrealities/even_hub_sdk`, SDK 0.0.12), Even
 
 ## Gallery images (from `src/glasses/screenshots/`)
 
-Suggested order: `15-phone-companion.png` (refreshed with Step 3 on, no Debug tab), `00-launcher.png`, `01-prompt.png`, `03b-cue-L1-picture.png`, `04-cue-L2.png`, `06-feedback-ok.png`, `16-candidates-v3-L1.png` (`s _ _ _ _`), `17-candidates-v3-L2.png` (`s u n _ _`), `18-candidates-v3-L3.png` (`sunny`). Don't use `08`-`10`/`08b`: they show the old picture and mouth-shape hints that Steps 2-3 no longer use. Add a photo of the real G2 in use if one exists; it is worth more than any screenshot.
+Suggested order: `15-phone-companion.png` (final build: Practice · Assist), `00-launcher.png`, `01-prompt.png`, `03b-cue-L1-picture.png`, `04-cue-L2.png`, `06-feedback-ok.png`, `16-candidates-v3-L1.png` (`s _ _ _ _`), `17-candidates-v3-L2.png` (`s u n _ _`), `18-candidates-v3-L3.png` (`sunny`). Don't use `08`-`10`/`08b`: they show the old picture and mouth-shape hints that Steps 2-3 no longer use. Add a photo of the real G2 in use if one exists; it is worth more than any screenshot.
 
 ## Team
 
