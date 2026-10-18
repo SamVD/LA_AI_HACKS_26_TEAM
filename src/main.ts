@@ -10,8 +10,14 @@ import { MockPredictor, MockStt } from './mocks'
 import { modes } from './modes'
 import { mountCompanion } from './phone'
 import { createStore } from './store'
+import { eventLog } from './debug/eventLog'
 
-const log = (event: string, data?: unknown) => console.log('[nudge]', event, data ?? '')
+// Every log line also goes to the in-memory pipeline log (T-315), which the phone
+// companion can export as JSON from a device session.
+const log = (event: string, data?: unknown) => {
+  console.log('[nudge]', event, data ?? '')
+  eventLog.record(event, data)
+}
 
 const bridge = await waitForEvenAppBridge()
 const hub = createHubBridge(bridge, log)

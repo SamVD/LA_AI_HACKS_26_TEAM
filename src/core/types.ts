@@ -6,7 +6,7 @@
 //
 // This file holds types and constants only. No runtime logic, no SDK imports.
 
-export const CONTRACT_VERSION = 3 as const
+export const CONTRACT_VERSION = 4 as const
 
 // ---------------------------------------------------------------------------
 // Input
@@ -64,11 +64,21 @@ export interface Transcript {
   tEndMs: number
   /** Set only when the call failed. `text` is then `''`. */
   error?: SttErrorCode
+  /**
+   * CONTRACT_VERSION 4 (T-314): who spoke, when the audio layer can tell (by loudness on
+   * the glasses mic). Absent = unknown; treat it as the wearer.
+   */
+  speaker?: Speaker
 }
+
+/** The glasses wearer, or someone else the mic picked up (the conversation partner). */
+export type Speaker = 'wearer' | 'other'
 
 export interface SpeechState {
   speaking: boolean
   tMs: number
+  /** CONTRACT_VERSION 4 (T-314): who started this speech burst, when known. Absent = unknown. */
+  speaker?: Speaker
 }
 
 // ---------------------------------------------------------------------------
