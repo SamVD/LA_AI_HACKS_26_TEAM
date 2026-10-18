@@ -1,0 +1,24 @@
+# Generated from OWNERS.json. TBD handles are intentionally omitted.
+/src/core/ @aaravj9
+/src/config.ts @aaravj9
+/src/main.ts @aaravj9
+/src/modes/index.ts @aaravj9
+/package.json @aaravj9
+/package-lock.json @aaravj9
+/app.json @aaravj9
+/index.html @aaravj9
+/vite.config.* @aaravj9
+/tsconfig*.json @aaravj9
+/.gitignore @aaravj9
+/.env.example @aaravj9
+/.github/ @aaravj9
+/README.md @aaravj9
+/CONTRIBUTING.md @aaravj9
+/OWNERS.json @aaravj9
+/PLAN.md @aaravj9
+/TASKS.md @aaravj9
+/docs/ @aaravj9
+/src/glasses/ @Sarah-J-Dias
+/src/modes/step2/ @Sarah-J-Dias
+/spikes/device/ @Sarah-J-Dias
+/docs/BETA_RESULTS.md @Sarah-J-Dias
