@@ -13,6 +13,8 @@ import { bindJudgeDemo } from './demo/bindJudgeDemo'
 import { MODE_HOME_LEAD, modeDisabledLead } from './modeCopy'
 import { formatStep1ItemLine, summarizeStep1Session } from './sessionSummary'
 import { describeWordAssetHint } from './words/wordAssetHint'
+import { createHintLog } from './sessionLog'
+import { readStep3Settings, writeStep3Settings, type Step3Sensitivity } from './step3Settings'
 
 export type CompanionDebugState = {
   transcripts: Transcript[]
@@ -76,7 +78,43 @@ export function mountCompanion(
   const homePanel = document.createElement('section')
   const demoPanel = document.createElement('section')
   demoPanel.className = 'nudge-demo-inline'
-  const demoBinding = bindJudgeDemo(demoPanel, { compact: true })
+
+  // T-304: Step 3 controls and the hint session log. The log sees every screen
+  // sent to the glasses (and the demo's screens), so demo hints appear too.
+  const hintLog = createHintLog()
+  const refreshStep3 = () => {
+    const settings = readStep3Settings()
+    for (const btn of step3Card.querySelectorAll<HTMLButtonElement>('[data-sensitivity]')) {
+      const selected = btn.dataset.sensitivity === settings.sensitivity
+      btn.setAttribute('aria-pressed', selected ? 'true' : 'false')
+      btn.classList.toggle('nudge-btn--primary', selected)
+    }
+    pauseBtn.textContent = settings.paused ? 'Resume hints' : 'Pause hints'
+    pauseBtn.setAttribute('aria-pressed', settings.paused ? 'true' : 'false')
+    logList.replaceChildren()
+    const entries = hintLog.entries()
+    if (!entries.length) {
+      const empty = document.createElement('li')
+      empty.className = 'nudge-debug-empty'
+      empty.textContent = 'No hints yet this page.'
+      logList.append(empty)
+      return
+    }
+    for (const entry of entries) {
+      const li = document.createElement('li')
+      const time = new Date(entry.at).toLocaleTimeString()
+      const level = `level ${entry.level}`
+      const word = entry.word || entry.words[0] || '—'
+      const outcome = entry.outcome === 'open' ? 'showing' : entry.outcome
+      li.textContent = `${time} · ${word} · ${level} · ${outcome}`
+      logList.append(li)
+    }
+  }
+  const demoBinding = bindJudgeDemo(demoPanel, {
+    compact: true,
+    onScreen: screen => { hintLog.feed(screen); refreshStep3() },
+    paused: () => readStep3Settings().paused,
+  })
   const previewPanel = document.createElement('section')
   const summaryPanel = document.createElement('section')
   const wordsPanel = document.createElement('section')
@@ -418,11 +456,40 @@ export function mountCompanion(
   openDemoBtn.addEventListener('click', () => showTab('demo'))
   judgeDemoCard.append(openDemoBtn)
 
+  const step3Card = document.createElement('section')
+  step3Card.className = 'nudge-card nudge-step3'
+  step3Card.innerHTML = `
+    <h2>Step 3 hints</h2>
+    <p class="nudge-home-demo-lead">Ambient hints after a pause. Sensitivity maps to the stall thresholds; pausing silences new hints (the demo shows it too).</p>
+  `
+  const sensRow = document.createElement('div')
+  sensRow.className = 'nudge-mode-actions'
+  for (const [id, label] of [['calm', 'Calm'], ['balanced', 'Balanced'], ['eager', 'Eager']] as Array<[Step3Sensitivity, string]>) {
+    const btn = document.createElement('button')
+    btn.type = 'button'
+    btn.className = 'nudge-btn nudge-btn--ghost'
+    btn.dataset.sensitivity = id
+    btn.textContent = label
+    btn.addEventListener('click', () => { writeStep3Settings({ sensitivity: id }); refreshStep3() })
+    sensRow.append(btn)
+  }
+  const pauseBtn = document.createElement('button')
+  pauseBtn.type = 'button'
+  pauseBtn.className = 'nudge-btn'
+  pauseBtn.addEventListener('click', () => {
+    writeStep3Settings({ paused: !readStep3Settings().paused })
+    refreshStep3()
+  })
+  sensRow.append(pauseBtn)
+  const logList = document.createElement('ul')
+  logList.className = 'nudge-word-list nudge-debug-list'
+  step3Card.append(sensRow, logList)
+
   const homeLead = document.createElement('p')
   homeLead.className = 'nudge-home-lead'
   homeLead.textContent =
     'Start a mode for the glasses. This page stays calm and shows a live preview when a mode is running.'
-  homePanel.append(homeLead, judgeDemoCard, modeList)
+  homePanel.append(homeLead, judgeDemoCard, step3Card, modeList)
   const previewLead = document.createElement('p')
   previewLead.className = 'nudge-preview-lead'
   previewLead.textContent =
@@ -551,20 +618,28 @@ export function mountCompanion(
   `
   root.append(header, tabBar, panels)
 
-  const unsubScreen = shell.onScreen(() => {
+  const unsubScreen = shell.onScreen(screen => {
+    hintLog.feed(screen)
+    refreshStep3()
     if (shell.activeMode()) followLive = true
     refreshHome()
     if (activeTab === 'preview') refreshPreview()
   })
 
+  let fedTranscripts = 0
   const unsubDebug = options.debug?.subscribe(state => {
     lastDebug = state
+    if (state.transcripts.length < fedTranscripts) fedTranscripts = 0
+    for (const t of state.transcripts.slice(fedTranscripts)) hintLog.feedTranscript(t.text, t.isFinal)
+    fedTranscripts = state.transcripts.length
+    refreshStep3()
     if (activeTab === 'debug') refreshDebug(state)
   })
 
   showTab('home')
   refreshHome()
   refreshPreview()
+  refreshStep3()
   void refreshWords()
   return () => {
     demoBinding.reset()
