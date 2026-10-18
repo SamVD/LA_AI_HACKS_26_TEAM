@@ -1,6 +1,6 @@
 # Nudge Task Board
 
-_Last updated: Sat Oct 17, 2026 (about H9:30) by ORCH. Decisions D1-D10: `PLAN.md` Section 13. Contracts: CONTRACT_VERSION 2 (`src/core/types.ts`, `docs/CONTRACTS.md`). Phase 1 builder prompts: `docs/prompts/phase1-builder-prompts.md`._
+_Last updated: Sat Oct 17, 2026 (about H9:15) by ORCH. Decisions D1-D12: `PLAN.md` Section 13. Contracts: CONTRACT_VERSION 2 (`src/core/types.ts`, `docs/CONTRACTS.md`). Phase 1 builder prompts: `docs/prompts/phase1-builder-prompts.md`._
 
 Single source of truth for who is doing what. Read `PLAN.md` first for architecture, contracts, ownership, and git rules.
 
@@ -12,8 +12,8 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 **Queue by lane (now):**
 - GLASS: S-3 is merged. Next: **T-101 now (critical path)**. Fit the S-3 0.1.2 rerun (5-minute lock, SDK storage timing) into a device cycle when convenient.
-- AI: S-1 is merged. Next: finish S-2, then **T-104 (now unblocked: glasses mic, D7)**. Set up the `api/` hosting (Vercel + ElevenLabs key) early. T-203 can share it.
-- LOGIC (Codex): T-103, T-106 and T-007 are merged. Next: **T-102 Step 1 mode now (critical path)**, then the T-106 store follow-up (small), then T-205.
+- AI: S-1 and S-2 are merged. Next: **T-104 now (critical path for Step 1)**, with the `api/` hosting (Vercel + ElevenLabs and Gemini keys) set up first. Then T-203 (`api/predict`, sharing that hosting).
+- LOGIC (Codex): T-103, T-106 and T-007 are merged. Next: **T-102 Step 1 mode now (critical path)**, then the T-106 store follow-up (small), then **T-201** (predictor + throttle), then T-205. Small fixture fix: eval-04 should accept "Sunrise Clinic" (S-2).
 - UI (Cursor): T-206 (PR #24) needs two fixes (personal-word frames, unique ids) and a retarget to `integration`; see the review.
 
 **Global rules for every task (also repeated in the builder prompt):**
@@ -119,7 +119,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ### S-2 Spike: Gemini predictor against fixtures
 - **Owner:** AI (Claude Code)
-- **Status:** READY (T-004 merged)
+- **Status:** MERGED (PR #26). Findings: `spikes/predictor/FINDINGS.md`. Prompt bumped to **v2** (`docs/PREDICTOR_PROMPT.md`); decisions D11 (model, few-shot, throttle) and D12 (fallback v2) in `PLAN.md` §13.
 - **Branch:** `ai/spike-predictor` (writes only `spikes/predictor/**`)
 - **Depends on:** T-001, T-004
 - **Spec:** run `docs/PREDICTOR_PROMPT.md` against `fixtures/predictor-eval.json` with the fastest Gemini tier. Report accuracy at top-1 and top-3, p50/p95 latency, and JSON-validity rate. Confirm current model ID from Gemini docs. Recommend prompt changes to ORCH.
@@ -256,11 +256,15 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ### T-201 Predictor implementation
 - **Owner:** LOGIC (Codex)
-- **Status:** TODO
+- **Status:** READY (S-2 merged). After T-102 in the LOGIC queue.
 - **Branch:** `logic/predictor`
 - **Depends on:** T-001 (`PREDICTOR_PROMPT.md`), S-2, T-004. Develop against `MockPredictor` and a stubbed fetch until T-203's proxy merges; do not wait on it.
 - **Files it may EDIT:** `src/ai/predictor/**`, `scripts/eval-predictor.*`
 - **Spec:** `PredictorService` per ORCH's prompt: call via `api/predict` (T-203's proxy), validate JSON against a schema, 1.2 s timeout via `AbortSignal`, and a **bank-only fallback** ranking words by tag overlap and recency. Include the eval script that reports top-1/top-3 accuracy on `fixtures/predictor-eval.json`.
+  - **v2 (S-2):** implement Section 6 validation and the **v2 fallback (Section 7: R0-R4)**. Port `validate()` from `spikes/predictor/eval.mjs` as a reference, but implement fallback v2, not the v1 rules in `eval.mjs`. Do not import from `spikes/`.
+  - **Throttle (D11, Section 10):** port `spikes/predictor/throttle.mjs` into `src/ai/predictor/throttle.ts` as `createThrottledPredictor(predictor: PredictorService, opts: { now: () => number, ... })` exposing `onFinal(request)` (trailing-edge prefetch, ≤1 per 5 s, ≤12/min) and `onHelp(request): Promise<Suggestion[]>` (cache → live call if room → stale cache → fallback; never waits). Port the `throttle-check.mjs` scenarios as Vitest cases with fake timers (never above 15/min, 0 self-caused 429s, taps answered within one call).
+  - **HTTP 429** from `api/predict` → immediate fallback, and block calls for `retryDelay` (log `rate-limited`). Never retry within the 1.2 s budget.
+  - Acceptance additions: fallback v2 tests for "not a fork" (no `fork`), the cup/tea cases (cup ranks above tea), "lisi" → lisinopril, and nothing scoring → `[]`; throttle Vitest scenarios pass.
 - **Acceptance criteria:** schema validation rejects malformed output; fallback engages on timeout and on invalid JSON (tested); eval script runs and prints accuracy.
 
 ### T-202 Rolling-transcript STT and buffer
@@ -280,6 +284,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 - **Depends on:** T-001
 - **Files it may EDIT:** `api/predict/**`
 - **Spec:** a minimal endpoint that holds the Gemini key, accepts a `PredictRequest`, enforces input size limits and an origin allow-list, and returns the model's raw JSON. CORS configured for the app origin. *(`api/stt/**` stays under T-104.)*
+  - **v2 (S-2, D11):** model `gemini-3.5-flash-lite` in one constant; `thinkingConfig: { thinkingLevel: "minimal" }`; build `contents` as the Examples 1-7 few-shot turns plus the real user turn (`docs/PREDICTOR_PROMPT.md` §2, §8); key in the `x-goog-api-key` header. On an upstream 429, **forward status 429 with the `retryDelay`** so the client throttle can back off. Deploy in a US region and report the proxy's own p95; if the total p95 exceeds ~1.1 s, ORCH raises the timeout to 1.5 s.
   - Note (D3): `api/stt` (token minter) belongs to T-104. This task is `api/predict` only. Share the hosting setup (Vercel project and env vars) with T-104.
 - **Acceptance criteria:** works from the Beta build; key not present in the client bundle; oversized input rejected.
 
@@ -290,6 +295,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 - **Depends on:** T-101, T-201 (mock first), T-202 (mock first)
 - **Files it may EDIT:** `src/modes/step2/**`
 - **Spec:** idle `blank` Screen (event-capturing). On each final transcript segment, refresh a candidate cache in the background (speculative). SELECT shows `candidates` at level 1 (picture/mouth shape of top candidate); SELECT again escalates to level 2 (first letter), then level 3 (full word); NEXT/PREV cycle among the top 3 and reset the ladder; BACK returns to `blank`. If STT hears the target word (via the matcher), clear the display automatically. Auto-dismiss after a configurable timeout. Works fully on mocks first (`?svc=mock`), then with the real services.
+  - **Throttle (D11):** never call `ctx.predictor.predict` directly. Build `createThrottledPredictor(ctx.predictor, { now: ctx.now })` from `src/ai/predictor` (T-201) on `enter()`; call `onFinal` on each final transcript segment and `onHelp` on SELECT. Until T-201 merges, use a local stub with the same two methods. When `onHelp` returns `[]`, show a quiet `status` ("No suggestion yet") instead of empty candidates.
   - Note (D2): the "STT hears the target → clear the display" check relies on candidates **not** being STT keyterms (T-202 only sends personal-bank keyterms). Don't add candidates to keyterms.
 - **Acceptance criteria:**
   - [ ] Mock run against all 8 fixtures: help tap shows candidates in under 300 ms (cache hit).
@@ -426,6 +432,7 @@ No new features after H18. Only fixes, packaging, polish, and the story.
 - H7: T-004 fixtures merged (PR #9). Follow-up filed as T-007.
 - H7: T-006 design tokens and glasses layouts merged (PR #7, after one round of changes).
 - H7: T-002 device checks done (PR #13, `docs/BETA_RESULTS.md`). QR prototype mode is broken on Even's side, so device testing uses packaged Beta builds; README and `docs/G2_SMOKE.md` updated.
+- H9: S-2 Gemini spike merged (PR #26). `PREDICTOR_PROMPT.md` is now **v2**; D11 (model, few-shot, free-tier throttle) and D12 (fallback v2). T-201 READY; T-203 and T-204 updated.
 - H9: T-103 matcher (PR #21), T-106 assets and store (PR #22) and T-007 fixtures (PR #23) merged. **T-102 READY.** T-206 (PR #24) changes requested.
 - H9: S-3 device spike merged (PR #20). Decisions D7-D10 (glasses mic, visibilitychange lifecycle, up/down tilt, `app.json` 0.2.0). T-104 READY. T-101 prompt corrected.
 - H8: S-1 ElevenLabs STT spike merged (PR #17). Decisions D1-D5 recorded in `PLAN.md` Section 13; T-104, T-202, T-203 and T-204 cards updated.

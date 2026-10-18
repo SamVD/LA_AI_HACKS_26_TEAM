@@ -2,7 +2,7 @@
 
 Owner: ORCH. Implemented by T-201 (`src/ai/predictor/`), evaluated by S-2 (`spikes/predictor/`). Contract types: `PredictRequest` and `Suggestion` in `src/core/types.ts` (CONTRACT_VERSION 1).
 
-**Prompt version: 1.** Bump it on any change to the system prompt, the input format or the examples, and log the change at the bottom of this file. Eval results are only comparable within a version.
+**Prompt version: 2.** Bump it on any change to the system prompt, the input format or the examples, and log the change at the bottom of this file. Eval results are only comparable within a version.
 
 ## 1. Job
 
@@ -17,17 +17,20 @@ What makes this different from "next-word prediction":
 
 ## 2. Model call
 
-- Model: the fastest current Gemini Flash-class model. **S-2 confirms the exact model ID from the Gemini docs; do not hard-code a guess.** The ID lives in one constant in `api/predict/`.
-- Called only from the server proxy (`api/predict`, T-203). The client never sees the key.
+_v2: settled by S-2 (`spikes/predictor/FINDINGS.md`)._
+
+- **Model: `gemini-3.5-flash-lite`**, pinned in one constant in `api/predict/` (T-203). Don't use `gemini-flash-latest`: it's an alias that can move, it was ~7× slower in S-2, and it rejects `minimal` thinking.
+- Called only from the server proxy (`api/predict`, T-203). The client never sees the key. Send the key in the `x-goog-api-key` header, never in a URL.
 - `systemInstruction`: the system prompt in Section 3, verbatim.
-- `contents`: one user turn containing the JSON input in Section 4.
+- `contents`: **Examples 1-7 from Section 8 as few-shot turns** (for each example, a `user` turn with its input JSON, then a `model` turn with its output JSON), followed by the real `user` turn with the Section 4 input. S-2: few-shot top-3 0.98 vs 0.94 zero-shot, for about +20 ms p50. It fixes the one systematic zero-shot failure (forcing a bank word that doesn't fit).
 - Generation config:
   - `responseMimeType: "application/json"`
-  - `responseSchema`: the schema in Section 5
-  - `temperature: 0.2` (we want stable rankings, not creativity)
+  - `responseSchema`: the schema in Section 5 (S-2 confirmed the live API accepts it as written)
+  - `temperature: 0.2`
   - `maxOutputTokens: 128`
-  - Disable or minimise "thinking" if the chosen model supports a thinking budget. Latency matters more than reasoning depth here.
-- Client timeout: **1.2 s** end-to-end via `AbortSignal`, then fall back (Section 7).
+  - **`thinkingConfig: { thinkingLevel: "minimal" }`** (S-2: 0 thought tokens on this model)
+- Client timeout: **1.2 s** end-to-end via `AbortSignal`, then fall back (Section 7). S-2 measured p50 ~650 ms and p95 ~880 ms before the proxy hop. If T-203 measures the total p95 above ~1.1 s, raise the timeout to 1.5 s rather than lose model answers.
+- **Rate limit: free tier = 15 requests/minute per project per model** (from the 429's `quotaValue`; extra keys don't help). Every call goes through the throttle in Section 10. **Never call the model directly from a mode.**
 
 ## 3. System prompt
 
@@ -53,7 +56,7 @@ Rules:
    - Earlier mentions: a topic or name from earlier in the transcript is likely to come up again.
 4. Prefer a word from the bank when it fits the context about as well as a general word. Copy bank words exactly as written, including capitals. Do not force a bank word that does not fit.
 5. Use "place" only as a tie-breaker.
-6. The suggestions should be different words, not variants of one word (cup, mug, glass is fine; cup, cups, a cup is not).
+6. The suggestions should be different words, not variants of one word (cup, mug, glass is fine; cup, cups, a cup is not). Never return both a word and its plural.
 7. Confidence is your probability, from 0 to 1, that this exact word is the one they want. The values do not need to sum to 1. Use low numbers when the context is vague.
 
 Output only a JSON array of objects with "word" and "confidence". No explanation.
@@ -122,18 +125,22 @@ If zero items survive → whole response invalid → fallback.
 
 ## 7. Fallback (bank-only)
 
-Used on timeout (1.2 s), network error, non-2xx from the proxy, or invalid output. Built into `PredictorService.predict`, which never rejects.
+Used on timeout (1.2 s), network error, HTTP 429 (never retried; see Section 10), any other non-2xx from the proxy, or invalid output. Built into `PredictorService.predict`, which never rejects. Because of the rate limit, users will see this more often than planned, so it matters (S-2 measured top-3 0.60 for the v1 rules).
 
-Score every bank entry:
+**v2 scoring (S-2 R0-R4).** Work on the transcript tail lowercased with punctuation stripped. Let *recent* = the last 8 words with fillers (um, uh, er, erm, hmm, like) removed. Ignore the tags `sample` and `personal` everywhere (they're metadata). For each bank entry:
 
-- **Tag and word overlap**: +1.0 for each tag or `word` token that appears in the last 40 words of the transcript (lowercase, after stripping punctuation; tags match on whole tokens).
-- **Category fit** from the words in `stalledAfter`: +0.5 for `medication` after "take", "took", "my pill"/"pills"; +0.5 for `person` after "my" + a family word (daughter, son, wife, husband, friend, doctor, nurse), or after "call"/"see"/"talk to"; +0.5 for `place` after "to the", "at the", "go to".
-- **Recency**: +0.5 if the word was said earlier in this transcript or suggested in the last 5 minutes.
+- **Tag overlap**: +1.0 for each of the entry's tags that appears as a whole token in the last 40 words.
+- **Own word already said (R0)**: if the entry's `word` appears in the transcript:
+  - `person` entries: +0.5 (names recur in conversation);
+  - every other entry: **−1.0 if it is in *recent*** (the user just said or rejected it, as in "not a fork"), otherwise 0. **Never boost a non-name word for having been said.**
+- **Recently suggested**: +0.5 if the entry was shown as a suggestion in the last 5 minutes and is not in *recent*.
+- **Partial word (R1)**: +1.0 if a token in *recent* of 3 or more letters, not a stop word and not the whole word, is a prefix of the entry's `word` ("lisi" → lisinopril).
+- **Category fit (R2)**, checked against *recent*, not only `stalledAfter`: +0.5 for `medication` after "take", "took", "pill", "pills"; +0.5 for `person` after "my" + a family word (daughter, son, wife, husband, friend, doctor, nurse), or after "call", "see", "talk to"; +0.5 for `place` after "to the", "at the", "go to".
 - **Place**: +0.25 if a tag matches a token in `place.label`.
 
-Take the top `n` with score > 0. Use `confidence = min(0.6, 0.15 * score)` so fallback results never look more certain than the model. `source: 'bank'`. If nothing scores > 0, return the `n` most recently used personal entries with `confidence: 0.05`, or `[]` if the bank is empty.
+Take the top `n` with score > 0. Use `confidence = min(0.6, 0.15 * score)` so fallback results never look more certain than the model. `source: 'bank'`. **If nothing scores > 0, return `[]` (R3).** Step 2 then shows a quiet `status` ("No suggestion yet") instead of random words.
 
-Log every fallback with its reason (`timeout`, `network`, `http`, `invalid`) through `ModeContext.log` so the companion debug panel (T-206) can show it.
+Log every fallback with its reason (`timeout`, `network`, `http`, `rate-limited`, `invalid`) through `ModeContext.log`, so the companion debug panel (T-206) can show it.
 
 ## 8. Worked examples
 
@@ -217,20 +224,31 @@ Why: nothing in the bank fits; the model must not force "keys". All three get `s
 ```
 Why: the context is vague, so the confidences are low. The supermarket makes groceries more likely than stamps.
 
-## 9. What S-2 should measure
+## 9. Measurements (S-2, prompt v1)
 
-Against `fixtures/predictor-eval.json`, with this prompt version:
+From `spikes/predictor/FINDINGS.md`: 25 cases × 2 reps on `gemini-3.5-flash-lite`, client to Gemini without the proxy hop.
 
-- top-1 and top-3 accuracy (`intendedWord` in the suggestions, case-insensitive, after Section 6 validation)
-- p50 and p95 latency, measured at the client including the proxy hop
-- JSON validity rate before Section 6 (and how many items Section 6 dropped)
-- the same three numbers with Examples 1-7 added as few-shot turns, to decide whether to ship them in the prompt
-- the fallback's top-3 accuracy alone, as a baseline
+| Config | top-1 | top-3 | p50 | p95 | JSON valid | >1.2 s |
+|---|---|---|---|---|---|---|
+| zero-shot | 0.94 | 0.94 | 651 ms | 835 ms | 100% | 0/50 |
+| few-shot (Examples 1-7) | 0.96 | 0.98 | 671 ms | 885 ms | 100% | 1/50 |
+| bank-only fallback (v1 rules) | 0.28 | 0.60 | | | | |
 
-Report recommended prompt changes to ORCH; do not edit this file.
+The eval set is near ceiling, so the next prompt change needs harder cases (STT-style mis-hearings, two plausible names). Re-measure with `node spikes/predictor/eval.mjs` after any version bump. It reads Sections 3, 5 and 8 from this file, so keep their numbering and fence format.
+
+## 10. Rate limit and throttle
+
+Free tier: **15 requests/minute per project per model**. Step 2 prefetching on every final transcript segment would make 30-60 calls/min and hit 429 within the first minute. **Decision (PLAN.md D11): stay on the free tier and throttle.** The reference policy is `spikes/predictor/throttle.mjs`, verified by `throttle-check.mjs` and a 3-minute live run with 0 429s. T-201 ports it into `src/ai/predictor/`; modes use only the throttle:
+
+- `onFinal(transcript)`: trailing-edge prefetch, **at most 1 call per 5 s**, always on the latest transcript; segments in between are coalesced. Prefetch may use at most **12 of the 15 slots per minute**, so **3 slots/min stay reserved for help taps**.
+- `onHelp(request)`: use the cached result if it matches the current transcript; otherwise make a live call if the window has room; otherwise use the stale cache, then the Section 7 fallback. **It never waits on the limiter.**
+- An HTTP 429 blocks calls for its `retryDelay` and is **never retried** inside the 1.2 s budget (immediate fallback).
+- Prefetch only while Step 2 or Step 3 is active.
+- The daily cap (RPD) is unknown (check AI Studio → Rate limits). If it turns out low, raise the prefetch gap to 10 s for the demo. With billing (Tier 1), keep the throttle with a ~2 s gap.
 
 ## Change log
 
 | Version | Date | Change |
 |---|---|---|
 | 1 | 2026-10-17 | First draft (T-001). |
+| 2 | 2026-10-17 | From S-2: pin `gemini-3.5-flash-lite` with minimal thinking; ship Examples 1-7 as few-shot turns; rule 6 adds "never a word and its plural"; fallback v2 (R0: don't boost already-said non-name words, penalise just-said ones; R1: partial-word prefix; R2: cues over the last 8 words without fillers; R3: nothing scores → `[]`; R4: ignore `sample`/`personal` tags); 429 handling; Section 10 throttle. |
