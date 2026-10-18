@@ -170,7 +170,7 @@ class Practice {
     this.current = undefined
     this.result = undefined
     this.session = { startedAt: this.ctx.now(), items: [], saved: false }
-    await this.stopStt()
+    await this.stops
     if (!this.valid(token)) return
     try {
       const bank = await this.ctx.store.getBank()
@@ -211,9 +211,9 @@ class Practice {
   }
 
   private async resume(token: number) {
-    const stopped = this.stopStt()
     const shown = await this.showCurrent(token)
-    await stopped
+    // Wait for cleanup from an error or exit, preserving the warm mic between items.
+    await this.stops
     if (shown && this.valid(token) && this.phase === 'active') this.run(() => this.listen(token))
   }
 
