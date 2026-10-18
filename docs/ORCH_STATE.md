@@ -2,7 +2,7 @@
 
 The orchestrator's single snapshot of where Nudge stands. **ORCH updates this after every gate (G1, G2, G3, final) and after any merge that changes a gate's readiness.** Detailed task cards live in `TASKS.md`, decisions in `PLAN.md` §13, contracts in `docs/CONTRACTS.md`.
 
-_Last updated: **Sun Oct 18, 2026, 6:20 AM PT** by ORCH (aaravj9). All T-311/T-312/T-313/T-315 code merged. **Next: G3 re-run (Sarah) with `VITE_STEP3=1 VITE_DEBUG=1 npm run pack` (0.4.4).** G1 and G2 PASSED; G3 HELD._
+_Last updated: **Sun Oct 18, 2026, 6:35 AM PT** by ORCH (aaravj9). Sarah is up. **Next: T-316 (log-only speaker levels, ~20 min), then the G3 re-run with `VITE_STEP3=1 VITE_DEBUG=1 npm run pack` (0.4.4).** T-314 on hold until G3 data. G1 and G2 PASSED; G3 HELD._
 
 ## Wake-up plan (3:45-7:00 AM build window, then ship by 10:00)
 
@@ -144,7 +144,8 @@ Legend: ✅ merged · 🟡 in progress / review · ⬜ todo · 🚦 gate.
 | T-311 | Early stall prediction (latency, free tier) | LOGIC (juannli, reassigned from Sam) | ✅ merged; device numbers from the G3 re-run | #104 |
 | T-312 | Launcher: Practice + Conversation | UI ✅ #103 · launcher ✅ #109 · title ✅ #110 · ORCH flags ⬜ at decision B | 🟡 code done | #103, #109, #110 |
 | T-313 | Step 1 ignores short/background speech | LOGIC (juannli/Devin) | ✅ merged: match first (correct answers always count); ignores non-matching speech < 250 ms or `other` | #105 |
-| T-314 | Speaker tagging by loudness (cut-off 5:30) | AI (Sam) | ⬜ after T-311 | — |
+| T-314 | Speaker tagging by loudness | AI | ⏸ ON HOLD: measure first (T-316), decide after the G3 re-run with data | — |
+| T-316 | Speaker loudness logging (measure-only; `stt.level` per utterance) | juannli (grant `logic/speaker-levels`) | ⬜ READY, ~20 min, **in the G3 re-run build** | — |
 | T-315 | Lean pipeline log export | ORCH ✅ + UI ✅ (Debug tab; shown with `VITE_DEBUG=1` or `?debug`) | ✅ | #101, #103, #108 |
 | T-401 | Judge demo (in-companion Demo tab) | UI | ✅ | #40, #44, #47 |
 | T-402 | Beta final + lifecycle tests | GLASS | ⬜ | — |
@@ -237,6 +238,7 @@ There are no console logs on the device. Use the phone companion's **Preview** t
 
 | When | Change |
 |---|---|
+| Sun 6:35 AM | Decided: **measure before building T-314.** New T-316 (log-only `stt.level {speechDb, peakDb, floorDb, speechMs, text}` per utterance), grant `logic/speaker-levels`, goes into the G3 re-run build; the runbook adds a speaker-labelling step (4b). T-314 on hold |
 | Sun 6:30 AM | T-404 drafts merged (#113, `docs/DEVPOST.md`, `docs/DEMO_SCRIPT.md`); ORCH fact-check fixes applied (T-314 not built, SVG preview, v3 gallery, 55 pictures, D16 mic advice, `c_p`, 797 tests) |
 | Sun 6:20 AM | Merged #110 (Step 3 title Conversation), #109 (launcher titles; Step 2 hidden when Step 3 is on), #108 (Debug tab via `VITE_DEBUG=1`). #111 held for decision B. Repo is public: history scanned, no secrets |
 | Sun 6:05 AM | Merged #105 (T-313, after the match-first fix). Left: T-312 launcher label + Step 3 title, then the G3 re-run on 0.4.4 |

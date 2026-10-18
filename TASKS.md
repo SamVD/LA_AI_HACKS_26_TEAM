@@ -451,6 +451,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
   1. Clean `integration`: `npm ci && npm run typecheck && npm test`, then **`VITE_STEP3=1 npm run pack`**. `.env.production` already sets batch STT and Step 2 (D17). Verified: it packs, and the bundle has `VITE_STEP3:"1"`. Upload; install 0.4.3 from Me → Beta tester.
   2. **T-208 latency tally (Step 2):** 10 help taps right after a hesitation ("…my, um"); stopwatch tap → first letters; record each time. Target: median ≤ ~1.5-2 s.
   3. **T-209 ladder (Step 2):** tap → `s _ _ _ _`, tap → `s u n _ _`, tap → word; swipe → next suggestion at L1; no picture or mouth shape.
+  4b. **Speaker levels (T-316):** during the soak, the partner sits at a normal distance (~1 m) and talks normally. Note roughly when the partner talks alone (≥3 stretches) and when the wearer talks alone (≥3 stretches), or remember a few exact phrases each said. The exported log's `stt.level` lines (with `text`) are then labelled wearer vs partner.
   4. **G3 soak (Step 3):** a 10-minute natural two-person conversation with planted word-finding pauses ("pass me the, um…"). Count hints that **helped**, **false hints** (appeared when no word was needed) and **missed** stalls; note the phone Home card's sensitivity (default Balanced). Also check the swipe-on-blank pause toggle and the phone card's Pause.
   5. Step 1 quick regression (2-3 items).
   6. Record in `docs/BETA_RESULTS.md`. ORCH decides: Step 3 ships default ON only with about ≤ 1 false hint per 5 minutes and at least some helped hints; otherwise it ships flag-off (PLAN §2) and the demo uses Step 2.
@@ -503,7 +504,7 @@ Order and cut-offs: see `docs/ORCH_STATE.md` → **Wake-up plan**. In short: MUS
 
 ### T-314 Speaker tagging by loudness (cut-off 5:30)
 - **Owner:** AI (Sam)
-- **Status:** READY after T-311
+- **Status:** ON HOLD (decided Sun 6:35 AM): **measure first with T-316**, then decide after the G3 re-run using the exported `stt.level` data. Not built before G3.
 - **Branch:** `ai/speaker-gate`
 - **Files it may EDIT:** `src/audio/**`, `src/ai/stall/**`, `src/modes/step3/**`
 - **Depends on:** CONTRACT_VERSION 4 (`speaker?` on `Transcript` and `SpeechState`)
@@ -512,6 +513,27 @@ Order and cut-offs: see `docs/ORCH_STATE.md` → **Wake-up plan**. In short: MUS
   - The stall detector only treats silence after **wearer** speech as a stall. Other speech still goes into the transcript (useful context).
   - **If it isn't stable on the device by 5:30, it ships off** (flag or default threshold that tags everything `wearer`).
 - **Acceptance criteria:** unit tests with synthetic levels; a G3 re-run where the partner's pauses don't trigger hints (T-315 log shows the `speaker` tags).
+
+### T-316 Speaker loudness logging (measure-only, before T-314)
+- **Owner:** juannli (Claude), filling in for the AI lane while Sam is away
+- **Status:** READY. **Goes into the G3 re-run build.** Time-box: about 20 minutes
+- **Branch:** `logic/speaker-levels` (OWNERS grant: `src/audio/stt.ts`, `src/audio/vad.ts` and their tests)
+- **Why:** T-314 (gate stalls on the wearer's speech by loudness) needs a threshold, but we have **no data** on how loud the partner is on the glasses mic. Building the gating blind risks tagging the wearer as `other`, which would silence Step 3 and make Step 1 (T-313) ignore the wearer. So measure first; decide T-314 after G3.
+- **Spec (logging only, no behavior change):**
+  1. `EnergyVad` (`vad.ts`): add a read-only getter **`speechDb`**: the **power-averaged** level (dBFS) of the frames that were inside confirmed speech, rounded. Return `-120` if there was none. Keep the existing `peakDb` and `noiseFloorDb` unchanged.
+  2. `ElevenLabsStt.transcribeUtterance` (`stt.ts`): after a transcript comes back (success, including empty text), call `this.log('stt.level', { speechDb, peakDb, floorDb, speechMs, end, text })` once per utterance.
+     - `speechMs` = `tEndMs - tStartMs`.
+     - `end` = the existing end reason (`silence` / `max` / `flush`).
+     - `text` is the trimmed transcript, for labelling who spoke. It lives only in the in-memory log the tester exports; no audio.
+
+     This covers Step 1 utterances and Steps 2-3 batch segments, because both go through `transcribeUtterance`.
+  3. **Do not** set `speaker`, change any threshold, or touch `src/ai/stall/**`, `src/modes/**` or `RollingStt`'s behavior.
+- **Acceptance criteria:**
+  - `vad.test.ts`: `speechDb` for a synthetic loud burst is near its level and stays `-120` with no speech.
+  - `stt.test.ts`: one `stt.level` log per transcribed utterance, with the fields above.
+  - Every existing test unchanged and green.
+  - `npm run typecheck` passes (vitest doesn't typecheck).
+- **Used by:** the G3 re-run (T-306 step 4b). After G3, ORCH reads `stt.level` from the exported log: a clean wearer/partner gap (about 10 dB or more) → build T-314 behind an off-by-default flag if time allows; otherwise the Devpost reports the measured gap and T-314 stays future work.
 
 ### T-315 Lean pipeline log export
 - **Owners:** ORCH (done: `src/debug/eventLog.ts`, fed from `main.ts`'s `log`) · UI (juannli) export button
