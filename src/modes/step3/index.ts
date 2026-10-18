@@ -145,7 +145,7 @@ export function createStep3(options: Step3Options = {}): Mode {
 
   return {
     id: 'step3',
-    title: 'Ambient',
+    title: 'Conversation',
     async enter(c) {
       ctx = c
       paused = false
