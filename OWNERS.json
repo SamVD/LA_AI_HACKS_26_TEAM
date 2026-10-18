@@ -1,0 +1,101 @@
+{
+  "$comment": "Path ownership for Nudge. A PR from branch <lane>/<slug> may only change files matching lanes.<lane>.paths, plus branchGrants[<full branch name>] if present (branchGrants are one-off extra paths for Phase 0 tasks that write files another lane owns afterwards). Globs use ** for any depth and * within one path segment. Read by scripts/check-ownership (T-003). Content owned by ORCH; see docs/CONTRACTS.md.",
+  "contractVersion": 1,
+  "lanes": {
+    "orch": {
+      "github": ["aaravj9"],
+      "tool": "Claude (orchestrator)",
+      "paths": [
+        "src/core/**",
+        "src/config.ts",
+        "src/main.ts",
+        "src/modes/index.ts",
+        "package.json",
+        "package-lock.json",
+        "app.json",
+        "index.html",
+        "vite.config.*",
+        "tsconfig*.json",
+        ".gitignore",
+        ".env.example",
+        ".github/**",
+        "README.md",
+        "CONTRIBUTING.md",
+        "OWNERS.json",
+        "PLAN.md",
+        "TASKS.md",
+        "docs/**"
+      ]
+    },
+    "glass": {
+      "github": ["Sarah-J-Dias"],
+      "tool": "Claude Code + Even plugin",
+      "paths": [
+        "src/glasses/**",
+        "src/modes/step2/**",
+        "spikes/device/**",
+        "docs/BETA_RESULTS.md"
+      ]
+    },
+    "ai": {
+      "github": ["TBD"],
+      "tool": "Claude Code + Even plugin",
+      "paths": [
+        "src/audio/**",
+        "src/ai/stall/**",
+        "src/modes/step3/**",
+        "api/**",
+        "spikes/stt/**",
+        "spikes/predictor/**"
+      ]
+    },
+    "ui": {
+      "github": ["TBD"],
+      "tool": "Cursor",
+      "paths": [
+        "src/phone/**",
+        "docs/design/**"
+      ]
+    },
+    "logic": {
+      "github": ["TBD"],
+      "tool": "Codex / ChatGPT",
+      "paths": [
+        "src/matching/**",
+        "src/store/**",
+        "src/content/**",
+        "src/mocks/**",
+        "src/modes/step1/**",
+        "src/ai/predictor/**",
+        "src/ai/keywords/**",
+        "fixtures/**",
+        "scripts/**"
+      ]
+    }
+  },
+  "branchGrants": {
+    "glass/scaffold": [
+      "package.json",
+      "package-lock.json",
+      "app.json",
+      "index.html",
+      "vite.config.*",
+      "tsconfig*.json",
+      ".gitignore",
+      "README.md",
+      "src/main.ts",
+      "docs/vendor/**",
+      "docs/DISPLAY_LIMITS.md"
+    ],
+    "logic/foundation": [
+      "src/main.ts",
+      "src/config.ts",
+      "src/modes/index.ts",
+      "src/modes/step1/index.ts",
+      "src/modes/step2/index.ts",
+      "src/modes/step3/index.ts",
+      ".github/workflows/ci.yml",
+      ".github/CODEOWNERS"
+    ]
+  }
+}
