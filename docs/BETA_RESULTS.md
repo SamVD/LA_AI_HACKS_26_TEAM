@@ -82,3 +82,76 @@ The tester (GLASS) wants Step 2's help flow changed. It's written here for ORCH 
 **Touchpad mapping proposal** (works without tilt): tap = show letters / reveal more; swipe down = next suggestion (= "tilt left"); swipe up = confirm (= "tilt right"); double-tap = hide. Tilt mirrors swipe down / swipe up when enabled.
 
 **Open question for ORCH:** this is a UX change made after G2 testing. Ship it before the G2 tag, or tag `v0.2-step2` on the current flow and make it the first post-G2 task? The latency issue (batch STT) matters more for the gate than the ladder shape.
+
+## G3 device run and refinement plan (Sarah, Sun Oct 18)
+
+**Build:** `integration` @ `34e46db`, v0.4.3, `VITE_STEP3=1` (`.env.production`: batch STT, Step 2 on), installed from Me → Beta tester.
+
+| Test | Result |
+|---|---|
+| Step 3 soak (two-person conversation) | **Works, but too slow.** A hint appears **~3-4 s after "umm"**, and "detects more 3-4 s later" (to clarify: a second hint, or the hint changing). No helped / false / missed tally was recorded. |
+| Step 1 | **Not as expected.** After a wrong answer the tester saw "incorrect, try again" and then the **next item**. Expected: "try again" → picture → wait → `c _ p` → full word. |
+| T-208 latency tally, T-209 ladder | Not reported separately |
+
+### 1. Why Step 3 takes 3-4 s (from the code, not guessed)
+
+| Stage | Setting | Time |
+|---|---|---|
+| Stall detector: silence after the last word | `minSilenceMs` 1500 (Balanced; Eager 900, Calm 2500) | 1.5 s |
+| Batch STT closes the chunk and transcribes it (overlaps the above) | `segmentSilenceMs` 800 + upload/transcribe | ~1.2-1.8 s |
+| Prediction: usually a live call, because prefetch is throttled to 1 per 5 s on the free tier (D11) | timeout 1.5 s | ~1-1.5 s |
+| Render over BLE | | ~0.2 s |
+| **Total** | | **~2.7-3.5 s** (matches the device) |
+
+A stall can't be told apart from a normal pause without ~1-1.5 s of silence (T-007), so **~1.5-2 s is the realistic floor** with the current architecture. Levers, cheapest first:
+1. **Eager sensitivity** (`minSilenceMs` 900): ~0.6 s faster, more false hints. Try it on the device now (phone Home card); no code change.
+2. **`segmentSilenceMs` 800 → ~500** (T-208 option 3): the final lands ~0.3 s sooner.
+3. **Prefetch on every final** so the hint is a cache hit (~1 s saved). This needs **Gemini billing (Tier 1)**: on the free 15/min the throttle (D11) can't prefetch more often. Team decision (cost).
+4. **Realtime STT** (`wss://`), blocked by the Even app (G2). Ask Even (sponsor table / Discord) whether packaged apps can open `wss://`; it would save another ~1 s.
+
+### 2. Speakers: the system can't tell who is talking
+**Today the transcript mixes both people.** The glasses mic hears the partner too, and nothing labels who said what. So Step 3 can treat the partner's pause or "um" as the user's stall, and the prediction context includes the partner's words without knowing they're the partner's. This is likely the biggest accuracy issue. Options:
+- **Loudness**: the wearer's voice is much louder on the glasses mic than a partner ~1 m away. Tag each chunk by its energy level and only let stalls fire on the wearer's speech. Cheap; uses the existing VAD energy. Needs a calibration check on the device.
+- **ElevenLabs diarization** (`diarize=true` on batch Scribe gives a speaker label per word). Not tested in S-1; adds latency, and the labels are arbitrary ("speaker 0/1") without loudness to say which one is the wearer.
+
+### 3. A "pipeline inspector" page (requested)
+A debug view that shows **what the backend is doing, live**, so we can measure accuracy instead of guessing:
+- every transcript chunk with its **times** (speech end → transcript arrived) and **speaker** (wearer / other, once section 2 exists);
+- the **stall detector's** decision per pause (silence length, ending type, fired or not, and why: cooldown, rate cap, paused);
+- the exact **context sent to the predictor** (`transcriptTail`, `stalledAfter`) and the **suggestions back**, with model vs bank fallback and ms;
+- **per-hint timing**: "um" → hint on the glasses, split by stage (the table in section 1, measured);
+- Step 1 attempts: what was heard, the match score, and why it moved on.
+
+Where: a **Debug tab on the phone companion page** (it runs on the device, so it sees real data), fed by a small in-memory event log behind the `log` function `src/main.ts` already passes everywhere. An "Export" button copies the session as JSON for analysis. No audio stored.
+
+### 4. Step 1: the requested behavior is already the coded behavior
+`src/modes/step1/index.ts`: after a wrong answer it shows × for 1.2 s, **escalates one cue and listens again** (picture → `c_p` → word). It only moves to the next item after **3 wrong answers at the full word**, or **silence at the full word**. Likely explanations for what the tester saw:
+- **No picture for that word**: the ladder skips straight from L0 to `c_p` (it may have looked like a new item);
+- **Background speech counted as attempts**: the partner talking, or the user continuing, produces quick "wrong" utterances that burn through the cues in seconds (same root cause as section 2);
+- the × screen shows **what was heard** (`× <heard text>`), which can look like a new word.
+
+Fix direction (LOGIC): only count an utterance as an attempt if it's the **wearer** (section 2) and longer than ~300 ms; hold the cue on screen longer before listening again; keep "× Try again" text-only. **Confirm with the inspector (section 3) first.**
+
+### 5. Step 2 vs Step 3: merge in the launcher, not in the code
+Step 3 **is** Step 2 plus an automatic tap: `src/modes/step3` creates a Step 2 inside itself, sends it a virtual tap when the stall detector fires, and manual taps still work. So Step 2 is a strict subset of Step 3.
+
+**Safe plan, with no mode code touched:**
+1. **Hide Step 2 from the launcher**: set `VITE_STEP2=0` with `VITE_STEP3=1` in `.env.production` (ORCH). Step 3 forces Step 2 on internally, so it keeps working.
+2. **Rename in the launcher**: "Practice" (Step 1) and "Conversation" (Step 3, which hints automatically and also on tap). A label change in `src/glasses/shell.ts` (GLASS) and the phone Home card (UI).
+3. **Keep `src/modes/step2/` as it is**: Step 3 runs on it. Deleting or reshaping it is what would break Step 3. Tests on both stay.
+
+The risk is only the launcher text and a flag. Step 1's and Step 3's code paths are unchanged.
+
+### Proposed task set (ORCH to confirm owners and order)
+
+| Task | What | Lane | Risk |
+|---|---|---|---|
+| R-1 | **Pipeline inspector**: in-memory event log + phone Debug tab + JSON export | ORCH (log hook in `main.ts`) + UI (tab) + GLASS/AI (emit events) | Low: read-only |
+| R-2 | **Speaker tagging by loudness**: label chunks wearer/other; stalls and Step 1 attempts only from the wearer | AI (`src/audio`, stall) | Medium: needs device calibration via R-1 |
+| R-3 | **Latency levers**: device-test Eager; `segmentSilenceMs` 500; decide on Gemini billing for un-throttled prefetch | AI + ORCH decision | Low |
+| R-4 | **Ask Even about `wss://`** from packaged apps | ORCH / anyone at the sponsor table | None |
+| R-5 | **Step 1 attempt filtering** (wearer-only, ≥300 ms) + clearer cue hold | LOGIC | Low, after R-1 confirms the cause |
+| R-6 | **Launcher: Practice + Conversation** (hide Step 2, rename) | ORCH (flag) + GLASS (shell label) + UI (Home card) | Low |
+| R-7 | **End-to-end UX review**: Claude runs every flow in the simulator against the conversation fixtures, plus a device pass, and writes a prioritized UX report; each fix becomes a card | GLASS (Claude) | None: review only |
+
+Order suggestion: **R-1 first** (it measures everything else), R-6 and R-3/R-4 in parallel, then R-2 and R-5 with R-1's data, R-7 last before the demo freeze.
