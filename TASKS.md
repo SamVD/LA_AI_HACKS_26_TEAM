@@ -1,6 +1,6 @@
 # Nudge Task Board
 
-_Last updated: Sat Oct 17, 2026 (about H9:15) by ORCH. Decisions D1-D12: `PLAN.md` Section 13. Contracts: CONTRACT_VERSION 2 (`src/core/types.ts`, `docs/CONTRACTS.md`). Phase 1 builder prompts: `docs/prompts/phase1-builder-prompts.md`._
+_Last updated: Sat Oct 17, 2026 (about H9:15) by ORCH. Decisions D1-D13: `PLAN.md` Section 13. Contracts: CONTRACT_VERSION 2 (`src/core/types.ts`, `docs/CONTRACTS.md`). Phase 1 builder prompts: `docs/prompts/phase1-builder-prompts.md`._
 
 Single source of truth for who is doing what. Read `PLAN.md` first for architecture, contracts, ownership, and git rules.
 
@@ -11,9 +11,9 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 **Device testing (all lanes):** QR prototype mode is broken on Even's side, so the glasses only run **packaged Beta builds** (pack → upload at hub.evenrealities.com → Me → Beta tester; a few minutes per cycle). Iterate in the simulator and batch device checks. The workflow, including how to pack a spike page on its own, is in `README.md` → "Run on the real G2". Gate flags are set at pack time with `VITE_STEP2=1` / `VITE_STEP3=1` (`docs/G2_SMOKE.md`).
 
 **Queue by lane (now):**
-- GLASS: S-3 is merged. Next: **T-101 now (critical path)**. Fit the S-3 0.1.2 rerun (5-minute lock, SDK storage timing) into a device cycle when convenient.
+- GLASS: T-101 is approved; delete `src/mocks/startup.test.ts` (grant added), wire the T-106 store and images, and push to turn CI green. Then the real-G2 gallery run (every layout, a mode, back, exit, 5-minute lock, pictures, storage).
 - AI: S-1 and S-2 are merged. Next: **T-104 now (critical path for Step 1)**, with the `api/` hosting (Vercel + ElevenLabs and Gemini keys) set up first. Then T-203 (`api/predict`, sharing that hosting).
-- LOGIC (Codex): T-103, T-106 and T-007 are merged. Next: **T-102 Step 1 mode now (critical path)**, then the T-106 store follow-up (small), then **T-201** (predictor + throttle), then T-205. Small fixture fix: eval-04 should accept "Sunrise Clinic" (S-2).
+- LOGIC (Codex): T-103, T-106 (+ store fix), T-007, T-201 part 1 and T-206 are merged. Next: **T-102 Step 1 mode (critical path)**, then **T-201 part 2** (fallback v2 + throttle), then T-205. Small fixture fix: eval-04 should accept "Sunrise Clinic".
 - UI (Cursor): T-206 (PR #24) needs two fixes (personal-word frames, unique ids) and a retarget to `integration`; see the review.
 
 **Global rules for every task (also repeated in the builder prompt):**
@@ -170,7 +170,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ### T-101 Glasses renderer, input mapper, cue ladder, lifecycle
 - **Owner:** GLASS
-- **Status:** READY
+- **Status:** IN_REVIEW (PR #29, approved). CI is red only because `src/mocks/startup.test.ts` still tests the replaced hello screen; `glass/renderer` now has a branch grant to delete it. Sarah: rebase, `git rm src/mocks/startup.test.ts`, wire `createStore` + `getImage` (T-106 merged), push. Then the real-G2 gallery run.
 - **Branch:** `glass/renderer`
 - **Depends on:** T-001, T-002, T-003
 - **Files it may EDIT:** `src/glasses/**` (excluding `src/glasses/imu/`), `src/main.ts` (branch grant for `glass/renderer`)
@@ -234,7 +234,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ### T-106 Picture and mouth-shape assets, store
 - **Owner:** LOGIC (Codex)
-- **Status:** MERGED (PR #22). All 40 assets verified rendering as PNGs at exact container sizes in a browser. **Follow-up (small PR, before T-206 merges):** `load()` must filter out invalid stored entries instead of dropping the whole list (otherwise one malformed entry wipes all personal words on the next write). Add a test.
+- **Status:** MERGED (PR #22), plus the store-recovery follow-up (PR #28). All 40 assets render as PNGs at exact sizes.
 - **Branch:** `logic/assets-store`
 - **Depends on:** T-002 (reads `docs/DISPLAY_LIMITS.md`), T-004
 - **Files it may EDIT:** `src/content/assets/**`, `src/content/index.ts`, `src/content/*.test.ts`, `src/store/**`, `scripts/make-assets.*` (not needed: SVG assets are rasterized at runtime in the WebView; see the Phase 1 builder prompt)
@@ -256,7 +256,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ### T-201 Predictor implementation
 - **Owner:** LOGIC (Codex)
-- **Status:** READY (S-2 merged). After T-102 in the LOGIC queue.
+- **Status:** PART 1 MERGED (PR #31): `createPredictor` (api/predict client, Section 6 validation, v1 fallback, eval script). **Part 2 READY, after T-102** (branch `logic/predictor-v2`): fallback v2 (§7, R0-R4) and the throttle (§10, D11), per the PR #31 review. `dropSamples` default stays false (D13).
 - **Branch:** `logic/predictor`
 - **Depends on:** T-001 (`PREDICTOR_PROMPT.md`), S-2, T-004. Develop against `MockPredictor` and a stubbed fetch until T-203's proxy merges; do not wait on it.
 - **Files it may EDIT:** `src/ai/predictor/**`, `scripts/eval-predictor.*`
@@ -314,7 +314,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ### T-206 Companion v2: personal word bank and debug panel
 - **Owner:** UI (Cursor)
-- **Status:** CHANGES_REQUESTED (PR #24): default `frames: []` for personal words, with an optional validated practice sentence; unique ids (non-Latin names collapsed to `p-word`, and `p-maya` collides with the builtin sample); retarget to `integration`.
+- **Status:** MERGED (PR #24): personal-word form (no practice sentence by default, optional validated one), unique ids, Debug tab (dev only until the shell exposes transcripts and suggestions), preview images.
 - **Branch:** `ui/companion-v2`
 - **Depends on:** T-105, T-106
 - **Files it may EDIT:** `src/phone/**` *(this task owns `src/phone/` for the duration of Phase 2; T-105 must be merged first)*
@@ -432,6 +432,7 @@ No new features after H18. Only fixes, packaging, polish, and the story.
 - H7: T-004 fixtures merged (PR #9). Follow-up filed as T-007.
 - H7: T-006 design tokens and glasses layouts merged (PR #7, after one round of changes).
 - H7: T-002 device checks done (PR #13, `docs/BETA_RESULTS.md`). QR prototype mode is broken on Even's side, so device testing uses packaged Beta builds; README and `docs/G2_SMOKE.md` updated.
+- H9: T-106 store recovery (PR #28), T-206 companion v2 (PR #24) and T-201 part 1 (PR #31) merged. T-101 (PR #29) approved, waiting on the startup-test deletion (grant added) to go green. `index.html` `#app` placeholder removed. D13 (`dropSamples` false).
 - H9: S-2 Gemini spike merged (PR #26). `PREDICTOR_PROMPT.md` is now **v2**; D11 (model, few-shot, free-tier throttle) and D12 (fallback v2). T-201 READY; T-203 and T-204 updated.
 - H9: T-103 matcher (PR #21), T-106 assets and store (PR #22) and T-007 fixtures (PR #23) merged. **T-102 READY.** T-206 (PR #24) changes requested.
 - H9: S-3 device spike merged (PR #20). Decisions D7-D10 (glasses mic, visibilitychange lifecycle, up/down tilt, `app.json` 0.2.0). T-104 READY. T-101 prompt corrected.
