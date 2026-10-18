@@ -149,7 +149,7 @@ Legend: ✅ merged · 🟡 in progress / review · ⬜ todo · 🚦 gate.
 | T-401 | Judge demo (in-companion Demo tab) | UI | ✅ | #40, #44, #47 |
 | T-402 | Beta final + lifecycle tests | GLASS | ⬜ | — |
 | T-403 | Paper design polish | UI | 🟡 partly done (tagline, focus rings, contrast, Devpost asset index, Home copy, preview captions, Words asset hint, Step 3 demo); #80 needs a rebase | #41→#44, #47, #64, #69, #71, #83, #80 |
-| T-404 | Devpost + demo script | ORCH | ⬜ | — |
+| T-404 | Devpost + demo script | ORCH (drafted by juannli) | 🟡 drafts merged (#113) + ORCH fact-check fixes; **[FILL]**s wait on the G3 re-run, final build, links and names | #113 |
 | T-405 | Final audit + submission | ORCH | ⬜ | — |
 
 ORCH infrastructure PRs: #2, #5, #6, #10, #12, #14, #15, #16, #19, #25, #27, #30, #32, #35, #37, #39, #42, #45, #46, #54, #55, plus this update.
@@ -237,6 +237,7 @@ There are no console logs on the device. Use the phone companion's **Preview** t
 
 | When | Change |
 |---|---|
+| Sun 6:30 AM | T-404 drafts merged (#113, `docs/DEVPOST.md`, `docs/DEMO_SCRIPT.md`); ORCH fact-check fixes applied (T-314 not built, SVG preview, v3 gallery, 55 pictures, D16 mic advice, `c_p`, 797 tests) |
 | Sun 6:20 AM | Merged #110 (Step 3 title Conversation), #109 (launcher titles; Step 2 hidden when Step 3 is on), #108 (Debug tab via `VITE_DEBUG=1`). #111 held for decision B. Repo is public: history scanned, no secrets |
 | Sun 6:05 AM | Merged #105 (T-313, after the match-first fix). Left: T-312 launcher label + Step 3 title, then the G3 re-run on 0.4.4 |
 | Sun 6:00 AM (H18) | Merged #103 (T-315 export + T-312 phone Home) and #104 (T-311 early stall prediction; juannli took it while Sam slept). `app.json` → 0.4.4. ~45 min behind plan: G3 re-run now, decide ~6:45, freeze 7:00-7:15 |
