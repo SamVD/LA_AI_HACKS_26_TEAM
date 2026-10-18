@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { PredictRequest, PredictorService, Screen, Suggestion } from '../../core/types'
+import type { PredictRequest, PredictorService, Screen, SpeechState, SttService, Suggestion, Transcript } from '../../core/types'
 import { MockStt, MockUI, createMockContext, type ConversationFixture } from '../../mocks'
+import { layoutScreen } from '../../glasses/layout'
 import { createStep2 } from './index'
 import { buildRequest } from './request'
 import { createThrottledPredictor } from '../../ai/predictor'
@@ -109,12 +110,35 @@ describe('Step 2 ladder and gestures', () => {
     await mode.exit()
   })
 
-  it('suggestions get a mouth shape and, for bank words, a picture', async () => {
-    const { last, mode } = await helpShown()
-    const screen = last()
+  it('suggestions carry no picture or mouth shape (letters only, CONTRACT_VERSION 3)', async () => {
+    const env = setup({ predictor: { predict: async () => [
+      { word: 'cup', confidence: 0.9, source: 'bank', imageKey: 'cup', mouthKey: 'mouth:back' },
+      { word: 'mug', confidence: 0.5, source: 'bank' },
+    ] } })
+    await env.mode.enter(env.ctx)
+    env.ui.emit('SELECT'); await tick(0)
+    const screen = env.last()
     if (screen.kind !== 'candidates') throw new Error('expected candidates')
-    expect(screen.items[0].mouthKey).toMatch(/^mouth:/)
-    await mode.exit()
+    for (const item of screen.items) {
+      expect(item.imageKey).toBeUndefined()
+      expect(item.mouthKey).toBeUndefined()
+    }
+    await env.mode.exit()
+  })
+
+  it('on the glasses: tap → s _ _ _ _, tap → s u n _ _, tap → sunny; swipe → next word at the first letter', async () => {
+    const env = setup({ predictor: { predict: async () => suggest('sunny', 'warm') } })
+    await env.mode.enter(env.ctx)
+    const shown = () => layoutScreen(env.last()).texts.map(t => t.content)
+    env.ui.emit('SELECT'); await tick(0)
+    expect(shown()).toEqual(['s _ _ _ _', '1/2'])
+    env.ui.emit('SELECT'); await tick(0)
+    expect(shown()).toEqual(['s u n _ _', '1/2'])
+    env.ui.emit('SELECT'); await tick(0)
+    expect(shown()).toEqual(['sunny', '1/2'])
+    env.ui.emit('NEXT'); await tick(0)
+    expect(shown()).toEqual(['w _ _ _', '2/2'])
+    await env.mode.exit()
   })
 
   it('auto-dismisses after the timeout, counted from the last gesture', async () => {
@@ -230,3 +254,98 @@ describe('request and throttle', () => {
     t.stop()
   })
 })
+
+// T-208: with batch STT (D17) a tap ends the segment being spoken (stt.flush) so the
+// request includes the words just said, waiting at most ~1.2 s.
+describe('Step 2 flush on a help tap (T-208)', () => {
+  /** A rolling STT whose flush() emits the segment the user was still speaking. */
+  class FlushingStt implements SttService {
+    private subs = new Set<(t: Transcript) => void>()
+    speaking = 'After breakfast I take my, um, my'
+    flushDelayMs = 300 // Scribe on the trimmed segment
+    flushes = 0
+    async start() {}
+    async stop() {}
+    onTranscript(cb: (t: Transcript) => void) { this.subs.add(cb); return () => { this.subs.delete(cb) } }
+    onSpeechState(_cb: (s: SpeechState) => void) { return () => {} }
+    async transcribeUtterance(): Promise<Transcript> { return { text: '', isFinal: true, tStartMs: 0, tEndMs: 0, error: 'no-speech' } }
+    emit(text: string) { for (const cb of [...this.subs]) cb({ text, isFinal: true, tStartMs: Date.now() - 1000, tEndMs: Date.now() }) }
+    flush = vi.fn(() => {
+      this.flushes++
+      return new Promise<void>(resolve => setTimeout(() => { this.emit(this.speaking); resolve() }, this.flushDelayMs))
+    })
+  }
+
+  function flushSetup(stt = new FlushingStt()) {
+    const ui = new MockUI()
+    const leave = vi.fn()
+    const predictor = slowPredictor({ 'take my, um, my': suggest('lisinopril', 'metformin') }, 400)
+    const ctx = createMockContext({
+      ui, stt, leave, now: Date.now, predictor,
+      flags: { step2Enabled: true, step3Enabled: false, imuEnabled: false, mockServices: true },
+    })
+    const mode = createStep2()
+    return { ui, ctx, mode, stt, predictor, leave, last: () => ui.last() as Screen, logs: (e: string) => ctx.logs.filter(l => l.event === e) }
+  }
+
+  it('a tap right after a hesitation includes the words just spoken', async () => {
+    const { ui, ctx, mode, stt, predictor, last } = flushSetup()
+    await mode.enter(ctx)
+    stt.emit('Breakfast is finished.')
+    await tick(2000) // the user keeps talking: "...take my, um, my" is still being recorded
+    const tapAt = Date.now()
+    ui.emit('SELECT')
+    while (last().kind !== 'candidates' && Date.now() - tapAt < 3000) await tick(10)
+    expect(stt.flushes).toBe(1)
+    const screen = last()
+    expect(screen.kind).toBe('candidates')
+    if (screen.kind === 'candidates') expect(screen.items.map(i => i.word)).toEqual(['lisinopril', 'metformin'])
+    expect(predictor.calls.at(-1)?.stalledAfter).toBe('take my, um, my')
+    expect(Date.now() - tapAt).toBeLessThan(1000) // ~300 ms flush + ~400 ms model
+    await mode.exit()
+  })
+
+  it('waits at most ~1.2 s for the flush, then answers from what it has', async () => {
+    const stt = new FlushingStt()
+    stt.flushDelayMs = 5000 // a stuck transcription
+    const { ui, ctx, mode, last, logs } = flushSetup(stt)
+    await mode.enter(ctx)
+    const tapAt = Date.now()
+    ui.emit('SELECT')
+    await tick(1150)
+    expect(last()).toEqual({ kind: 'blank' }) // still waiting
+    await tick(100)
+    expect((logs('step2 flush').at(-1)?.data as { ms: number }).ms).toBeGreaterThanOrEqual(1200)
+    await tick(500) // the model answers (nothing for an empty transcript): the user gets the usual status
+    expect(last()).toEqual({ kind: 'status', text: 'No suggestion yet' })
+    expect(Date.now() - tapAt).toBeLessThan(2000)
+    await mode.exit()
+  })
+
+  it('skips the flush when a final arrived in the last 300 ms', async () => {
+    const { ui, ctx, mode, stt } = flushSetup()
+    await mode.enter(ctx)
+    stt.emit('After breakfast I take my, um, my')
+    await tick(100)
+    ui.emit('SELECT')
+    await tick(600)
+    expect(stt.flushes).toBe(0)
+    await mode.exit()
+  })
+
+  it('a BACK during the flush cancels the tap: nothing pops up and no lookup is spent', async () => {
+    const { ui, ctx, mode, last, leave, logs } = flushSetup()
+    await mode.enter(ctx)
+    ui.emit('SELECT')
+    await tick(100)
+    ui.emit('BACK') // Step 2 is "loading": BACK hides
+    await tick(2000)
+    expect(last()).toEqual({ kind: 'blank' })
+    expect(leave).not.toHaveBeenCalled()
+    // The cancelled tap stops right after the flush: no help lookup (Gemini's free tier is 15/min, D11).
+    expect(logs('step2 flush')).toEqual([])
+    expect(logs('step2 help')).toEqual([])
+    await mode.exit()
+  })
+})
+

@@ -96,9 +96,20 @@ describe('layoutScreen content', () => {
     const cue: Screen = { kind: 'cue', level: 1, word: 'cup', imageKey: 'cup', sentence: 'You drink from a ____.' }
     expect(layoutScreen(cue, { images: true }).images).toEqual([expect.objectContaining({ imageKey: 'cup', w: 200, h: 120 })])
     expect(layoutScreen(cue, { images: false }).images).toEqual([])
-    const cand = layoutScreen({ kind: 'candidates', items, index: 0, level: 1 }, { images: true })
-    expect(cand.images[0].imageKey).toBe('open') // mouthKey wins in Steps 2-3
-    expect(allContent(cand)).toContain('1/2')
+  })
+
+  it('candidates are letters-first with no picture or mouth shape (CONTRACT_VERSION 3)', () => {
+    for (const level of [1, 2, 3] as const) {
+      const page = layoutScreen({ kind: 'candidates', items, index: 0, level }, { images: true })
+      expect(page.images).toEqual([]) // items[0] has both imageKey and mouthKey
+      expect(page.texts.map(t => t.content)).toEqual([['c _ _', 'c u _', 'cup'][level - 1], '1/2'])
+    }
+  })
+
+  it('sunny: tap → s _ _ _ _, tap → s u n _ _, tap → sunny', () => {
+    const sunny = [{ word: 'sunny', confidence: 0.9, source: 'model' as const }]
+    expect([1, 2, 3].map(level => allContent(layoutScreen({ kind: 'candidates', items: sunny, index: 0, level: level as 1 | 2 | 3 }))))
+      .toEqual(['s _ _ _ _\n1/1', 's u n _ _\n1/1', 'sunny\n1/1'])
   })
 
   it('feedback uses √ / × and words', () => {

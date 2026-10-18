@@ -2,19 +2,19 @@
 
 The orchestrator's single snapshot of where Nudge stands. **ORCH updates this after every gate (G1, G2, G3, final) and after any merge that changes a gate's readiness.** Detailed task cards live in `TASKS.md`, decisions in `PLAN.md` §13, contracts in `docs/CONTRACTS.md`.
 
-_Last updated: **Sun Oct 18, 2026, 12:20 AM PT (hackathon hour ~H13 of 24)** by ORCH (aaravj9). **G1 and G2 PASSED. `main` = `v0.2-step2` = `ae2294d`.** CONTRACT_VERSION 3._
+_Last updated: **Sun Oct 18, 2026, 12:50 AM PT (hackathon hour ~H13:50 of 24)** by ORCH (aaravj9). **G1 and G2 PASSED. `main` = `v0.2-step2` = `ae2294d`. G3 READY TO RUN from `a34bc50` (0.4.3).**_
 
 ## Snapshot
 
 | Item | Value |
 |---|---|
-| `integration` | after #80, #89, #90, #91 (gate) and this PR (contract v3, T-208/T-209/T-210). typecheck, build, 754 tests |
+| `integration` | **`a34bc50`** after #98 (T-209 part 2) + this PR. typecheck, build, **776 tests**. `VITE_STEP3=1 npm run pack` verified (0.4.3, batch + Step 2 + Step 3 in the bundle) |
 | `main` | **`ae2294d`** (fast-forwarded at G2: the tested 0.4.2 code + D17 + D18; a plain `npm run pack` reproduces it byte-for-byte) |
 | Tags | `v0.1-step1` → `4b13180` (G1); **`v0.2-step2` → `ae2294d`** (G2). Next: `v0.3-step3` at G3 |
-| `app.json` version | **0.4.2** = the G2 build. **Next upload: 0.4.3 or higher** (D10); ORCH bumps it before the G3 pack |
+| `app.json` version | **0.4.3** for the next upload (the G3 pack, with T-208 + T-209). 0.4.2 = the G2 build (D10) |
 | Contracts | **`CONTRACT_VERSION 3`**: `SttService.flush?()` (T-208) and letters-first `candidates` levels (T-209). All lanes: merge `integration` |
 | Production `api/` | `https://nudge-seven-psi.vercel.app`, redeployed by Sam with the WebView origin. At 10:54 PM: `127.0.0.1:<any port>` preflight 204, **but `null` and `file://` also 204, so it's looser than intended**; tighten after #61 (see blockers) |
-| Open PRs | #88 (juannli): superseded by #80 except for a comment; rebase or close |
+| Open PRs | #93 (T-210, juannli): changes requested, still not using `revealWord` (preview only; not needed for G3); #88 (juannli): rebase or close |
 | Open issues | none (#73 closed by #76) |
 
 ## Gates
@@ -23,7 +23,7 @@ _Last updated: **Sun Oct 18, 2026, 12:20 AM PT (hackathon hour ~H13 of 24)** by 
 |---|---|---|---|
 | **G1: Step 1 on the real G2** | Practice: 10 prompts, cue ladder, √/× feedback, lock/resume, mic denial, exit | ✅ **PASSED (H11:15, #68)**: real speech graded on the G2; lock, exit, B5, B6 pass; A4 accepted via unit tests (D16). Tagged `v0.1-step1` | Done. A3/A5/A7 carried to G2 |
 | **G2: Step 2 in a live conversation** | Help tap → good suggestion in ≤ ~1.5 s on most attempts; Step 1 regression | ✅ **PASSED on function (H13, D18, #90/#91)**: 0.4.2 batch followed the conversation ("warm and um um" → "sunny"); Step 1 + T-108 clean. **Latency not demonstrated** (the tester said 2-3 s) | Tagged `v0.2-step2`. Latency → **T-208**; ladder request → **T-209/T-210** |
-| **G3: Step 3 ambient hints** | Auto-hints after a stall, no false-hint spam in a 10-minute soak | **Code complete** (H12:10): T-301 (#75, #85), T-302 (#78), T-303, T-304 (#82, #83) merged; companion Pause/Sensitivity wired into the detector (this PR). **Ready to run after G2**: pack from `integration` with `VITE_STEP3=1`, 0.4.3+ | After G2. Ships flag-off unless it passes (PLAN §2) |
+| **G3: Step 3 ambient hints** | Auto-hints after a stall, no false-hint spam in a 10-minute soak | **READY TO RUN** (0.4.3 from `a34bc50`, `VITE_STEP3=1`): Step 3 + T-208 flush + T-209 letters-first | Sarah + a second person: TASKS T-306 runbook (latency tally, ladder check, 10-min soak). Ships flag-off unless it passes (PLAN §2) |
 | **Final** | Beta `.ehpk` + Devpost by **H22 (10 AM Sunday)** | Not started (T-402, T-404, T-405) | Demo assets (T-401) are done |
 
 ## Every task
@@ -57,15 +57,15 @@ Legend: ✅ merged · 🟡 in progress / review · ⬜ todo · 🚦 gate.
 | T-205 | Mouth-shape resolver + 25 pictures | LOGIC (Devin) | ✅ | #62, #70 |
 | T-206 | Companion v2 (personal words, debug) | UI | ✅ (Debug tab dev-only until the shell exposes transcripts) | #24, #36, #48 |
 | T-207 | 🚦 Gate G2 | ORCH + GLASS | ✅ **PASSED** (D18), tagged `v0.2-step2` | #90, #91 |
-| T-208 | Step 2 latency: flush the batch segment on a tap | AI (Sam) | ⬜ READY (grant `ai/flush-on-tap`) | — |
-| T-209 | Letters-first hint ladder (Steps 2-3) | GLASS (Sarah) | ⬜ READY (after T-208 for `step2/index.ts`) | — |
-| T-210 | Phone preview + demo: letters-first | UI (juannli) | ⬜ after T-209 | — |
+| T-208 | Step 2 latency: flush the batch segment on a tap | AI (Sam) | ✅ merged; sim median ≈ 1.49 s tap → candidates; device tally pending (0.4.3) | #96 |
+| T-209 | Letters-first hint ladder (Steps 2-3) | GLASS (Sarah) | ✅ merged; device check in the G3 pack | #95, #98 |
+| T-210 | Phone preview + demo: letters-first | UI (juannli) | 🟡 changes requested again (still a second letters implementation) | #93 |
 | T-301 | Stall detector | AI (Sam) | ✅ 0 false hints on fixtures, recall 11/12; contextual like/thing (#85) | #75, #85 |
 | T-302 | Step 3 mode | AI (Sam) | ✅ merged; swipe pause; key words log-only | #78 |
 | T-303 | Keyword extractor | LOGIC | ✅ | #52 |
 | T-304 | Companion v3 (Step 3 settings, log) | UI | ✅ merged and wired to the detector by ORCH (`src/modes/index.ts` `settingsDetector`). Open nits: hide the card unless Step 3 is on; `eager` without content words | #82, #83 |
 | T-305 | Stretch: head tilt (up/down only, D9) | GLASS | ⬜ only after G2 | — |
-| T-306 | 🚦 Gate G3 | ORCH | ⬜ code complete; runs after G2 | — |
+| T-306 | 🚦 Gate G3 | ORCH + GLASS | **READY TO RUN** (runbook in TASKS) | — |
 | T-401 | Judge demo (in-companion Demo tab) | UI | ✅ | #40, #44, #47 |
 | T-402 | Beta final + lifecycle tests | GLASS | ⬜ | — |
 | T-403 | Paper design polish | UI | 🟡 partly done (tagline, focus rings, contrast, Devpost asset index, Home copy, preview captions, Words asset hint, Step 3 demo); #80 needs a rebase | #41→#44, #47, #64, #69, #71, #83, #80 |
@@ -130,10 +130,10 @@ There are no console logs on the device. Use the phone companion's **Preview** t
 
 | Person | Now | Then |
 |---|---|---|
-| **Sarah (GLASS)** | **T-209** letters-first ladder (`src/glasses/**` first; `step2/index.ts` after T-208 merges) | G3 run (T-306) with a `VITE_STEP3=1` pack at 0.4.3+; optional #89 probe; T-402 final Beta |
-| **Sam (AI)** | **T-208** flush on tap (grant `ai/flush-on-tap`). Turn off Git deploys in Vercel. No `api/` redeploys before the demo | Support G3 (tune `minSilenceMs` from the soak) |
-| **juannli (LOGIC via Devin + UI)** | Rebase or close #88. **T-210** preview + demo letters-first (after T-209) | Final T-403 polish |
-| **Aarav (ORCH)** | Audit T-208/T-209/T-210; bump `app.json` to 0.4.3 for the G3 pack (with T-208/T-209 in if they've landed); run G3 (T-306) | T-404 Devpost + demo script, T-405 final submission |
+| **Sarah (GLASS)** | **Run G3 now** (TASKS T-306): `VITE_STEP3=1 npm run pack` from `integration` ≥ `a34bc50` (0.4.3); latency tally, ladder check, 10-min soak | T-402 final Beta |
+| **Sam (AI)** | T-208 done. Support the G3 run (tune `minSilenceMs` from the soak); turn off Git deploys in Vercel; no `api/` redeploys | T-404 help: Devpost technical section |
+| **juannli (LOGIC via Devin + UI)** | **#93**: switch to `revealWord` (the review is still open); rebase or close #88 | Refresh `15-phone-companion.png` for Devpost; final T-403 polish |
+| **Aarav (ORCH)** | Audit T-209 part 2 and #93; record G3 + the T-208 tally; on a pass, tag `v0.3-step3` | **T-404 Devpost + demo script**, T-405 final submission |
 
 ## Loose ends (non-blocking)
 
@@ -155,6 +155,8 @@ There are no console logs on the device. Use the phone companion's **Preview** t
 
 | When | Change |
 |---|---|
+| Sun 12:50 AM (H13:50) | Merged #98 (T-209 part 2: letters-only suggestions). **G3 ready to run** from `a34bc50` (0.4.3; pack verified). #93 still needs `revealWord` |
+| Sun 12:45 AM (H13:45) | Merged #96 (T-208 flush on tap: sim median ≈ 1.49 s), #95 (T-209 part 1: letters-first on the glasses), #94 (docs). #93 changes requested (one shared `revealWord`). `app.json` → 0.4.3 for the G3 pack |
 | Sun 12:20 AM (H13) | **G2 PASSED** (D18, #91): `main` → `ae2294d`, tag `v0.2-step2`; D17 batch default. CONTRACT_VERSION 3 (`flush?`, letters-first candidates). New: T-208 (Sam), T-209 (Sarah), T-210 (juannli). Merged #80, #89, #90. Blocker #2 reworded: the cause is unconfirmed, and the whitelist entry is correct |
 | Sun 12:10 AM (H12:10) | Merged #85 (AI cleanup: token wedge fix, `stt.no-speech` diagnostics, shared `api/` helpers, not deployed) and #78 (T-302). ORCH wired the companion's Step 3 Pause/Sensitivity into the detector. **G3 code complete** |
 | Sat 11:55 PM (H11:55) | Merged #82 (T-304) and #83 (Step 3 demo); #80 needs a rebase; #78 approved (waiting on ready). D17 approved by aaravj9 for a G2 pass; gate PR staged |
