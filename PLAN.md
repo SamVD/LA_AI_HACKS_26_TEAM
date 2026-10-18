@@ -1,6 +1,6 @@
 # Nudge: Master Plan (Even G2, UCLA AI Hackathon)
 
-_Last updated: Sat Oct 17, 2026, about H8, by ORCH. Decisions taken since the draft are in Section 13._
+_Last updated: Sat Oct 17, 2026, about H9, by ORCH. Decisions taken since the draft are in Section 13._
 
 Nudge is a quiet word-finding aid for people with aphasia, built as an Even Hub app for the Even G2 glasses. It runs as a web app (Vite + TypeScript) inside the Even phone app's WebView. Steps 1-3 are in scope for this hackathon. Steps 4-5 are backlog.
 
@@ -14,8 +14,8 @@ Everything here comes from the Even Hub docs, the LA Hacks Even starter pack, an
 |---|---|
 | G2 apps are web apps (HTML/TS) hosted in a WebView in the Even phone app. | **No native phone app.** The "phone app vs web app" question is settled: it's one web app. |
 | Display is 576x288 per eye, monochrome green. Images are greyscale only. No arbitrary pixel drawing. No camera, no speaker. | All visuals are text plus small greyscale images. Mouth shapes and pictures must be pre-made line art. |
-| Mic: glasses mic or phone mic. Both deliver 16 kHz mono signed 16-bit PCM to the app via `onEvenHubEvent` (`event.audioEvent`). | We own the speech-to-text step. The `asr` template's STT is a placeholder. |
-| IMU gives raw x/y/z only. No head-tilt gesture exists. | Head tilt is derived by us, so it is a stretch task, not core. |
+| Mic: glasses mic or phone mic. Both deliver 16 kHz mono signed 16-bit PCM to the app via `onEvenHubEvent` (`event.audioEvent`). S-3 on the real G2: the glasses mic is cleaner (floor −38 to −42 dBFS, 50 ms chunks) and reliable; the phone mic started 1 time in 3. | We own the speech-to-text step. The `asr` template's STT is a placeholder. **Use the glasses mic (D7).** |
+| IMU gives raw x/y/z only. No head-tilt gesture exists. S-3: ~10 samples/s in g; look up/down separates on x (+0.30 / −0.25 g), left/right did not separate. | Head tilt is derived by us, so it is a stretch task, not core, and up/down only (D9). |
 | Touchpad: click, double-click, swipe up, swipe down, long-press. Long-press can collide with the OS contextual menu. | Core input = click / swipe / double-click. Do not depend on long-press. |
 | One container per page captures events. Root-page double-tap triggers the system exit confirmation. | We need an event-capturing container even when the screen looks blank. Design "Back" around the system exit. |
 | Network calls need manifest permissions AND the API server's CORS config. | Keys and CORS are best handled by a small server-side proxy (see Section 5, `api/`). |
@@ -267,4 +267,8 @@ Not targeted: Sentry, Cognition, StepFun, and the rest. Adding any of them adds 
 | D4 | H8 (S-1) | **`app.json` gets the `network` whitelist when T-104 lands**: `https://api.elevenlabs.io`, `wss://api.elevenlabs.io` (scheme matching to verify on the device), and the hosted `api/` origin, plus the mic permission S-3 picks. ORCH makes this edit. | Packaged builds enforce permissions. The whitelist does not bypass CORS (`docs/vendor/even-skills/build-and-deploy`). |
 | D5 | H8 (S-1) | **Always send `language_code=en`. Drop empty realtime commits. Speech state comes from local VAD.** | Auto-detect returned French, Portuguese, Javanese and Chinese on short English clips. VAD sends an empty commit about every 35 s of silence. STT lags about 1 s. |
 | D6 | H7 | **Device testing uses packaged Beta builds.** | QR prototype mode is broken on Even's side (`docs/BETA_RESULTS.md`). |
+| D7 | H9 (S-3) | **Use the glasses mic only** (`AudioInputSource.Glasses`), and declare only `g2-microphone` in `app.json`. The phone mic is not a default; any fallback to it needs a retry and a timeout. | On the real G2 the glasses mic had a lower noise floor (−38 to −42 vs −30 dBFS), equal or better SNR, and 50 ms chunks. `audioControl(true, Phone)` returned `false` 2 of 3 times, and the one success took >5 s. `spikes/device/FINDINGS.md` §1. |
+| D8 | H9 (S-3) | **Detect lock and background with `document.visibilitychange`.** SDK foreground events are optional extras; don't use `setBackgroundState` / `onBackgroundRestore` (they're not in SDK 0.0.12). On hidden, flush the store; on visible, re-show the last Screen. | With the phone locked, the WebView kept running (no reload, timers fired) and the glasses mic streamed with no gaps over 1 s. `FOREGROUND_EXIT/ENTER` never fired; only `visibilitychange` did. §5. |
+| D9 | H9 (S-3) | **T-305 head tilt is look up / look down only** (→ PREV / NEXT), calibrated on mode entry, with a ±0.15 g dead zone on x. Left/right is out unless a second run separates it. | Up/down was clear on x; tilt left and tilt right both moved y negative. §2. |
+| D10 | H9 (S-3) | **`app.json` version is now 0.2.0.** Every Beta upload under `com.lahacks.nudge` (including spike builds) must use a version higher than the last one uploaded. | The S-3 probe was uploaded as 0.1.2 under Nudge's package ID; the repo was still at 0.1.0. |
 
