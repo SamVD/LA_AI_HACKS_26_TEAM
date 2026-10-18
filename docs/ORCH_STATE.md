@@ -83,7 +83,7 @@ _Last updated: **Sun Oct 18, 2026, 6:00 AM PT (~H18)** by ORCH (aaravj9). **Runn
 
 | Item | Value |
 |---|---|
-| `integration` | after #103 (T-315 + T-312 phone), #104 (T-311) and this PR (0.4.4). typecheck, build, **789 tests** |
+| `integration` | after #105 (T-313) and this PR. typecheck, build, **793 tests**. Ready for the 0.4.4 G3 re-run pack |
 | `main` | **`ae2294d`** (fast-forwarded at G2: the tested 0.4.2 code + D17 + D18; a plain `npm run pack` reproduces it byte-for-byte) |
 | Tags | `v0.1-step1` → `4b13180` (G1); **`v0.2-step2` → `ae2294d`** (G2); **`backup-g3-working` → `34e46db`** (the G3 run-1 build, 0.4.3 + `VITE_STEP3=1`; a backup, **not** a passed gate). Next: `v0.3-step3` on a G3 pass |
 | `app.json` version | **0.4.4** for the G3 re-run upload. 0.4.3 = G3 run 1 (`backup-g3-working`); 0.4.2 = G2 |
@@ -143,7 +143,7 @@ Legend: ✅ merged · 🟡 in progress / review · ⬜ todo · 🚦 gate.
 | T-306 | 🚦 Gate G3 | ORCH + GLASS | **HELD** (run 1: works, too slow); re-run after T-311 | #100 |
 | T-311 | Early stall prediction (latency, free tier) | LOGIC (juannli, reassigned from Sam) | ✅ merged; device numbers from the G3 re-run | #104 |
 | T-312 | Launcher: Practice + Conversation | UI ✅ (phone Home) · GLASS label ⬜ · AI title ⬜ · ORCH flags ⬜ | 🟡 | #103 |
-| T-313 | Step 1 ignores short/background speech | LOGIC (juannli/Devin) | ⬜ READY | — |
+| T-313 | Step 1 ignores short/background speech | LOGIC (juannli/Devin) | ✅ merged: match first (correct answers always count); ignores non-matching speech < 250 ms or `other` | #105 |
 | T-314 | Speaker tagging by loudness (cut-off 5:30) | AI (Sam) | ⬜ after T-311 | — |
 | T-315 | Lean pipeline log export | ORCH ✅ + UI ✅ (Home → Export session log) | ✅ merged. Move the card off Home (Debug tab or `?debug=1`) before the final build | #101, #103 |
 | T-401 | Judge demo (in-companion Demo tab) | UI | ✅ | #40, #44, #47 |
@@ -236,6 +236,7 @@ There are no console logs on the device. Use the phone companion's **Preview** t
 
 | When | Change |
 |---|---|
+| Sun 6:05 AM | Merged #105 (T-313, after the match-first fix). Left: T-312 launcher label + Step 3 title, then the G3 re-run on 0.4.4 |
 | Sun 6:00 AM (H18) | Merged #103 (T-315 export + T-312 phone Home) and #104 (T-311 early stall prediction; juannli took it while Sam slept). `app.json` → 0.4.4. ~45 min behind plan: G3 re-run now, decide ~6:45, freeze 7:00-7:15 |
 | Sun 1:45 AM (H14) | Team break until 3:45. Added **Wake-up plan**: timeline, must/drop priorities, decision points A-C, messages to paste. Freeze moved to **7:00**, T-314 cut-off to **5:30**. Tagged **`backup-g3-working` → `34e46db`** (the G3 run-1 build; backup, not a gate) |
 | Sun 1:30 AM (H14) | **G3 HELD (D19)** after run 1 (#100): works, ~3-4 s per hint. Measured Gemini via Vercel ~1.0 s. Merged #93 (T-210), #100. Plan on the free tier: T-311..T-315 cards; CONTRACT v4 (`speaker?`); T-315 log hook (`src/debug/eventLog.ts`) wired in `main.ts`. Freeze 06:00 |
