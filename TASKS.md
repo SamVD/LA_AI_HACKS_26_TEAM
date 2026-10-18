@@ -1,6 +1,6 @@
 # Nudge Task Board
 
-_Last updated: Sat Oct 17, 2026 (about H7:15) by ORCH. Contracts: CONTRACT_VERSION 2 (`src/core/types.ts`, `docs/CONTRACTS.md`). Phase 1 builder prompts: `docs/prompts/phase1-builder-prompts.md`._
+_Last updated: Sat Oct 17, 2026 (about H7:35) by ORCH. Contracts: CONTRACT_VERSION 2 (`src/core/types.ts`, `docs/CONTRACTS.md`). Phase 1 builder prompts: `docs/prompts/phase1-builder-prompts.md`._
 
 Single source of truth for who is doing what. Read `PLAN.md` first for architecture, contracts, ownership, and git rules.
 
@@ -14,7 +14,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 - GLASS: S-3 via a packaged spike build (**before H8**), the T-003 simulator boot check, then T-101.
 - AI: S-1, then S-2, then T-104 (needs S-1 + S-3).
 - LOGIC (Codex): T-103, then T-106, then T-102, then T-007.
-- UI (Cursor): T-105.
+- UI (Cursor): T-105 is merged. Next: the placeholder-label nit plus dev-page intent buttons (small), then T-206 once T-106 lands.
 
 **Global rules for every task (also repeated in the builder prompt):**
 - Read anything. Edit only the files listed on your card. If you need a change elsewhere, stop and say so in your reply.
@@ -219,7 +219,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ### T-105 Phone companion v1 and Screen preview
 - **Owner:** UI (Cursor)
-- **Status:** READY
+- **Status:** MERGED (PR #11, after two review rounds). `mountCompanion(root, shell)` is ready for T-101 to call from `src/main.ts`. Follow-up nit for the next UI PR: the image placeholder label shows the key (= the word) at cue L1.
 - **Branch:** `ui/companion-v1`
 - **Depends on:** T-003, T-006
 - **Files it may EDIT:** `src/phone/**`
@@ -416,6 +416,7 @@ No new features after H18. Only fixes, packaging, polish, and the story.
 - H7: T-004 fixtures merged (PR #9). Follow-up filed as T-007.
 - H7: T-006 design tokens and glasses layouts merged (PR #7, after one round of changes).
 - H7: T-002 device checks done (PR #13, `docs/BETA_RESULTS.md`). QR prototype mode is broken on Even's side, so device testing uses packaged Beta builds; README and `docs/G2_SMOKE.md` updated.
+- H7: T-105 phone companion merged (PR #11). Cue-ladder rule added to `GLASSES_LAYOUTS.md` (PR #15): the word stays hidden until level 3.
 - H7: CONTRACT_VERSION 2 (additive: `AppShell`, `ModeInfo`, `ModeContext.leave?()`, `GreyImage`, `ImageSource`, `KeyValueStore`). `@evenrealities/pretext@0.1.4` installed. Menu layout corrected to a text container. Phase 1 builder prompts added. **All lanes: rebase on `integration`.**
 
 ---
