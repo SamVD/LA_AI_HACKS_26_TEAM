@@ -1,0 +1,75 @@
+{
+  "at": "2026-10-18T04:24:05.164Z",
+  "rows": [
+    {
+      "clip": "cup",
+      "note": "clean word",
+      "text": "Cup",
+      "error": "",
+      "pass": true,
+      "totalMs": 2731,
+      "speechEndToTextMs": 1228,
+      "sttMs": 326
+    },
+    {
+      "clip": "spoon",
+      "note": "clean word",
+      "text": "Spoon",
+      "error": "",
+      "pass": true,
+      "totalMs": 2846,
+      "speechEndToTextMs": 1193,
+      "sttMs": 289
+    },
+    {
+      "clip": "toothbrush",
+      "note": "two syllables",
+      "text": "Toothbrush",
+      "error": "",
+      "pass": true,
+      "totalMs": 3124,
+      "speechEndToTextMs": 1219,
+      "sttMs": 316
+    },
+    {
+      "clip": "umbrella",
+      "note": "three syllables",
+      "text": "Umbrella",
+      "error": "",
+      "pass": true,
+      "totalMs": 2950,
+      "speechEndToTextMs": 1197,
+      "sttMs": 295
+    },
+    {
+      "clip": "cop",
+      "note": "near miss must NOT become cup (D1)",
+      "text": "Cop",
+      "error": "",
+      "pass": true,
+      "totalMs": 2834,
+      "speechEndToTextMs": 1281,
+      "sttMs": 379
+    },
+    {
+      "clip": "phrase",
+      "note": "word inside a phrase",
+      "text": "It is a cup",
+      "error": "",
+      "pass": true,
+      "totalMs": 3041,
+      "speechEndToTextMs": 1189,
+      "sttMs": 286
+    },
+    {
+      "clip": "silence",
+      "note": "nobody speaks -> no-speech, no API call",
+      "text": "",
+      "error": "no-speech",
+      "pass": true,
+      "totalMs": 8000,
+      "speechEndToTextMs": null,
+      "sttMs": null
+    }
+  ]
+}
