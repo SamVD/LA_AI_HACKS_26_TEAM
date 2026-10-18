@@ -19,8 +19,8 @@ _Source: [LA AI Hackathon 2026 Devpost](https://la-ai-hackathon-2026.devpost.com
 
 ### T-403 polish (companion + story)
 
-- **Calm phone UI** — Tabbed companion (Home / Demo / Preview / …): large type, 56px targets, build-capability strip, mode cards with one-line leads; glasses preview stays secondary until a mode runs.
-- **Caregiver Step 3** — When the pack includes Step 3, Home exposes hint sensitivity and pause without opening the glasses menu; the card disappears entirely in Assist-only builds so judges are not offered dead controls.
+- **Calm phone UI** — Tabbed companion (Home / Demo / Preview / Word Bank): large type, 56px targets, build-capability strip; Home lists **Practice** and **Conversation** only when hints ship (Assist hidden). Preview lead: “Mirrors the glasses.”
+- **Caregiver Conversation** — When the pack includes Step 3, hint sensitivity and pause live under the **Conversation** card on Home (not a separate Step 3 panel); controls stay hidden in Assist-only builds.
 - **Letters-first assist** — Step 2–3 help on the G2 (T-209) and the phone preview (T-210, PR #93) show progressive letter masks instead of mouth shapes or word-bank pictures, matching the “quiet until you need a word” thesis.
 
 ## Deliverables for Paper (T-403)

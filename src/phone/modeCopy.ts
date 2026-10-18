@@ -2,9 +2,10 @@ import type { ModeId } from '../core/types'
 
 /** One calm line per mode on the companion Home tab. */
 export const MODE_HOME_LEAD: Record<ModeId, string> = {
-  step1: 'Practice word-finding on the G2.',
+  step1: 'Name everyday things with gentle letter cues.',
   step2: 'Glasses stay blank in conversation; tap the touchpad when you need a word.',
-  step3: 'Hints appear on their own after a pause; tap anytime for help.',
+  step3:
+    'Talk normally. If you pause on a word, a hint appears on the glasses. Tap anytime for help.',
 }
 
 export function modeDisabledLead(id: ModeId): string {
