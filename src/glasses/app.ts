@@ -40,7 +40,14 @@ export async function startApp(opts: AppOptions) {
   // NEXT/PREV mean other things on the blank, menu and Practice screens.
   const now = opts.now ?? Date.now
   const tilt = opts.flags.imuEnabled ? createTiltDetector() : null
-  tilt && shell.onScreen(screen => { if (screen.kind === 'candidates') tilt.arm(now()); else tilt.disarm() })
+  // Arm only on the transition into `candidates`: re-arming on each redraw would re-take
+  // `rest` from the tilted samples and fire again (NEXT, NEXT, PREV on a single look down).
+  let lastKind: string | null = null
+  tilt && shell.onScreen(screen => {
+    if (screen.kind === 'candidates') { if (lastKind !== 'candidates') tilt.arm(now()) }
+    else tilt.disarm()
+    lastKind = screen.kind
+  })
 
   unsubscribe = opts.hub.onEvent(event => {
     const intent = toIntent(event)

@@ -318,6 +318,29 @@ describe('head tilt (T-305)', () => {
     expect(seen).toEqual(['NEXT', 'PREV'])
   })
 
+  it('a redraw after a tilt does not re-arm: holding the look-down then returning gives one NEXT', async () => {
+    const seen: string[] = []
+    let t = 0
+    const mode: Mode = { ...listeningMode('step1', seen), async enter(c) {
+      c.ui.onIntent(i => { seen.push(i); void c.ui.show({ ...cand }) })
+      await c.ui.show(cand)
+    } }
+    const fake = createFakeHub()
+    const store = new MemoryStore()
+    const allFlags = { step2Enabled: false, step3Enabled: false, mockServices: true, imuEnabled: true }
+    const { shell } = await startApp({
+      hub: fake.hub, modes: { step1: mode, step2: stub('step2'), step3: stub('step3') }, flags: allFlags, store,
+      now: () => (t += 100),
+      makeContext: ({ ui, leave }) => ({ ui, leave, stt: new MockStt(), predictor: new MockPredictor(), store, now: () => 0, log: () => {}, flags: allFlags }),
+    })
+    await shell.startMode('step1')
+    await flush()
+    for (const [x, n] of [[0.03, 10], [-0.25, 18], [0.03, 10]] as const) {
+      for (let i = 0; i < n; i++) { fake.fire(imu(x)); await flush() }
+    }
+    expect(seen).toEqual(['NEXT'])
+  })
+
   it.each([['blank', { kind: 'blank' } as Screen], ['status', { kind: 'status', text: 'x' } as Screen]])(
     'on %s: tilts dispatch nothing', async (_, screen) => {
       const { seen, look } = await tiltBoot(screen, { imuEnabled: true })
