@@ -1,9 +1,11 @@
 import { describe, expect, it, vi } from 'vitest'
-import type { GreyImage, Mode, ModeContext, Screen } from '../core/types'
+import type { GreyImage, Mode, ModeContext, Screen, WordEntry } from '../core/types'
 import { MemoryStore, MockPredictor, MockStt } from '../mocks'
 import { startApp } from './app'
 import { toIntent, toSystemSignal } from './input'
-import { CueLadder, maskWord } from './ladder'
+import { CueLadder, maskWord, revealWord } from './ladder'
+import { layoutScreen } from './layout'
+import words from '../content/words.json'
 import { createBridgeKeyValue } from './storage'
 import { createFakeHub, flush } from './testing'
 import { createGlassesUI } from './ui'
@@ -203,6 +205,42 @@ describe('app shell', () => {
     expect(fake.calls.slice(before).map(c => c.op)).toEqual(['rebuild'])
     await tap({ sysEvent: { eventType: 7 } })
     expect(fake.listenerCount()).toBe(0)
+  })
+})
+
+describe('letters-first reveal (Steps 2-3, CONTRACT_VERSION 3)', () => {
+  const table: Array<[string, string, string, string]> = [
+    // word, level 1, level 2 (first ⌈n/2⌉ letters), level 3
+    ['a', 'a', 'a', 'a'],
+    ['go', 'g _', 'g _', 'go'],
+    ['sunny', 's _ _ _ _', 's u n _ _', 'sunny'],
+    ['umbrella', 'u _ _ _ _ _ _ _', 'u m b r _ _ _ _', 'umbrella'],
+    ['car keys', 'c _ _   _ _ _ _', 'c a r   k _ _ _', 'car keys'],
+    ['Maya', 'M _ _ _', 'M a _ _', 'Maya'],
+    ["o'clock", "o ' _ _ _ _ _", "o ' c l _ _ _", "o'clock"],
+  ]
+  for (const [word, l1, l2, l3] of table) {
+    it(word, () => {
+      expect(revealWord(word, 1)).toBe(l1)
+      expect(revealWord(word, 2)).toBe(l2)
+      expect(revealWord(word, 3)).toBe(l3)
+    })
+  }
+
+  it('collapses extra whitespace and never reveals the word before level 3', () => {
+    expect(revealWord('  car   keys ', 2)).toBe('c a r   k _ _ _')
+    for (const w of ['sunny', 'umbrella', 'car keys', 'Maya']) {
+      expect(revealWord(w, 1).replace(/\s/g, '')).not.toBe(w.replace(/\s/g, ''))
+      expect(revealWord(w, 2).replace(/\s/g, '')).not.toBe(w.replace(/\s/g, ''))
+    }
+  })
+
+  it('every reveal of the longest bank word fits one line of the candidates box', () => {
+    const longest = (words as WordEntry[]).map(w => w.word).reduce((a, b) => (b.length > a.length ? b : a))
+    for (const level of [1, 2, 3] as const) {
+      const page = layoutScreen({ kind: 'candidates', items: [{ word: longest, confidence: 1, source: 'bank' }], index: 0, level })
+      expect(page.texts[0].h, `${longest} L${level}`).toBe(27) // one centered line, so no wrap
+    }
   })
 })
 
