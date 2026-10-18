@@ -293,3 +293,41 @@ Recommendation: **Conversation meets D21** → judge build 0.4.7 with `VITE_STEP
 3. Then re-run this 12-minute check on 0.4.8 (tilt, speaker gate) unchanged.
 
 The speaker gate and tilt are **untested**, not failed.
+
+## 0.4.9 final feature check (Sarah, Sun Oct 18, 10:12-10:17 AM PT)
+
+**Build:** `integration` @ `0cbe4c5`, v0.4.9, `VITE_IMU=1 VITE_SPEAKER_GATE=1 VITE_DEBUG=1` (Step 3 now on by default). ElevenLabs credits restored. Data: one Debug export (127 events, about 4.5 min). The run was shorter than the 10-minute checklist, so counts are what the log shows.
+
+**Main complaint from the tester: hints take too long after "um".**
+
+### Tilt (T-305, T-319)
+| Gesture | Log | Verdict |
+|---|---|---|
+| Sideways (reveal one step) | 4 × `imu.tilt SELECT`, each moved exactly one step (`library` → L2; `Rachel` → L2 → L3; `Rachel` → L2) | Works; 4 tries, not 10 |
+| Down (next suggestion) | 2 × `NEXT`, both on the candidates screen | Works; no `PREV` (look up) tried |
+| Unwanted actions | No tilt fired outside the candidates screen; none logged during talking without a suggestion | No problems seen |
+
+### Speaker gate (T-314)
+**Not testable in this run.** All 21 chunks were tagged `wearer` (-11 to -20 dB). Most chunks were 12-14 s long (`end: max`), with both people's voices merged, so there was no partner-only chunk to gate. The gate needs shorter chunks to see the partner.
+
+### Why hints feel slow (from the log)
+An auto-hint needs three things in a row: the stall detector's silence wait, the transcript of the chunk, and a prediction (unless it was prefetched).
+
+| Hint | Silence wait | Transcript ready | Prediction | "um" → letters |
+|---|---|---|---|---|
+| "I took my dog for a walk in the, um" (auto) | 1.65 s | before the wait ended | **1.74 s** (cold, first call) | **≈ 3.1 s** |
+| "Sister, her name is, um" (auto) | 1.54 s | before the wait ended | prefetched, 0 s | **≈ 1.5 s** |
+| "It's not moving up. Um." (tap) | n/a | 0.63 s to close and transcribe the chunk | 1.07 s | **1.7 s after the tap** |
+| "…a kind of" (tap) | n/a | 1.02 s | 0.89 s | **1.9 s after the tap** |
+
+What makes it slow:
+1. **The silence wait, 1.5 s** (Balanced). Eager (0.9 s) saves about 0.6 s and is a setting in Hint settings: no build needed.
+2. **Long chunks.** 13 of 21 chunks hit the 15 s cap, and their transcription took **1.0-2.5 s** (vs 0.35-0.6 s for short chunks). A tap closes the current chunk and waits for its transcript before predicting, so a long chunk delays the tap path. `segmentSilenceMs` 800 → ~500 and a lower cap (`maxMs` 15 000 → ~6 000, `src/audio/rolling/index.ts:130`) would shorten chunks, speed up STT, and also let the speaker gate see the partner.
+3. **Cold first prediction: 1.74 s** vs ~1.0 s after. A warm-up predict call when Conversation starts would hide it (the checklist's warm-up tap does this by hand).
+4. **Prediction when not prefetched: ~1.0 s.** When the prefetch had already run (the Rachel stall), letters appeared the instant the silence wait ended.
+
+### Recommendation for the judge build
+- Ship tilt (works as designed).
+- Set the default sensitivity to **Eager** if ORCH agrees (−0.6 s on every auto-hint).
+- Speaker gate: keep off or leave it in; it can't hurt, but it isn't proven.
+- Shorter chunks (point 2) is the biggest remaining speed-up but touches `src/audio` (AI lane) and needs one more device test.
