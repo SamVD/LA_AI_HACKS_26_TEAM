@@ -74,6 +74,10 @@
     }
   },
   "branchGrants": {
+    "logic/step1-mode": [
+      "src/glasses/main.test.ts",
+      "src/phone/dev/devShell.test.ts"
+    ],
     "glass/renderer": [
       "src/main.ts",
       "src/mocks/startup.test.ts"

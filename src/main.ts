@@ -1,4 +1,6 @@
 import { waitForEvenAppBridge } from '@evenrealities/even_hub_sdk'
+import { createElevenLabsStt } from './audio'
+import type { SttService } from './core/types'
 import { readFlags } from './config'
 import { builtinBank, getImage } from './content'
 import { createBridgeKeyValue, createHubBridge, startApp } from './glasses'
@@ -22,7 +24,15 @@ const store = createStore(createBridgeKeyValue(hub), builtinBank())
 const gallery = new URLSearchParams(typeof location === 'undefined' ? '' : location.search).has('gallery')
   || (import.meta as ImportMeta & { env?: Record<string, unknown> }).env?.VITE_GALLERY === '1'
 
-// Real STT (T-104) and prediction (T-201) replace these mocks when they are wired.
+// Real STT (T-104): the glasses mic and ElevenLabs batch STT, with single-use tokens
+// from api/stt (set VITE_STT_TOKEN_URL at pack time; see src/audio/index.ts). It is
+// created on the first mode start, after the startup page exists (the glasses mic
+// needs it), and shared across modes. `?svc=mock` keeps the scripted MockStt.
+// Prediction (T-201) is wired with T-201 part 2 and T-203.
+let realStt: SttService | undefined
+const sttForMode = (): SttService =>
+  flags.mockServices ? new MockStt() : (realStt ??= createElevenLabsStt(bridge, { now: Date.now, log }))
+
 const { shell } = await startApp({
   hub,
   modes: gallery ? { ...modes, step1: createGallery() } : modes,
@@ -32,7 +42,7 @@ const { shell } = await startApp({
   makeContext: ({ ui, leave }) => ({
     ui,
     leave,
-    stt: new MockStt(),
+    stt: sttForMode(),
     predictor: new MockPredictor(),
     store,
     now: Date.now,
