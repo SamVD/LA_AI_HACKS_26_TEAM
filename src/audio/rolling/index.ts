@@ -53,6 +53,10 @@ export class RollingStt implements SttService {
   private readonly realtime: RealtimeTranscriber | null
   private running = false
   private loop: Promise<void> | null = null
+  /** Resolves once the batch segment being recorded has been handled (its final emitted, if any). */
+  private segmentDone: Promise<void> | null = null
+  /** Cuts the batch loop's error backoff short, so stop() never waits up to 15 s on it. */
+  private wake: (() => void) | null = null
 
   constructor(private readonly o: RollingSttOptions) {
     this.realtime = (o.mode ?? 'realtime') === 'realtime'
@@ -75,10 +79,25 @@ export class RollingStt implements SttService {
 
   async stop(): Promise<void> {
     this.running = false
+    this.wake?.()
     await this.realtime?.stop()
     await this.o.base.stop() // also cancels a batch utterance in flight
     await this.loop
     this.loop = null
+  }
+
+  /**
+   * T-208 (CONTRACT_VERSION 3): end the batch segment being recorded now and resolve once
+   * its final has gone out through onTranscript, so a help tap includes the words just
+   * spoken instead of waiting for the ~0.8 s pause. Resolves at once when nothing with
+   * speech is buffered, when stopped, and in realtime mode (the server's VAD commits there).
+   * Never rejects; the batch loop keeps running. Callers cap the wait.
+   */
+  async flush(): Promise<void> {
+    if (!this.running || this.realtime) return
+    const done = this.segmentDone
+    if (!done || !this.o.base.endUtterance()) return
+    await done
   }
 
   onTranscript(cb: (t: Transcript) => void) { return this.o.base.onTranscript(cb) }
@@ -88,15 +107,24 @@ export class RollingStt implements SttService {
   private async batchLoop(): Promise<void> {
     let failures = 0
     while (this.running) {
+      let segmentHandled!: () => void
+      this.segmentDone = new Promise<void>(resolve => { segmentHandled = resolve })
       const t = await this.o.base.transcribeUtterance({ maxMs: 15_000, endSilenceMs: this.o.segmentSilenceMs ?? 800 })
-      if (!this.running) return
+      if (!this.running) { segmentHandled(); return }
       if (t.text.trim() && !t.error) {
         failures = 0
         this.o.base.emitTranscript({ ...t, text: t.text.trim(), isFinal: true })
-      } else if (t.error && t.error !== 'no-speech') {
+      }
+      segmentHandled() // before any backoff, so a flush never waits on it
+      if (t.text.trim() && !t.error) continue
+      if (t.error && t.error !== 'no-speech') {
         this.o.log?.('rolling.batch-error', { error: t.error })
         failures++
-        await new Promise(resolve => setTimeout(resolve, Math.min(15_000, 500 * 2 ** (failures - 1))))
+        await new Promise<void>(resolve => {
+          const timer = setTimeout(resolve, Math.min(15_000, 500 * 2 ** (failures - 1)))
+          this.wake = () => { clearTimeout(timer); resolve() }
+        })
+        this.wake = null
       }
     }
   }
