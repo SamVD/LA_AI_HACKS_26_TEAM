@@ -367,7 +367,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ### T-302 Step 3 mode
 - **Owner:** AI
-- **Status:** APPROVED (PR #78). Waiting for Sam to mark it ready, then ORCH merges and wires the companion settings (#82) into the mode.
+- **Status:** MERGED (PR #78). Companion settings wired by ORCH (`src/modes/index.ts`). Device check at G3 (T-306).
 - **Branch:** `ai/step3-mode`
 - **Depends on:** T-301, T-204
 - **Files it may EDIT:** `src/modes/step3/**`
@@ -385,7 +385,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ### T-304 Companion v3: Step 3 settings and session log
 - **Owner:** UI (Cursor)
-- **Status:** MERGED (PRs #82, #83). The card's Pause and Sensitivity buttons reach the glasses only after ORCH wires them (after #78).
+- **Status:** MERGED (PRs #82, #83); Pause and Sensitivity wired to the detector by ORCH. Nits: hide the card unless Step 3 is on; `eager` without content words.
 - **Branch:** `ui/companion-v3`
 - **Depends on:** T-206
 - **Files it may EDIT:** `src/phone/**`
