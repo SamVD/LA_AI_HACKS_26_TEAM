@@ -36,13 +36,29 @@ If port 5173 is busy, run `npx vite --port 5174` and `npx evenhub-simulator http
 
 To script the simulator (screenshots, injected taps, console logs) add `--automation-port 9898`; see `docs/vendor/even-skills/simulator-automation/SKILL.md`.
 
-## Run on the real G2 (QR over LAN)
+## Run on the real G2
 
-1. Laptop and phone on the same Wi-Fi. Venue Wi-Fi often blocks device-to-device traffic; a phone hotspot works.
-2. `npm run dev`
-3. Find your laptop's LAN IP (Windows: `ipconfig`, look for IPv4 Address; macOS: `ipconfig getifaddr en0`).
-4. `npx evenhub qr --url http://<your-ip>:5173`
-5. In the Even app, scan the QR code. The glasses show "Hello Nudge"; edits hot-reload.
+**QR prototype mode does not work right now.** Scanning a dev-server QR code from the Even app never loads the app; the Even sponsor table confirmed this is a known issue on their side (Sat Oct 17). There is no live reload on the glasses. See [`docs/BETA_RESULTS.md`](docs/BETA_RESULTS.md).
+
+Every device test goes through a packaged build:
+
+1. Iterate in the simulator first (`npm run dev` + `npm run simulate`).
+2. `npm run pack` → `nudge.ehpk` (gitignored).
+3. Upload it at [hub.evenrealities.com](https://hub.evenrealities.com) → **My projects**. If the portal rejects a re-upload with the same version, bump `version` in `app.json` (ORCH-owned: say so in your PR, or ask ORCH).
+4. On the phone: Even Realities app → **Me → Beta tester** → install or update Nudge.
+
+A cycle takes a few minutes, so batch your device checks.
+
+**Packaging a spike page** (for example `spikes/device/`) as its own build, with no repo changes:
+
+```bash
+npx vite build spikes/device --config vite.config.ts --outDir "$PWD/dist/spike" --emptyOutDir
+npx evenhub pack app.json dist/spike --sdk-ver 0.0.12 -o spike.ehpk
+```
+
+`--config vite.config.ts` is required (it sets the `esnext` target the SDK's top-level `await` needs). Add any permissions the spike needs (for example `g2-microphone`, `phone-microphone`) to `app.json` **locally only**, because packaged builds enforce them. Uploading a spike build replaces the Nudge Beta app, so re-pack from `integration` afterwards.
+
+If QR mode starts working again: `npm run dev`, then `npx evenhub qr --url http://<LAN-IP>:5173` (macOS: `ipconfig getifaddr en0`; Windows: `ipconfig`), and scan it in the Even app. Venue Wi-Fi often blocks phone-to-laptop traffic; a phone hotspot helps.
 
 ## Package and upload a Beta build
 

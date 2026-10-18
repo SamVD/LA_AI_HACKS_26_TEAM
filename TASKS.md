@@ -1,6 +1,6 @@
 # Nudge Task Board
 
-_Last updated: Sat Oct 17, 2026 (about H7) by ORCH. Contracts: CONTRACT_VERSION 2 (`src/core/types.ts`, `docs/CONTRACTS.md`). Phase 1 builder prompts: `docs/prompts/phase1-builder-prompts.md`._
+_Last updated: Sat Oct 17, 2026 (about H7:15) by ORCH. Contracts: CONTRACT_VERSION 2 (`src/core/types.ts`, `docs/CONTRACTS.md`). Phase 1 builder prompts: `docs/prompts/phase1-builder-prompts.md`._
 
 Single source of truth for who is doing what. Read `PLAN.md` first for architecture, contracts, ownership, and git rules.
 
@@ -8,8 +8,10 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 **Status values:** TODO, READY, IN_PROGRESS, IN_REVIEW, CHANGES_REQUESTED, APPROVED, MERGED, BLOCKED.
 
+**Device testing (all lanes):** QR prototype mode is broken on Even's side, so the glasses only run **packaged Beta builds** (pack → upload at hub.evenrealities.com → Me → Beta tester; a few minutes per cycle). Iterate in the simulator and batch device checks. The workflow, including how to pack a spike page on its own, is in `README.md` → "Run on the real G2". Gate flags are set at pack time with `VITE_STEP2=1` / `VITE_STEP3=1` (`docs/G2_SMOKE.md`).
+
 **Queue by lane (now):**
-- GLASS: T-002 G2 + Beta checks and the T-003 simulator boot check, then S-3 (**all before H8**), then T-101.
+- GLASS: S-3 via a packaged spike build (**before H8**), the T-003 simulator boot check, then T-101.
 - AI: S-1, then S-2, then T-104 (needs S-1 + S-3).
 - LOGIC (Codex): T-103, then T-106, then T-102, then T-007.
 - UI (Cursor): T-105.
@@ -29,7 +31,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ### T-002 Scaffold from the Even minimal template
 - **Owner:** GLASS (Claude Code)
-- **Status:** IN_PROGRESS. Code merged to `integration` (PR #3, audited). Still open: steps 3 and 7 (real G2 via QR, Beta install), plus a simulator boot check of T-003's wiring (`npm run dev` + `npm run simulate`; console shows `[nudge:screen] … step1 not built yet`). **Do these before H8.**
+- **Status:** MERGED. Code in PR #3; device checks in PR #13 (`docs/BETA_RESULTS.md`): the Beta build installs and runs on the real G2 (hello screen, tap, double-tap exit). Step 3 (QR) is **not possible**: an Even-side issue, replaced by the packaged-build loop. The T-003 simulator boot check has moved to the GLASS queue.
 - **Branch:** `glass/scaffold`
 - **Depends on:** none
 - **Files it may EDIT:** repo root config (`package.json`, lockfile, `app.json`, `vite.config.*`, `tsconfig*`, `.gitignore`, `README.md`), `src/main.ts`, `docs/vendor/**`, `docs/DISPLAY_LIMITS.md`. *(These move to ORCH ownership when this task merges.)*
@@ -130,6 +132,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 - **Depends on:** T-002
 - **Spec:** on the real G2: (1) capture 10 seconds from the glasses mic and from the phone mic, save locally for comparison (do not commit audio); report which is cleaner at normal conversation distance; (2) log raw IMU x/y/z during nod left, nod right, look up, look down; (3) confirm an event-capturing container works while nothing is visible (needed for the `blank` Screen); (4) confirm the WebView page is visible on the phone while the glasses render; (5) test lock/resume while the mic is open.
 - **Acceptance criteria:** `spikes/device/FINDINGS.md` answers all five; flag anything that changes `PLAN.md`.
+- **Packaged-build note:** QR doesn't work, so build the spike page as its own `.ehpk` (`npx vite build spikes/device --config vite.config.ts --outDir "$PWD/dist/spike" --emptyOutDir`, then `npx evenhub pack app.json dist/spike --sdk-ver 0.0.12 -o spike.ehpk`). Add `g2-microphone` and `phone-microphone` to `app.json` **locally only** (packaged builds enforce permissions) and report which ones were required. Uploading it replaces the Nudge Beta app; re-pack from `integration` afterwards. Logs: if console output isn't reachable on the device, render the numbers on the glasses or the phone page instead.
 
 ### T-006 Design tokens and glasses layout sketches
 - **Owner:** UI (Cursor)
@@ -179,7 +182,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
   - [ ] The three stub modes from the registry show their status text on the simulator.
   - [ ] Intents arrive correctly from sim input injection.
   - [ ] No text overflows the container on the longest sentence in `words.json`.
-  - [ ] Works on the real G2.
+  - [ ] Works on the real G2, from a packaged Beta build (no QR; see README "Run on the real G2"). Do most work in the simulator and batch the device checks into one or two pack/upload cycles.
 
 ### T-102 Step 1 engine and mode
 - **Owner:** LOGIC (Codex)
@@ -412,6 +415,7 @@ No new features after H18. Only fixes, packaging, polish, and the story.
 - H7: T-003 foundation merged (PR #8): mocks, registry, config, CI, `check-ownership`.
 - H7: T-004 fixtures merged (PR #9). Follow-up filed as T-007.
 - H7: T-006 design tokens and glasses layouts merged (PR #7, after one round of changes).
+- H7: T-002 device checks done (PR #13, `docs/BETA_RESULTS.md`). QR prototype mode is broken on Even's side, so device testing uses packaged Beta builds; README and `docs/G2_SMOKE.md` updated.
 - H7: CONTRACT_VERSION 2 (additive: `AppShell`, `ModeInfo`, `ModeContext.leave?()`, `GreyImage`, `ImageSource`, `KeyValueStore`). `@evenrealities/pretext@0.1.4` installed. Menu layout corrected to a text container. Phase 1 builder prompts added. **All lanes: rebase on `integration`.**
 
 ---

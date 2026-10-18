@@ -1,6 +1,8 @@
 # Phase 0 builder prompts
 
-Copy each block into the named teammate's tool. Each one stands alone. Every builder starts from the latest `integration` (`git fetch && git checkout -b <branch> origin/integration`).
+Copy each block into the named teammate's tool. Each one stands alone.
+
+> **Update (H7):** QR prototype mode is broken on Even's side (`docs/BETA_RESULTS.md`). Wherever a prompt below says `npx evenhub qr`, use a packaged build instead. For S-3, follow the "Packaging a spike page" steps in `README.md` → "Run on the real G2". Every builder starts from the latest `integration` (`git fetch && git checkout -b <branch> origin/integration`).
 
 | Prompt | Lane | Tool | Can start |
 |---|---|---|---|
