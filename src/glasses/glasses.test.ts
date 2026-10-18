@@ -143,15 +143,22 @@ const DOWN = { textEvent: { eventType: 2 } }
 describe('app shell', () => {
   it('boots to the launcher with only enabled modes', async () => {
     const { fake, shell } = await boot()
-    expect(fake.texts()).toEqual(['Nudge\n> Step 1  step1'])
+    expect(fake.texts()).toEqual(['Nudge\n> step1'])
     expect(shell.modes().map(m => m.enabled)).toEqual([true, false, false])
-    expect(shell.lastScreen()).toEqual({ kind: 'menu', title: 'Nudge', items: ['Step 1  step1'], index: 0 })
+    expect(shell.lastScreen()).toEqual({ kind: 'menu', title: 'Nudge', items: ['step1'], index: 0 })
   })
 
   it('flags reveal Step 2 and 3; NEXT moves the marker', async () => {
-    const { fake, tap } = await boot(undefined, { step2Enabled: true, step3Enabled: true })
+    const { fake, tap } = await boot(undefined, { step2Enabled: true, step3Enabled: false })
     await tap(DOWN)
-    expect(fake.texts()).toEqual(['Nudge\n  Step 1  step1\n> Step 2  step2\n  Step 3  step3'])
+    expect(fake.texts()).toEqual(['Nudge\n  step1\n> step2'])
+  })
+
+  it('hides Step 2 from the launcher when Step 3 is enabled (T-312)', async () => {
+    const { fake, shell, tap } = await boot(undefined, { step2Enabled: true, step3Enabled: true })
+    expect(shell.lastScreen()?.items).toEqual(['step1', 'step3'])
+    await tap(DOWN)
+    expect(fake.texts()).toEqual(['Nudge\n  step1\n> step3'])
   })
 
   it('double-click at the launcher opens the exit dialog; inside a stub it returns to the launcher', async () => {

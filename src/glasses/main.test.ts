@@ -52,7 +52,7 @@ it('boots to the launcher, runs Step 1 Practice, returns on double-click and exi
   await import('../main')
 
   expect(mock.bridge.createStartUpPageContainer).toHaveBeenCalledOnce()
-  expect(contentOf(mock.bridge.createStartUpPageContainer.mock.calls[0])).toBe('Nudge\n> Step 1  Practice')
+  expect(contentOf(mock.bridge.createStartUpPageContainer.mock.calls[0])).toBe('Nudge\n> Practice')
   expect(mock.mounted).toHaveBeenCalledWith(app, expect.objectContaining({ startMode: expect.any(Function) }))
 
   mock.listener?.({ audioEvent: {} })
@@ -61,7 +61,7 @@ it('boots to the launcher, runs Step 1 Practice, returns on double-click and exi
   expect(contentOf(mock.bridge.rebuildPageContainer.mock.calls.at(-1)!)).toContain('____')
 
   mock.listener?.({ sysEvent: { eventType: 3 } }) // BACK inside Practice returns to the launcher.
-  await vi.waitFor(() => expect(contentOf(mock.bridge.rebuildPageContainer.mock.calls.at(-1)!)).toBe('Nudge\n> Step 1  Practice'))
+  await vi.waitFor(() => expect(contentOf(mock.bridge.rebuildPageContainer.mock.calls.at(-1)!)).toBe('Nudge\n> Practice'))
   expect(mock.bridge.shutDownPageContainer).not.toHaveBeenCalled()
 
   mock.listener?.({ sysEvent: { eventType: 3 } }) // BACK at the launcher opens the exit dialog.

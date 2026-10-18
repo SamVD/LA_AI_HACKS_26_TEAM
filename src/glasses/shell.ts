@@ -16,7 +16,6 @@ export interface ShellOptions {
 }
 
 const ORDER: ModeId[] = ['step1', 'step2', 'step3']
-const LABEL: Record<ModeId, string> = { step1: 'Step 1', step2: 'Step 2', step3: 'Step 3' }
 
 export function createShell(opts: ShellOptions): AppShell & { showLauncher(): Promise<void> } {
   const log = opts.log ?? (() => {})
@@ -45,8 +44,14 @@ export function createShell(opts: ShellOptions): AppShell & { showLauncher(): Pr
 
   const enabledModes = () => modeInfos().filter(m => m.enabled)
 
+  /** T-312: Practice + Conversation in the launcher; Step 2 hidden when Step 3 ships. */
+  const launcherModes = () => {
+    const enabled = enabledModes()
+    return opts.flags.step3Enabled ? enabled.filter(m => m.id !== 'step2') : enabled
+  }
+
   function launcherScreen(): Screen {
-    const items = enabledModes().map(m => `${LABEL[m.id]}  ${m.title}`)
+    const items = launcherModes().map(m => m.title)
     launcherIndex = Math.min(launcherIndex, Math.max(0, items.length - 1))
     return { kind: 'menu', title: 'Nudge', items, index: launcherIndex }
   }
@@ -105,11 +110,12 @@ export function createShell(opts: ShellOptions): AppShell & { showLauncher(): Pr
       for (const cb of [...active.subscribers]) cb(intent)
       return
     }
-    const count = enabledModes().length
+    const visible = launcherModes()
+    const count = visible.length
     if (intent === 'BACK') { opts.exitApp(); return }
     if (intent === 'NEXT' && count) { launcherIndex = (launcherIndex + 1) % count; void showLauncher() }
     if (intent === 'PREV' && count) { launcherIndex = (launcherIndex - 1 + count) % count; void showLauncher() }
-    if (intent === 'SELECT' && count) void startMode(enabledModes()[launcherIndex].id)
+    if (intent === 'SELECT' && count) void startMode(visible[launcherIndex].id)
   })
 
   return {
