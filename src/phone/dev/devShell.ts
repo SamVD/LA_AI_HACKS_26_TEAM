@@ -1,5 +1,6 @@
 import type {
   AppShell,
+  Flags,
   ModeId,
   PredictorService,
   Screen,
@@ -20,6 +21,11 @@ export type DevShell = {
   shell: AppShell
   previewUi: PreviewUI
   debug: CompanionDebugSource
+}
+
+/** Dev harness: mock services + Step 2 on (packaged builds still use `VITE_STEP2=1`). */
+function devShellFlags(): Flags {
+  return { ...readFlags(), mockServices: true, step2Enabled: true }
 }
 
 export function createDevShell(): DevShell {
@@ -67,14 +73,13 @@ export function createDevShell(): DevShell {
 
   const startMode = async (id: ModeId) => {
     await leaveMode()
-    const flags = readFlags()
     const stt = new MockStt()
     context = createMockContext({
       ui,
       store,
       stt,
       predictor,
-      flags: { ...flags, mockServices: true },
+      flags: devShellFlags(),
       leave: () => {
         void leaveMode()
       },
@@ -89,7 +94,7 @@ export function createDevShell(): DevShell {
 
   const shell: AppShell = {
     modes() {
-      const flags = readFlags()
+      const flags = devShellFlags()
       return (['step1', 'step2', 'step3'] as ModeId[]).map(id => ({
         id,
         title: modeRegistry[id].title,
