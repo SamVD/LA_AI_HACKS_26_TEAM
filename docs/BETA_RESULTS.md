@@ -243,3 +243,29 @@ Two more Conversation-mode exports (144 + 66 events). **Both ran almost entirely
 
 ### Recommendation for the 9:30 decision
 The evidence leans toward **Conversation working with Gemini live**: fitting words on every real stall, near-instant taps, 1 false hint, and C passes. But **B wasn't run as specified**. If there's time before 9:30, one clean 8-minute B block (6 planted stalls, no taps, no pausing, partner silent during stalls) would settle it. Otherwise ORCH decides on this partial data.
+
+### Clean B block (9:09-9:13 AM PT, same build)
+
+One more export (138 events, ~4 min). Planted stalls from the demo script; no taps on the planted stalls. Time ran out after **3 of the 6** planted stalls (cake, Rachel and dog weren't reached).
+
+| # | Stall | Auto-hint (top 3) | Result | Stall → letters* |
+|---|---|---|---|---|
+| 1 | "…no clouds this morning. Very, um" | `sunny, bright, clear` | **Helped** ("All three, guys") | 1.9 s |
+| 2 | "I got soaked and I forgot my, um" (2nd try; the 1st was skipped because stall 1's words were still showing) | `towel, umbrella, jacket` | **Helped** (`umbrella` #2; the wearer chose "towel") | 2.6 s |
+| 3 | "My hands were freezing, so I wore my, um" | `gloves, jacket, sweater` | **Helped** (said "Gloves") | 2.9 s |
+
+\* From the last detected sound to letters on the lens: the stall detector's silence wait, plus the prediction time (0-0.9 s; stall 1 was already in the prefetch cache).
+
+**Against D21 B:** **3 helped** (meets ≥ 3 of 6), **0 false auto-hints** (≤ 2), stall → letters **1.9-2.9 s** (≤ 3 s). All three are words outside the bank, so all three came from Gemini. **B passes on its numbers**, with the caveat that only 3 of the 6 stalls were run.
+
+Other notes: 5 of 23 predictor calls timed out (including the cold start), and a timed-out stall would have shown bank words or nothing (F-2 still open). Three taps during between-stall chatter gave non-target words (`towel, jacket, bathroom`; `ready, prepared, planned`), but none was an automatic hint.
+
+### Overall G3b verdict for ORCH
+| Part | Verdict |
+|---|---|
+| A. Tap help | Pass on speed (2 ms cached / 0.97 s live); 3 of 4 fitting (4 taps, not 5) |
+| B. Auto-hints | **Pass**: 3 of 3 planted stalls helped, 0 false, ≤ 2.9 s |
+| C. Pause | Pass |
+| D. Practice | Works (fragment attempts: issue 3 above) |
+
+Recommendation: **Conversation meets D21** → judge build 0.4.7 with `VITE_STEP3=1`. Before or right after 0.4.7, if possible: `timeoutMs` → ~1800 (F-2) and strip `sample` bank entries.
