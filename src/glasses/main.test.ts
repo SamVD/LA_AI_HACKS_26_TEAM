@@ -36,9 +36,8 @@ const settle = () => new Promise(resolve => setTimeout(resolve, 0))
 const contentOf = (call: unknown[]) => (call[0] as { textObject: Array<{ content: string }> }).textObject[0].content
 
 it('boots to the launcher, runs the Step 1 stub, returns on double-click and exits from the root', async () => {
-  const root = {}
-  const app = { replaceWith: vi.fn() }
-  vi.stubGlobal('document', { getElementById: () => app, createElement: () => root, addEventListener: vi.fn(), removeEventListener: vi.fn(), visibilityState: 'visible' })
+  const app = {}
+  vi.stubGlobal('document', { getElementById: () => app, addEventListener: vi.fn(), removeEventListener: vi.fn(), visibilityState: 'visible' })
   vi.spyOn(console, 'log').mockImplementation(() => {})
   mock.bridge.onEvenHubEvent.mockImplementation((listener: (event: HubEvent) => void) => {
     mock.listener = listener
@@ -48,8 +47,7 @@ it('boots to the launcher, runs the Step 1 stub, returns on double-click and exi
 
   expect(mock.bridge.createStartUpPageContainer).toHaveBeenCalledOnce()
   expect(contentOf(mock.bridge.createStartUpPageContainer.mock.calls[0])).toBe('Nudge\n> Step 1  Practice')
-  expect(app.replaceWith).toHaveBeenCalledWith(root)
-  expect(mock.mounted).toHaveBeenCalledWith(root, expect.objectContaining({ startMode: expect.any(Function) }))
+  expect(mock.mounted).toHaveBeenCalledWith(app, expect.objectContaining({ startMode: expect.any(Function) }))
 
   mock.listener?.({ audioEvent: {} })
   mock.listener?.({ sysEvent: {} }) // Omitted protobuf zero is a click: start Step 1.

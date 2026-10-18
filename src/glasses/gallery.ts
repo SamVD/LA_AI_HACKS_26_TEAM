@@ -5,7 +5,7 @@
 import type { Mode, Screen, Suggestion } from '../core/types'
 
 const items: Suggestion[] = [
-  { word: 'cup', confidence: 0.82, source: 'bank', imageKey: 'cup', mouthKey: 'k' },
+  { word: 'cup', confidence: 0.82, source: 'bank', imageKey: 'cup', mouthKey: 'mouth:back' },
   { word: 'mug', confidence: 0.4, source: 'bank' },
   { word: 'glass', confidence: 0.2, source: 'model' },
 ]
