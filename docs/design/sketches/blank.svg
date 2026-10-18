@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 288" width="576" height="288">
+<rect width="576" height="288" fill="#000000"/>
+<rect x="0" y="0" width="576" height="288" fill="none" stroke="#2a6b3f" stroke-width="1" stroke-dasharray="6 4"/>
+  <text x="8" y="22" fill="#5cff8a" font-family="monospace" font-size="14">event capture (invisible)</text>
+<text x="16" y="272" fill="#2a6b3f" font-family="monospace" font-size="12">blank — touchpad active, no pixels</text>
+</svg>
