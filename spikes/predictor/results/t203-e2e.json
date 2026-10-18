@@ -1,0 +1,261 @@
+{
+  "at": "2026-10-18T04:34:25.080Z",
+  "rpm": 14,
+  "summary": {
+    "n": 25,
+    "top1": 0.88,
+    "top3": 0.96,
+    "clientP50": 677,
+    "clientP95": 974,
+    "clientMax": 1204,
+    "geminiP50": 672,
+    "geminiP95": 971,
+    "proxyOverheadP95": 1,
+    "fallbacks": {
+      "timeout": 1,
+      "http 429": 1
+    }
+  },
+  "burst": {
+    "after": 7,
+    "status": 429,
+    "retryAfter": "35",
+    "exposed": "retry-after, server-timing",
+    "body": {
+      "error": "rate_limited",
+      "retryDelayMs": 35000
+    },
+    "clientFellBackWith": "http 429"
+  },
+  "rows": [
+    {
+      "id": "eval-01",
+      "shape": "clean-stall",
+      "ms": 906,
+      "top1": true,
+      "top3": true,
+      "source": "bank",
+      "words": "cup, mug, glass"
+    },
+    {
+      "id": "eval-02",
+      "shape": "clean-stall",
+      "ms": 887,
+      "top1": true,
+      "top3": true,
+      "source": "bank",
+      "words": "milk, water"
+    },
+    {
+      "id": "eval-03",
+      "shape": "clean-stall",
+      "ms": 1204,
+      "top1": false,
+      "top3": true,
+      "source": "bank",
+      "words": "book, park, library"
+    },
+    {
+      "id": "eval-04",
+      "shape": "circumlocution",
+      "ms": 677,
+      "top1": false,
+      "top3": true,
+      "source": "bank",
+      "words": "Sunrise Clinic, hospital, Dr. Velrin"
+    },
+    {
+      "id": "eval-05",
+      "shape": "filler-stall",
+      "ms": 661,
+      "top1": true,
+      "top3": true,
+      "source": "bank",
+      "words": "lisinopril, metformin"
+    },
+    {
+      "id": "eval-06",
+      "shape": "filler-stall",
+      "ms": 596,
+      "top1": true,
+      "top3": true,
+      "source": "bank",
+      "words": "phone, glasses, keys"
+    },
+    {
+      "id": "eval-07",
+      "shape": "filler-stall",
+      "ms": 677,
+      "top1": true,
+      "top3": true,
+      "source": "bank",
+      "words": "towel, soap, comb"
+    },
+    {
+      "id": "eval-08",
+      "shape": "filler-stall",
+      "ms": 853,
+      "top1": true,
+      "top3": true,
+      "source": "bank",
+      "words": "pharmacy, Sunrise Clinic, grocery store"
+    },
+    {
+      "id": "eval-09",
+      "shape": "near-synonym-1",
+      "ms": 581,
+      "top1": true,
+      "top3": true,
+      "source": "bank",
+      "words": "cup, tea, spoon"
+    },
+    {
+      "id": "eval-10",
+      "shape": "near-synonym-1",
+      "ms": 718,
+      "top1": true,
+      "top3": true,
+      "source": "bank",
+      "words": "book, novel, magazine"
+    },
+    {
+      "id": "eval-11",
+      "shape": "near-synonym-1",
+      "ms": 745,
+      "top1": true,
+      "top3": true,
+      "source": "model",
+      "words": "armchair, chair, recliner"
+    },
+    {
+      "id": "eval-12",
+      "shape": "near-synonym-1",
+      "ms": 539,
+      "top1": true,
+      "top3": true,
+      "source": "bank",
+      "words": "library"
+    },
+    {
+      "id": "eval-13",
+      "shape": "near-synonym-2",
+      "ms": 800,
+      "top1": true,
+      "top3": true,
+      "source": "bank",
+      "words": "spoon, ladle, bowl"
+    },
+    {
+      "id": "eval-14",
+      "shape": "near-synonym-2",
+      "ms": 634,
+      "top1": true,
+      "top3": true,
+      "source": "bank",
+      "words": "knife, bread, spoon"
+    },
+    {
+      "id": "eval-15",
+      "shape": "near-synonym-2",
+      "ms": 843,
+      "top1": true,
+      "top3": true,
+      "source": "bank",
+      "words": "keys, fob, clicker"
+    },
+    {
+      "id": "eval-16",
+      "shape": "known-name",
+      "ms": 634,
+      "top1": true,
+      "top3": true,
+      "source": "bank",
+      "words": "Maya, Nilo, Pip"
+    },
+    {
+      "id": "eval-17",
+      "shape": "known-name",
+      "ms": 586,
+      "top1": true,
+      "top3": true,
+      "source": "bank",
+      "words": "Dr. Velrin, Maya, Nilo"
+    },
+    {
+      "id": "eval-18",
+      "shape": "known-name",
+      "ms": 783,
+      "top1": true,
+      "top3": true,
+      "source": "bank",
+      "words": "Nilo, Maya, Dr. Velrin"
+    },
+    {
+      "id": "eval-19",
+      "shape": "not-in-bank",
+      "ms": 602,
+      "top1": true,
+      "top3": true,
+      "source": "model",
+      "words": "mechanic, keys, car"
+    },
+    {
+      "id": "eval-20",
+      "shape": "not-in-bank",
+      "ms": 623,
+      "top1": true,
+      "top3": true,
+      "source": "model",
+      "words": "umbrella, jacket, glasses"
+    },
+    {
+      "id": "eval-21",
+      "shape": "not-in-bank",
+      "ms": 641,
+      "top1": false,
+      "top3": false,
+      "source": "model",
+      "words": "stamps, envelope"
+    },
+    {
+      "id": "eval-22",
+      "shape": "circumlocution",
+      "ms": 763,
+      "top1": true,
+      "top3": true,
+      "source": "bank",
+      "words": "knife, scissors, bread"
+    },
+    {
+      "id": "eval-23",
+      "shape": "circumlocution",
+      "ms": 660,
+      "top1": true,
+      "top3": true,
+      "source": "bank",
+      "words": "glasses, book, phone"
+    },
+    {
+      "id": "eval-24",
+      "shape": "near-miss-sound",
+      "ms": 974,
+      "top1": true,
+      "top3": true,
+      "source": "bank",
+      "words": "cup, mug, tea"
+    },
+    {
+      "id": "eval-25",
+      "shape": "near-miss-sound",
+      "ms": 670,
+      "top1": true,
+      "top3": true,
+      "source": "bank",
+      "words": "spoon, fork, knife"
+    }
+  ],
+  "serverLog": [
+    "predict: gemini 429, retry in 35000 ms",
+    "predict: gemini 429, retry in 34000 ms"
+  ]
+}
