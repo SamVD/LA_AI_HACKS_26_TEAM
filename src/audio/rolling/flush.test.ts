@@ -24,7 +24,7 @@ class FakeMic implements MicSource {
   }
 }
 
-function setup(o: { scribe?: () => Response | Promise<Response>; mode?: 'batch' | 'realtime' } = {}) {
+function setup(o: { scribe?: () => Response | Promise<Response>; mode?: 'batch' | 'realtime'; speakerSplitDb?: number } = {}) {
   const texts = ['I take my um', 'and then some more']
   let n = 0
   const scribeCalls: number[] = []
@@ -39,10 +39,11 @@ function setup(o: { scribe?: () => Response | Promise<Response>; mode?: 'batch' 
   }) as unknown as typeof fetch
   const mic = new FakeMic()
   const base = new ElevenLabsStt({ mic, tokens: new TokenProvider({ url: TOKEN_URL, fetch: fetchFn }), fetch: fetchFn })
-  const stt = new RollingStt({ base, mic, realtimeTokens: new TokenProvider({ url: TOKEN_URL, fetch: fetchFn }), mode: o.mode ?? 'batch' })
+  const logs: { event: string; data?: unknown }[] = []
+  const stt = new RollingStt({ base, mic, realtimeTokens: new TokenProvider({ url: TOKEN_URL, fetch: fetchFn }), mode: o.mode ?? 'batch', speakerSplitDb: o.speakerSplitDb, log: (event, data) => logs.push({ event, data }) })
   const finals: Transcript[] = []
   stt.onTranscript(t => { if (t.isFinal) finals.push(t) })
-  return { stt, mic, finals, scribeCalls }
+  return { stt, mic, finals, scribeCalls, base, logs }
 }
 
 beforeEach(() => { vi.useFakeTimers() })
@@ -122,6 +123,55 @@ describe('RollingStt.flush (T-208)', () => {
     expect(resolved).toBe(false) // waiting on the transcription
     await vi.advanceTimersByTimeAsync(4100)
     expect(resolved).toBe(true) // Step 2 caps its own wait at 1.2 s; this bounds the rest
+    await stt.stop()
+  })
+})
+
+describe('RollingStt speaker tagging (T-314)', () => {
+  it('tags a loud chunk wearer (-12 dB > -20 split)', async () => {
+    const { stt, mic, finals, logs } = setup({ speakerSplitDb: -20 })
+    await stt.start()
+    await mic.play(synth([quiet(300), word(700, -12), quiet(1200)]))
+    await vi.advanceTimersByTimeAsync(100)
+    expect(finals.map(f => f.speaker)).toEqual(['wearer'])
+    expect(logs.filter(l => l.event === 'stt.speaker')).toMatchObject([{ data: { speaker: 'wearer', speechDb: -12 } }])
+    await stt.stop()
+  })
+
+  it('tags a quiet chunk other (-26 dB < -20 split) — partner speech gets flagged, not dropped', async () => {
+    const { stt, mic, finals, logs } = setup({ speakerSplitDb: -20 })
+    await stt.start()
+    await mic.play(synth([quiet(300), word(700, -26), quiet(1200)])) // 700 ms: too long for the junk drop
+    await vi.advanceTimersByTimeAsync(100)
+    expect(finals.map(f => f.speaker)).toEqual(['other'])
+    expect(logs.filter(l => l.event === 'stt.speaker')).toMatchObject([{ data: { speaker: 'other', speechDb: -26 } }])
+    await stt.stop()
+  })
+
+  it('no level (e.g. measure failed) still tags wearer — never tags on missing data', async () => {
+    const { stt, mic, finals, base, logs } = setup({ speakerSplitDb: -20 })
+    const orig = base.transcribeUtterance.bind(base)
+    base.transcribeUtterance = async (opts) => {
+      const r = await orig(opts)
+      base.lastLevel = null // pretend the VAD gave us nothing
+      return r
+    }
+    await stt.start()
+    await mic.play(synth([quiet(300), word(700, -26), quiet(1200)]))
+    await vi.advanceTimersByTimeAsync(100)
+    expect(finals.map(f => f.speaker)).toEqual(['wearer'])
+    expect(logs.filter(l => l.event === 'stt.speaker')).toMatchObject([{ data: { speaker: 'wearer', speechDb: null } }])
+    await stt.stop()
+  })
+
+  it('unset speakerSplitDb keeps behavior identical: no speaker field, no stt.speaker log', async () => {
+    const { stt, mic, finals, logs } = setup()
+    await stt.start()
+    await mic.play(synth([quiet(300), word(700, -26), quiet(1200)]))
+    await vi.advanceTimersByTimeAsync(100)
+    expect(finals).toHaveLength(1)
+    expect(finals[0].speaker).toBeUndefined()
+    expect(logs.filter(l => l.event === 'stt.speaker')).toEqual([])
     await stt.stop()
   })
 })
