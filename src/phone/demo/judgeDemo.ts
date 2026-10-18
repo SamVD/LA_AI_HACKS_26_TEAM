@@ -1,5 +1,6 @@
 import type { Screen, Suggestion } from '../../core/types'
 import type { ConversationFixture } from '../../mocks/fixtures'
+import { describePreviewScreen } from '../preview/previewCaption'
 import { ensurePreviewImages, renderPreviewOptions } from '../preview/previewAssets'
 import { renderScreen } from '../preview/renderScreen'
 import { judgeConversation, primaryStall, suggestionsForStall } from './demoFixture'
@@ -29,9 +30,10 @@ function delay(ms: number, signal?: AbortSignal): Promise<void> {
   })
 }
 
-async function paint(host: JudgeDemoCallbacks, screen: Screen, label: string) {
+async function paint(host: JudgeDemoCallbacks, screen: Screen, note?: string) {
   await ensurePreviewImages(screen)
-  host.onPreviewSvg(renderScreen(screen, renderPreviewOptions()), label)
+  const caption = describePreviewScreen(screen)
+  host.onPreviewSvg(renderScreen(screen, renderPreviewOptions()), note ? `${caption} · ${note}` : caption)
 }
 
 export type RunJudgeDemoOptions = {
@@ -54,7 +56,7 @@ export async function runJudgeDemo(
 
   const transcripts: string[] = []
   host.onState({ phase: 'playing', transcripts, suggestions: [] })
-  await paint(host, { kind: 'blank' }, 'Step 2 — listening (blank screen on G2)')
+  await paint(host, { kind: 'blank' })
 
   const finalLines = fixture.events.filter(
     event => event.type === 'transcript' && event.isFinal,
@@ -94,11 +96,7 @@ export async function runJudgeDemo(
     items,
   }
   host.onState({ phase: 'help', transcripts: [...transcripts], suggestions: items })
-  await paint(
-    host,
-    helpScreen,
-    `After help tap — stalled on “${stall.intendedWord}”`,
-  )
+  await paint(host, helpScreen, `after help tap · stall “${stall.intendedWord}”`)
 }
 
 export function stallCueLine(): string {

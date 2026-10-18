@@ -414,7 +414,11 @@ export function mountCompanion(
   homeLead.textContent =
     'Start a mode for the glasses. This page stays calm and shows a live preview when a mode is running.'
   homePanel.append(homeLead, judgeDemoCard, modeList)
-  previewPanel.append(previewHost, previewKind)
+  const previewLead = document.createElement('p')
+  previewLead.className = 'nudge-preview-lead'
+  previewLead.textContent =
+    'Mirrors the glasses. Picture and mouth lines show whether each asset loaded (T-205).'
+  previewPanel.append(previewLead, previewHost, previewKind)
   if (options.devPlaylist?.length) {
     const prev = document.createElement('button')
     prev.type = 'button'

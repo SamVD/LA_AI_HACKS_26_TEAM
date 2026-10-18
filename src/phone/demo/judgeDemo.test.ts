@@ -5,6 +5,7 @@ import { judgeConversation, runJudgeDemo, stallCueLine } from './judgeDemo'
 vi.mock('../preview/previewAssets', () => ({
   ensurePreviewImages: async () => {},
   renderPreviewOptions: () => ({}),
+  previewImageUrl: () => null,
 }))
 
 describe('judgeDemo', () => {
