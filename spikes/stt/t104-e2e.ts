@@ -12,7 +12,7 @@ import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'no
 import { createServer } from 'node:http'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { createTokenHandler } from '../../api/stt/handler'
+import { createTokenHandler } from '../../api/stt/_handler'
 import type { MicSource } from '../../src/audio/mic'
 import { ElevenLabsStt } from '../../src/audio/stt'
 import { TokenProvider } from '../../src/audio/token'

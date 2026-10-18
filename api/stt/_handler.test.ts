@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { createTokenHandler, parseOrigins } from './handler'
+import { createTokenHandler, parseOrigins } from './_handler'
 
 const KEY = 'sk_test_never_leaks_0123456789'
 const ORIGIN = 'http://localhost:5173'

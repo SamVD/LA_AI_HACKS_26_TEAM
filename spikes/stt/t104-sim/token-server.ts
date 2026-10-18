@@ -3,7 +3,7 @@
 // Env: ELEVENLABS_API_KEY (or .env.local), STT_ALLOWED_ORIGINS (default http://localhost:5173), PORT (default 8788)
 import { existsSync, readFileSync } from 'node:fs'
 import { createServer } from 'node:http'
-import { createTokenHandler, parseOrigins } from '../../../api/stt/handler'
+import { createTokenHandler, parseOrigins } from '../../../api/stt/_handler'
 
 const key = process.env.ELEVENLABS_API_KEY
   ?? (existsSync('.env.local') ? readFileSync('.env.local', 'utf8').match(/^\s*ELEVENLABS_API_KEY\s*=\s*(\S+)/m)?.[1] : undefined)
