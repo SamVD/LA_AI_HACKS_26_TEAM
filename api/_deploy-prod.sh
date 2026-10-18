@@ -26,7 +26,9 @@ OUT=$(mktemp -d)
 trap 'rm -rf "$OUT"' EXIT
 git archive "$SHA" | tar -x -C "$OUT"
 mkdir -p "$OUT/.vercel" && cp .vercel/project.json "$OUT/.vercel/"
-printf '{"framework":"vite"}\n' > "$OUT/vercel.json"
+# The Vercel project has no framework preset, so the deploy names it. Merge into the repo's
+# vercel.json (ORCH's settings, e.g. git.deploymentEnabled) instead of overwriting it.
+node -e 'const fs = require("fs"); const p = process.argv[1]; const c = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, "utf8")) : {}; c.framework ??= "vite"; fs.writeFileSync(p, JSON.stringify(c, null, 2) + "\n")' "$OUT/vercel.json"
 BAD=$(cd "$OUT" && ls -a | grep -E '^\.git$|^\.env' | grep -vxE '\.env\.production|\.env\.example' || true)
 if [ -n "$BAD" ]; then echo "refusing: secret-looking files in the export: $BAD" >&2; exit 1; fi
 
