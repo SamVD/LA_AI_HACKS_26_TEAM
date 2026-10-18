@@ -42,6 +42,8 @@ Sections A and B are required at every gate. Run C, D and E for the steps the ga
 | B2 | `blank` Screen | Glasses look dark, but a tap still registers |
 | B3 | Click / swipe down / swipe up / double-click | Map to SELECT / NEXT / PREV / BACK (double-click on root = exit dialog) |
 | B4 | Images (pictures, mouth shapes) | Appear within ~2 s; the screen stays usable while they load |
+| B5 | **Touchpad while the glasses mic is open** (Step 1 listening for an answer) | Tap still escalates the cue, swipe down still skips, and double-tap still leaves Step 1. The app has two `onEvenHubEvent` listeners at once (shell input and mic capture); this confirms the real SDK delivers events to both. **A fail here blocks G1.** |
+| B6 | Mic open/close across items | After 3-4 items, audio still arrives (no "Could not hear you" while speaking); the mic closes when leaving Step 1 |
 
 ## C. Step 1 (Practice) main flow
 

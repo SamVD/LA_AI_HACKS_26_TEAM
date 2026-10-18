@@ -432,6 +432,7 @@ No new features after H18. Only fixes, packaging, polish, and the story.
 - H7: T-004 fixtures merged (PR #9). Follow-up filed as T-007.
 - H7: T-006 design tokens and glasses layouts merged (PR #7, after one round of changes).
 - H7: T-002 device checks done (PR #13, `docs/BETA_RESULTS.md`). QR prototype mode is broken on Even's side, so device testing uses packaged Beta builds; README and `docs/G2_SMOKE.md` updated.
+- H9: PR #36 (dev-shell test + playlist) merged. T-102 (PR #34): changes requested (rebase off duplicated commits; verified `main.test.ts` patch; mic-stop fix). `docs/G2_SMOKE.md` gains B5 (touchpad while the mic is open: two SDK event listeners) and B6 (mic across items).
 - H9: **T-104 mic + STT merged (PR #33)** and wired in `src/main.ts`; `app.json` gets `g2-microphone` + ElevenLabs. T-102 (PR #34) approved, pending stub-test updates (grant added). Step 1 now needs: T-102 merged, `api/stt` hosted, then a packaged G1 run on the real G2.
 - H9: **T-101 glasses renderer and shell merged (PR #29)**: the glasses half of Step 1 is in. Step 1 still needs T-102 (mode) and T-104 (mic and STT).
 - H9: T-106 store recovery (PR #28), T-206 companion v2 (PR #24) and T-201 part 1 (PR #31) merged. T-101 (PR #29) approved, waiting on the startup-test deletion (grant added) to go green. `index.html` `#app` placeholder removed. D13 (`dropSamples` false).
