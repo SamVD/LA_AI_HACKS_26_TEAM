@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { PredictRequest, WordEntry } from '../core/types'
 import { readFlags, readInitialMode } from '../config'
+import { EMPTY_PRACTICE_MESSAGE } from '../modes/step1'
 import { getMode, modes } from '../modes'
 import { ConsoleUI, createMockContext, MemoryStore, MockPredictor, MockStt, MockUI } from './index'
 import type { ConversationFixture } from './fixtures'
@@ -42,7 +43,12 @@ describe('UI and registered modes', () => {
     const context = createMockContext({ ui })
     expect(getMode(id)).toBe(modes[id])
     await getMode(id).enter(context)
-    expect(ui.last()).toEqual({ kind: 'status', text: `${id} not built yet` })
+    const last = ui.last()
+    if (id === 'step1') {
+      expect(last).toEqual({ kind: 'status', text: EMPTY_PRACTICE_MESSAGE })
+    } else {
+      expect(last).toEqual({ kind: 'status', text: `${id} not built yet` })
+    }
     await getMode(id).exit()
   })
   it('records snapshots and unsubscribes intent subscribers', async () => {

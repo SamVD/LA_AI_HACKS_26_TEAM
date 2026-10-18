@@ -15,6 +15,7 @@ const mock = vi.hoisted(() => ({
     getLocalStorage: vi.fn().mockResolvedValue(''),
     setLocalStorage: vi.fn().mockResolvedValue(true),
     onEvenHubEvent: vi.fn(),
+    audioControl: vi.fn().mockResolvedValue(true),
   },
 }))
 vi.mock('@evenrealities/even_hub_sdk', () => {
@@ -27,6 +28,7 @@ vi.mock('@evenrealities/even_hub_sdk', () => {
     RebuildPageContainer: Property,
     TextContainerUpgrade: Property,
     ImageRawDataUpdate: Property,
+    AudioInputSource: { Phone: 0, Glasses: 1 },
   }
 })
 vi.mock('../phone', () => ({ mountCompanion: mock.mounted }))
@@ -35,14 +37,18 @@ afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals() })
 const settle = () => new Promise(resolve => setTimeout(resolve, 0))
 const contentOf = (call: unknown[]) => (call[0] as { textObject: Array<{ content: string }> }).textObject[0].content
 
-it('boots to the launcher, runs the Step 1 stub, returns on double-click and exits from the root', async () => {
+it('boots to the launcher, runs Step 1 Practice, returns on double-click and exits from the root', async () => {
   const app = {}
+  vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('offline')))
   vi.stubGlobal('document', { getElementById: () => app, addEventListener: vi.fn(), removeEventListener: vi.fn(), visibilityState: 'visible' })
   vi.spyOn(console, 'log').mockImplementation(() => {})
+  // Input and audio capture subscribe independently, as on the real SDK.
+  const listeners = new Set<(event: HubEvent) => void>()
   mock.bridge.onEvenHubEvent.mockImplementation((listener: (event: HubEvent) => void) => {
-    mock.listener = listener
-    return () => {}
+    listeners.add(listener)
+    return () => { listeners.delete(listener) }
   })
+  mock.listener = event => { for (const listener of [...listeners]) listener(event) }
   await import('../main')
 
   expect(mock.bridge.createStartUpPageContainer).toHaveBeenCalledOnce()
@@ -52,11 +58,10 @@ it('boots to the launcher, runs the Step 1 stub, returns on double-click and exi
   mock.listener?.({ audioEvent: {} })
   mock.listener?.({ sysEvent: {} }) // Omitted protobuf zero is a click: start Step 1.
   await settle(); await settle()
-  expect(contentOf(mock.bridge.rebuildPageContainer.mock.calls.at(-1)!)).toBe('step1 not built yet')
+  expect(contentOf(mock.bridge.rebuildPageContainer.mock.calls.at(-1)!)).toContain('____')
 
-  mock.listener?.({ sysEvent: { eventType: 3 } }) // BACK inside the stub returns to the launcher.
-  await settle(); await settle()
-  expect(contentOf(mock.bridge.rebuildPageContainer.mock.calls.at(-1)!)).toBe('Nudge\n> Step 1  Practice')
+  mock.listener?.({ sysEvent: { eventType: 3 } }) // BACK inside Practice returns to the launcher.
+  await vi.waitFor(() => expect(contentOf(mock.bridge.rebuildPageContainer.mock.calls.at(-1)!)).toBe('Nudge\n> Step 1  Practice'))
   expect(mock.bridge.shutDownPageContainer).not.toHaveBeenCalled()
 
   mock.listener?.({ sysEvent: { eventType: 3 } }) // BACK at the launcher opens the exit dialog.
