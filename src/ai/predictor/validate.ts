@@ -9,6 +9,16 @@ export type AssetResolver = (entry: WordEntry) => { imageKey?: string; mouthKey?
 export const STOP_WORDS = new Set(
   'um uh er hmm the a an and or but with like it that this thing stuff something'.split(' '),
 )
+/**
+ * G3 re-run (#120): words that are never the word someone is searching for: pronouns,
+ * function words and conversational fillers ("me", "then", "Did you"). A model suggestion that
+ * is one of these, or a phrase containing one (unless it's a word-bank entry), is dropped.
+ */
+export const FUNCTION_WORDS = new Set(`i me my mine myself you your yours we us our they them their he him his she her
+  it its this that these those there here then than so to of in on at by for from into onto with without about
+  is am are was were be been being do does did done have has had can could will would shall should may might must
+  not no yes yeah yep ok okay oh ah well just really very too also please thanks thank sorry what who whom whose
+  which where when why how if because as or and but nor um uh er erm hmm`.split(/\s+/))
 const ABBREVIATION = /\b(dr|mr|mrs|ms|st|jr|sr)\.$/i
 const ALLOWED = /^\p{L}[\p{L} .'’-]*$/u
 
@@ -83,6 +93,10 @@ export function validateModelOutput(
       continue
     }
     const entry = bankByWord.get(lower(w))
+    if (!entry && lower(w).split(/[\s-]+/).some(part => FUNCTION_WORDS.has(part.replace(/['’]s$/, '')))) {
+      dropped++
+      continue
+    }
     const next = { word: entry ? entry.word : w, confidence: Math.min(1, Math.max(0, confidence)), entry }
     const key = dedupeKey(w)
     const prev = kept.get(key)

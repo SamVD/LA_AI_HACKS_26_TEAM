@@ -19,6 +19,22 @@ export { RealtimeTranscriber, cleanKeyterms, realtimeUrl, type SocketFactory, ty
 
 export type RollingMode = 'realtime' | 'batch'
 
+/**
+ * G3 re-run (#120): batch segments that are almost certainly not the wearer's words.
+ * - `non-latin`: mostly non-Latin letters. Scribe hallucinated Malayalam/Chinese on short
+ *   clips although we send `language_code=en`.
+ * - `short-quiet`: under 500 ms of speech **and** below -22 dB. Partner fragments ("to" at
+ *   -24 dB) triggered false stalls and spent prediction quota. The wearer measured -9 to -15 dB.
+ * Returns the reason to drop the segment, or null to keep it.
+ */
+export function junkReason(text: string, level: { speechDb: number; speechMs: number } | null): 'non-latin' | 'short-quiet' | null {
+  const letters = text.match(/\p{L}/gu) ?? []
+  const nonLatin = letters.filter(ch => !/\p{Script=Latin}/u.test(ch)).length
+  if (letters.length && nonLatin / letters.length > 0.3) return 'non-latin'
+  if (level && level.speechMs < 500 && level.speechDb < -22) return 'short-quiet'
+  return null
+}
+
 type Env = Record<string, unknown>
 const defaultEnv = () => (import.meta as ImportMeta & { env?: Env }).env ?? {}
 
@@ -113,7 +129,10 @@ export class RollingStt implements SttService {
       if (!this.running) { segmentHandled(); return }
       if (t.text.trim() && !t.error) {
         failures = 0
-        this.o.base.emitTranscript({ ...t, text: t.text.trim(), isFinal: true })
+        const level = this.o.base.lastLevel
+        const junk = junkReason(t.text, level)
+        if (junk) this.o.log?.('rolling.drop', { reason: junk, ...level, text: t.text.trim() })
+        else this.o.base.emitTranscript({ ...t, text: t.text.trim(), isFinal: true })
       }
       segmentHandled() // before any backoff, so a flush never waits on it
       if (t.text.trim() && !t.error) continue

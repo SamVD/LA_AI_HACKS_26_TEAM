@@ -2,7 +2,7 @@
 
 The orchestrator's single snapshot of where Nudge stands. **ORCH updates this after every gate (G1, G2, G3, final) and after any merge that changes a gate's readiness.** Detailed task cards live in `TASKS.md`, decisions in `PLAN.md` §13, contracts in `docs/CONTRACTS.md`.
 
-_Last updated: **Sun Oct 18, 2026, 6:50 AM PT** by ORCH (aaravj9). **All code for the G3 re-run is merged (`24c8ea8`). Sarah packs now: `VITE_STEP3=1 VITE_DEBUG=1 npm run pack` (0.4.4).** G1 and G2 PASSED; G3 HELD until the re-run._
+_Last updated: **Sun Oct 18, 2026, 7:55 AM PT** by ORCH (aaravj9). **G3 NOT PASSED → ship Practice + Assist (D20).** ⚠️ **Gemini's free daily quota is exhausted until 4:59 PM PT; it must be unblocked (billing) before the demo.** Four quick fixes merged; `app.json` 0.4.5 for the final build._
 
 ## Wake-up plan (3:45-7:00 AM build window, then ship by 10:00)
 
@@ -86,10 +86,10 @@ _Last updated: **Sun Oct 18, 2026, 6:50 AM PT** by ORCH (aaravj9). **All code fo
 | `integration` | **`24c8ea8`** after #116 (T-316). typecheck, build, **802 tests**. **G3 re-run pack verified:** `VITE_STEP3=1 VITE_DEBUG=1 npm run pack` → 0.4.4, batch STT, Step 3 + Debug tab, `stt.level` logging |
 | `main` | **`ae2294d`** (fast-forwarded at G2: the tested 0.4.2 code + D17 + D18; a plain `npm run pack` reproduces it byte-for-byte) |
 | Tags | `v0.1-step1` → `4b13180` (G1); **`v0.2-step2` → `ae2294d`** (G2); **`backup-g3-working` → `34e46db`** (the G3 run-1 build, 0.4.3 + `VITE_STEP3=1`; a backup, **not** a passed gate). Next: `v0.3-step3` on a G3 pass |
-| `app.json` version | **0.4.4** for the G3 re-run upload. 0.4.3 = G3 run 1 (`backup-g3-working`); 0.4.2 = G2 |
+| `app.json` version | **0.4.5** for the **final judge build** (Practice + Assist, no `VITE_DEBUG`). 0.4.4 = G3 re-run |
 | Contracts | **`CONTRACT_VERSION 4`**: v3 (`SttService.flush?`, letters-first candidates) + v4 (`Speaker`, `speaker?` on `Transcript`/`SpeechState`, T-314) |
 | Production `api/` | `https://nudge-seven-psi.vercel.app`, redeployed by Sam with the WebView origin. At 10:54 PM: `127.0.0.1:<any port>` preflight 204, **but `null` and `file://` also 204, so it's looser than intended**; tighten after #61 (see blockers) |
-| Open PRs | #111 (juannli): **hold, don't merge.** Flips pack defaults to Conversation; ORCH does it at decision B, after the G3 re-run |
+| Open PRs | #121 (T-406 Devpost finish, juannli), #118 (screenshot). #111 **closed** (D20: no Conversation default) |
 | Open issues | none (#73 closed by #76) |
 
 ## Gates
@@ -98,7 +98,7 @@ _Last updated: **Sun Oct 18, 2026, 6:50 AM PT** by ORCH (aaravj9). **All code fo
 |---|---|---|---|
 | **G1: Step 1 on the real G2** | Practice: 10 prompts, cue ladder, √/× feedback, lock/resume, mic denial, exit | ✅ **PASSED (H11:15, #68)**: real speech graded on the G2; lock, exit, B5, B6 pass; A4 accepted via unit tests (D16). Tagged `v0.1-step1` | Done. A3/A5/A7 carried to G2 |
 | **G2: Step 2 in a live conversation** | Help tap → good suggestion in ≤ ~1.5 s on most attempts; Step 1 regression | ✅ **PASSED on function (H13, D18, #90/#91)**: 0.4.2 batch followed the conversation ("warm and um um" → "sunny"); Step 1 + T-108 clean. **Latency not demonstrated** (the tester said 2-3 s) | Tagged `v0.2-step2`. Latency → **T-208**; ladder request → **T-209/T-210** |
-| **G3: Step 3 ambient hints** | Auto-hints after a stall, no false-hint spam in a 10-minute soak | **HELD (D19).** Run 1 (#100, 0.4.3): works, but ~3-4 s per hint and no tally. Measured: Gemini via Vercel ~1.0 s (0.94-1.27); the 1.5 s stall silence is the largest share | Re-run on 0.4.4 at ~5:15 after T-311 (+T-312/T-313; T-314 if stable by 5:30) with a tally and a T-315 log export (see Wake-up plan) |
+| **G3: Step 3 ambient hints** | Auto-hints after a stall, no false-hint spam in a 10-minute soak | ❌ **NOT PASSED (D20).** Re-run (#120) cut short by the Gemini daily quota; stall detection worked (4/8 real), 0 helpful hints (fallback only); loudness splits speakers at −20 dB | Ships **off**. Conversation is presented as experimental in the Devpost |
 | **Final** | Beta `.ehpk` + Devpost by **H22 (10 AM Sunday)** | Not started (T-402, T-404, T-405) | Demo assets (T-401) are done |
 
 ## Every task
@@ -140,7 +140,7 @@ Legend: ✅ merged · 🟡 in progress / review · ⬜ todo · 🚦 gate.
 | T-303 | Keyword extractor | LOGIC | ✅ | #52 |
 | T-304 | Companion v3 (Step 3 settings, log) | UI | ✅ merged and wired to the detector by ORCH (`src/modes/index.ts` `settingsDetector`). Open nits: hide the card unless Step 3 is on; `eager` without content words | #82, #83 |
 | T-305 | Stretch: head tilt (up/down only, D9) | GLASS | ⬜ only after G2 | — |
-| T-306 | 🚦 Gate G3 | ORCH + GLASS | **HELD** (run 1: works, too slow); re-run after T-311 | #100 |
+| T-306 | 🚦 Gate G3 | ORCH + GLASS | ❌ not passed (D20); Conversation ships off | #100, #120 |
 | T-311 | Early stall prediction (latency, free tier) | LOGIC (juannli, reassigned from Sam) | ✅ merged; device numbers from the G3 re-run | #104 |
 | T-312 | Launcher: Practice + Conversation | UI ✅ #103 · launcher ✅ #109 · title ✅ #110 · ORCH flags ⬜ at decision B | 🟡 code done | #103, #109, #110 |
 | T-313 | Step 1 ignores short/background speech | LOGIC (juannli/Devin) | ✅ merged: match first (correct answers always count); ignores non-matching speech < 250 ms or `other` | #105 |
@@ -178,6 +178,7 @@ ORCH infrastructure PRs: #2, #5, #6, #10, #12, #14, #15, #16, #19, #25, #27, #30
 | D16 | G1 passes; mic-denied (A4) accepted via unit tests, since the device can't trigger it; A4 reworded; A3/A5/A7 run at G2 |
 | D17 | Packaged builds default to batch rolling STT and Step 2 on (`.env.production`); realtime stays in the code until `wss://` works on the device |
 | D18 | G2 passes on function; latency is a known issue (T-208); ladder request scoped to letters-first (T-209), no tilt left/right (D9 stands) |
+| D20 | G3 not passed → ship Practice + Assist; four quick fixes; unblock Gemini via billing before the demo |
 | D19 | G3 held: Step 3 works but ~3-4 s per hint. Free tier; T-311 early stall prediction first, then T-312/T-313, T-314 only if stable by 5:30, T-315 log export; tallied re-run; freeze **7:00** (moved from 06:00 for the 1:45-3:45 break) |
 
 ## Blockers and risks
@@ -189,6 +190,7 @@ ORCH infrastructure PRs: #2, #5, #6, #10, #12, #14, #15, #16, #19, #25, #27, #30
 | 3 | Gemini **free tier 15 req/min, daily cap unknown** | Suggestions fall back to bank-only under load | AI | Throttle (D11); check AI Studio → Rate limits before the demo; billing would remove it |
 | 4 | **Vercel Hobby** blocks Git deploys from non-members; only Sam can deploy | A deploy bottleneck | AI | D15: only `bash api/_deploy-prod.sh` (merged commits, auto-checks). A `vercel --prod` from a checkout caused the 9-minute 500 outage (05:07-05:16 UTC, issue #56) |
 | 5 | Single-device team (one G2) and minutes-long pack/upload cycles | Slow device iteration | GLASS | Simulator first; batch device checks; G1 and G2 back to back when possible |
+| 9 | ⚠️ **Gemini free daily quota exhausted** (7:09 AM, blocked until 4:59 PM PT) | Every suggestion is the bank fallback, so the demo shows wrong words | Aarav / Sam | **Enable billing on the existing Google AI Studio project** (no key change, no redeploy; a few cents). Fallbacks if impossible: a teammate's own Gemini key needs a Vercel env change + redeploy (deploy quota?); switching provider (StepFun) needs a server change + deploy + prompt re-check (not recommended at this stage) |
 | 8 | **The repo is public** (it was private earlier) | Anyone can read the full history | ORCH | **Checked H18:** all 287 commits on every branch scanned for Google/ElevenLabs keys, `sutkn_` tokens, private keys and `.env`/`.vercel` files: **clean**. Keep secrets on Vercel only |
 | 7 | **Vercel Hobby deploy quota exhausted** (100 per 24 h, rolling; error `api-deployments-young-hobby-team-24h` on every PR since about #79). Cause: every branch push made a preview deploy | **Production keeps serving** (checked live), but Sam **can't redeploy `api/`** until slots free up. Each freed slot was being used by the next push | ORCH / Sam | `vercel.json` `git.deploymentEnabled: false` (this PR) stops preview deploys. `api/_deploy-prod.sh` writes its own `vercel.json`, so production deploys are unaffected. **Avoid `api/` changes before the demo**; if one is critical, Sam checks `vercel ls` for a free slot. Ignore the red "Vercel" status on PRs; `verify` is the check that counts |
 | 6 | Not yet seen on hardware: mic denial path, SDK storage persistence across restarts, multiple `onEvenHubEvent` listeners | Possible G1 failures | GLASS | G2_SMOKE A4, A7, B5 cover them explicitly |
@@ -239,6 +241,7 @@ There are no console logs on the device. Use the phone companion's **Preview** t
 
 | When | Change |
 |---|---|
+| Sun 7:55 AM | **G3 not passed → ship Practice + Assist (D20).** Merged #120 (re-run results: Gemini daily quota hit 7:09 AM). ORCH quick fixes: no fallback recency boost, function-word filter, junk-segment filter (non-Latin / short-quiet). `app.json` 0.4.5. #111 closed. Blocker #9: unblock Gemini (billing) |
 | Sun 6:55 AM | New **T-406** for juannli: finish the non-G3 parts of the Devpost writeup (grant `ui/devpost-finish`). No hosted judge-demo URL (Vercel root needs the bridge; no redeploys) |
 | Sun 6:50 AM | Merged #116 (T-316 `stt.level` logging, no behavior change). G3 re-run build verified from `24c8ea8` |
 | Sun 6:35 AM | Decided: **measure before building T-314.** New T-316 (log-only `stt.level {speechDb, peakDb, floorDb, speechMs, text}` per utterance), grant `logic/speaker-levels`, goes into the G3 re-run build; the runbook adds a speaker-labelling step (4b). T-314 on hold |
