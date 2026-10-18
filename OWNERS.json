@@ -10,6 +10,7 @@
         "src/config.ts",
         "src/main.ts",
         "src/modes/index.ts",
+        "src/modes/index.test.ts",
         "package.json",
         "package-lock.json",
         "app.json",
