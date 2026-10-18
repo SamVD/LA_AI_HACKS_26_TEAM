@@ -3,7 +3,7 @@ import type { PredictRequest, PredictorService, Screen, Suggestion } from '../..
 import { MockStt, MockUI, createMockContext, type ConversationFixture } from '../../mocks'
 import { createStep2 } from './index'
 import { buildRequest } from './request'
-import { createThrottledPredictor } from './throttle'
+import { createThrottledPredictor } from '../../ai/predictor'
 
 type Glob = (pattern: string, opts: { eager: true; import: 'default' }) => Record<string, ConversationFixture>
 const fixtures: ConversationFixture[] = Object.values((import.meta as unknown as { glob: Glob })
