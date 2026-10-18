@@ -11,7 +11,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 **Device testing (all lanes):** QR prototype mode is broken on Even's side, so the glasses only run **packaged Beta builds** (pack → upload at hub.evenrealities.com → Me → Beta tester; a few minutes per cycle). Iterate in the simulator and batch device checks. The workflow, including how to pack a spike page on its own, is in `README.md` → "Run on the real G2". Gate flags are set at pack time with `VITE_STEP2=1` / `VITE_STEP3=1` (`docs/G2_SMOKE.md`).
 
 **Queue by lane (now):**
-- GLASS: T-101 is approved; delete `src/mocks/startup.test.ts` (grant added), wire the T-106 store and images, and push to turn CI green. Then the real-G2 gallery run (every layout, a mode, back, exit, 5-minute lock, pictures, storage).
+- GLASS: T-101 is merged. Next: **the real-G2 gallery run** from a packaged build (`VITE_GALLERY=1 npm run pack`, version above the last upload), logged in `docs/BETA_RESULTS.md`. Then T-204 (Step 2 mode) on mocks.
 - AI: S-1 and S-2 are merged. Next: **T-104 now (critical path for Step 1)**, with the `api/` hosting (Vercel + ElevenLabs and Gemini keys) set up first. Then T-203 (`api/predict`, sharing that hosting).
 - LOGIC (Codex): T-103, T-106 (+ store fix), T-007, T-201 part 1 and T-206 are merged. Next: **T-102 Step 1 mode (critical path)**, then **T-201 part 2** (fallback v2 + throttle), then T-205. Small fixture fix: eval-04 should accept "Sunrise Clinic".
 - UI (Cursor): T-206 (PR #24) needs two fixes (personal-word frames, unique ids) and a retarget to `integration`; see the review.
@@ -170,7 +170,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ### T-101 Glasses renderer, input mapper, cue ladder, lifecycle
 - **Owner:** GLASS
-- **Status:** IN_REVIEW (PR #29, approved). CI is red only because `src/mocks/startup.test.ts` still tests the replaced hello screen; `glass/renderer` now has a branch grant to delete it. Sarah: rebase, `git rm src/mocks/startup.test.ts`, wire `createStore` + `getImage` (T-106 merged), push. Then the real-G2 gallery run.
+- **Status:** MERGED (PR #29). Renderer, touchpad input, app shell (launcher root), `visibilitychange` lifecycle, SDK storage store and `getImage` pictures wired in `src/main.ts`; phone companion mounted on `#app`. Simulator-verified for every Screen kind (screenshots in `src/glasses/screenshots/`). **Still open: the real-G2 gallery run** (every layout, a mode, back, exit, 5-minute lock, pictures, SDK storage), with results in `docs/BETA_RESULTS.md`.
 - **Branch:** `glass/renderer`
 - **Depends on:** T-001, T-002, T-003
 - **Files it may EDIT:** `src/glasses/**` (excluding `src/glasses/imu/`), `src/main.ts` (branch grant for `glass/renderer`)
@@ -432,6 +432,7 @@ No new features after H18. Only fixes, packaging, polish, and the story.
 - H7: T-004 fixtures merged (PR #9). Follow-up filed as T-007.
 - H7: T-006 design tokens and glasses layouts merged (PR #7, after one round of changes).
 - H7: T-002 device checks done (PR #13, `docs/BETA_RESULTS.md`). QR prototype mode is broken on Even's side, so device testing uses packaged Beta builds; README and `docs/G2_SMOKE.md` updated.
+- H9: **T-101 glasses renderer and shell merged (PR #29)**: the glasses half of Step 1 is in. Step 1 still needs T-102 (mode) and T-104 (mic and STT).
 - H9: T-106 store recovery (PR #28), T-206 companion v2 (PR #24) and T-201 part 1 (PR #31) merged. T-101 (PR #29) approved, waiting on the startup-test deletion (grant added) to go green. `index.html` `#app` placeholder removed. D13 (`dropSamples` false).
 - H9: S-2 Gemini spike merged (PR #26). `PREDICTOR_PROMPT.md` is now **v2**; D11 (model, few-shot, free-tier throttle) and D12 (fallback v2). T-201 READY; T-203 and T-204 updated.
 - H9: T-103 matcher (PR #21), T-106 assets and store (PR #22) and T-007 fixtures (PR #23) merged. **T-102 READY.** T-206 (PR #24) changes requested.
