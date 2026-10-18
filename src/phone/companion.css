@@ -193,6 +193,10 @@ a.nudge-btn {
   color: var(--nudge-text-muted);
 }
 
+.nudge-word-asset-hint {
+  overflow-wrap: anywhere;
+}
+
 .nudge-word-row {
   display: flex;
   flex-wrap: wrap;

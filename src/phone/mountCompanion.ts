@@ -11,6 +11,7 @@ import { extractKeywords } from '../ai/keywords'
 import { bindJudgeDemo } from './demo/bindJudgeDemo'
 import { MODE_HOME_LEAD, modeDisabledLead } from './modeCopy'
 import { formatStep1ItemLine, summarizeStep1Session } from './sessionSummary'
+import { describeWordAssetHint } from './words/wordAssetHint'
 
 export type CompanionDebugState = {
   transcripts: Transcript[]
@@ -103,6 +104,7 @@ export function mountCompanion(
       <span>Word</span>
       <input name="word" type="text" required autocomplete="off" class="nudge-input" />
     </label>
+    <p class="nudge-form-hint nudge-form-hint--static nudge-word-asset-hint" data-asset-hint hidden></p>
     <label class="nudge-field">
       <span>Category</span>
       <select name="category" class="nudge-input">
@@ -370,7 +372,10 @@ export function mountCompanion(
     wordsPanel.hidden = id !== 'words'
     debugPanel.hidden = id !== 'debug'
     if (id === 'summary') void refreshSummary()
-    if (id === 'words') void refreshWords()
+    if (id === 'words') {
+      void refreshWords()
+      void refreshWordAssetHint()
+    }
     if (id === 'preview') refreshPreview()
     if (id === 'debug') refreshDebug(lastDebug)
   }
@@ -454,6 +459,32 @@ export function mountCompanion(
   panels.append(homePanel, demoPanel, previewPanel, summaryPanel, wordsPanel, debugPanel)
 
   const formHint = wordForm.querySelector<HTMLParagraphElement>('[data-form-hint]')!
+  const assetHint = wordForm.querySelector<HTMLParagraphElement>('[data-asset-hint]')!
+  const wordInput = wordForm.querySelector<HTMLInputElement>('input[name="word"]')!
+
+  const refreshWordAssetHint = async () => {
+    const word = wordInput.value
+    if (!word.trim()) {
+      assetHint.hidden = true
+      assetHint.textContent = ''
+      return
+    }
+    const bank = await shell.store.getBank()
+    const takenIds = new Set(bank.map(entry => entry.id))
+    const hint = describeWordAssetHint(word, takenIds)
+    if (!hint) {
+      assetHint.hidden = true
+      assetHint.textContent = ''
+      return
+    }
+    assetHint.hidden = false
+    assetHint.textContent = hint
+  }
+
+  wordInput.addEventListener('input', () => {
+    void refreshWordAssetHint()
+  })
+
   wordForm.addEventListener('submit', event => {
     event.preventDefault()
     void (async () => {
@@ -497,6 +528,8 @@ export function mountCompanion(
       formHint.hidden = false
       formHint.textContent = `Saved “${entry.word}”.`
       wordForm.reset()
+      assetHint.hidden = true
+      assetHint.textContent = ''
       void refreshWords()
     })()
   })
