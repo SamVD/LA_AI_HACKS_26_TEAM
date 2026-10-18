@@ -285,3 +285,55 @@ describe('bridge key-value store', () => {
     await expect(kv.set('k', 'v')).rejects.toThrow(/setLocalStorage failed/)
   })
 })
+
+describe('head tilt (T-305)', () => {
+  const imu = (x: number) => ({ sysEvent: { eventType: 8, imuData: { x } } })
+  const cand: Screen = { kind: 'candidates', items: [], index: 0, level: 1 }
+
+  /** A mode that shows `screen` and records the intents it receives. */
+  async function tiltBoot(screen: Screen, flags: { imuEnabled: boolean }) {
+    const seen: string[] = []
+    let t = 0
+    const mode: Mode = { ...listeningMode('step1', seen), async enter(c) { c.ui.onIntent(i => { seen.push(i) }); await c.ui.show(screen) } }
+    const fake = createFakeHub()
+    const store = new MemoryStore()
+    const allFlags = { step2Enabled: false, step3Enabled: false, mockServices: true, ...flags }
+    const { shell } = await startApp({
+      hub: fake.hub, modes: { step1: mode, step2: stub('step2'), step3: stub('step3') }, flags: allFlags, store,
+      now: () => (t += 100),
+      makeContext: ({ ui, leave }) => ({ ui, leave, stt: new MockStt(), predictor: new MockPredictor(), store, now: () => 0, log: () => {}, flags: allFlags }),
+    })
+    await shell.startMode('step1')
+    await flush()
+    const look = async (x: number, n: number) => { for (let i = 0; i < n; i++) { fake.fire(imu(x)); await flush() } }
+    return { fake, seen, look }
+  }
+
+  it('on candidates: look down sends NEXT, look up sends PREV', async () => {
+    const { seen, look } = await tiltBoot(cand, { imuEnabled: true })
+    await look(0.03, 10)
+    await look(-0.25, 6)
+    await look(0.03, 10)
+    await look(0.3, 6)
+    expect(seen).toEqual(['NEXT', 'PREV'])
+  })
+
+  it.each([['blank', { kind: 'blank' } as Screen], ['status', { kind: 'status', text: 'x' } as Screen]])(
+    'on %s: tilts dispatch nothing', async (_, screen) => {
+      const { seen, look } = await tiltBoot(screen, { imuEnabled: true })
+      await look(0.03, 10)
+      await look(-0.25, 8)
+      await look(0.3, 8)
+      expect(seen).toEqual([])
+    })
+
+  it('turns the IMU on only when the flag is set', async () => {
+    const on = await tiltBoot(cand, { imuEnabled: true })
+    expect(on.fake.calls.filter(c => c.op === 'imu')).toEqual([{ op: 'imu', on: true }])
+    const off = await tiltBoot(cand, { imuEnabled: false })
+    expect(off.fake.calls.filter(c => c.op === 'imu')).toEqual([])
+    await off.look(0.03, 10)
+    await off.look(-0.25, 8)
+    expect(off.seen).toEqual([])
+  })
+})

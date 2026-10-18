@@ -3,6 +3,7 @@
 import type { Flags, GlassesUI, ImageSource, Mode, ModeContext, ModeId, Store } from '../core/types'
 import type { HubBridge, Log } from './bridge'
 import { toIntent, toSystemSignal } from './input'
+import { createTiltDetector } from './imu/tilt'
 import { createLifecycle, type VisibilitySource } from './lifecycle'
 import { createShell } from './shell'
 import { createGlassesUI } from './ui'
@@ -16,6 +17,8 @@ export interface AppOptions {
   makeContext(parts: { ui: GlassesUI; leave: () => void }): ModeContext
   log?: Log
   doc?: VisibilitySource
+  /** Clock for IMU samples (they carry no timestamp). */
+  now?: () => number
 }
 
 export async function startApp(opts: AppOptions) {
@@ -33,13 +36,29 @@ export async function startApp(opts: AppOptions) {
 
   let unsubscribe = () => {}
   const lifecycle = createLifecycle({ shell, refresh: () => ui.refresh(), store: opts.store, log, unsubscribe: () => unsubscribe(), doc: opts.doc })
+  // T-305: head tilt = swipe, but only while suggestions are on the glasses.
+  // NEXT/PREV mean other things on the blank, menu and Practice screens.
+  const now = opts.now ?? Date.now
+  const tilt = opts.flags.imuEnabled ? createTiltDetector() : null
+  tilt && shell.onScreen(screen => { if (screen.kind === 'candidates') tilt.arm(now()); else tilt.disarm() })
+
   unsubscribe = opts.hub.onEvent(event => {
     const intent = toIntent(event)
     if (intent) { ui.dispatch(intent); return }
+    const imu = event.sysEvent?.imuData as { x?: number } | undefined
+    if (tilt && imu) {
+      const dir = tilt.sample(imu.x ?? 0, now())
+      if (dir && shell.lastScreen()?.kind === 'candidates') {
+        log('imu.tilt', { dir, kind: 'candidates' })
+        ui.dispatch(dir)
+      }
+      return
+    }
     const signal = toSystemSignal(event)
     if (signal) void lifecycle.onSystem(signal)
   })
 
   await shell.showLauncher()
+  if (tilt) log('imu.on', { ok: await opts.hub.imuControl(true) })
   return { shell, ui }
 }

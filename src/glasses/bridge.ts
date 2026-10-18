@@ -4,6 +4,7 @@ import {
   CreateStartUpPageContainer,
   ImageContainerProperty,
   ImageRawDataUpdate,
+  ImuReportPace,
   RebuildPageContainer,
   TextContainerProperty,
   TextContainerUpgrade,
@@ -21,6 +22,8 @@ export interface HubBridge {
   sendImage(id: number, name: string, png: Uint8Array): Promise<boolean>
   /** shutDownPageContainer(1): the system exit dialog. The user may cancel. */
   exitDialog(): Promise<void>
+  /** Turns the IMU sample stream on or off (about 10 samples/s). Resolves true when the glasses accepted it. */
+  imuControl(on: boolean): Promise<boolean>
   onEvent(cb: (event: EvenHubEvent) => void): () => void
   getItem(key: string): Promise<string>
   setItem(key: string, value: string): Promise<boolean>
@@ -94,6 +97,7 @@ export function createHubBridge(bridge: EvenAppBridge, log: Log, timeoutMs = 500
       return String(result) === 'success'
     }, false),
     exitDialog: async () => { await run('shutDownPageContainer', () => bridge.shutDownPageContainer(1), false) },
+    imuControl: on => run('imuControl', () => bridge.imuControl(on, ImuReportPace.P100), false),
     onEvent: cb => bridge.onEvenHubEvent(cb),
     getItem: key => run('getLocalStorage', () => bridge.getLocalStorage(key), ''),
     setItem: (key, value) => run('setLocalStorage', () => bridge.setLocalStorage(key, value), false),
