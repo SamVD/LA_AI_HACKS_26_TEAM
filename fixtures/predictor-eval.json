@@ -341,6 +341,83 @@
         "soupspoon"
       ],
       "inBank": true
+    },
+    {
+      "id": "eval-26",
+      "shape": "near-miss-sound",
+      "transcriptTail": "I need to return these books before they are late. Please walk me to the libary, the",
+      "stalledAfter": "the",
+      "n": 3,
+      "intendedWord": "library",
+      "acceptable": [
+        "library",
+        "bookshop"
+      ],
+      "inBank": true
+    },
+    {
+      "id": "eval-27",
+      "shape": "near-miss-sound",
+      "transcriptTail": "Sarah tried to call twice and left a voicemail. Hand me my fone, my",
+      "stalledAfter": "my",
+      "n": 3,
+      "intendedWord": "phone",
+      "acceptable": [
+        "phone",
+        "telephone"
+      ],
+      "inBank": true
+    },
+    {
+      "id": "eval-28",
+      "shape": "near-miss-sound",
+      "transcriptTail": "The toast is ready but I am out of slices. Get me the bredd, the",
+      "stalledAfter": "the",
+      "n": 3,
+      "intendedWord": "bread",
+      "acceptable": [
+        "bread"
+      ],
+      "inBank": true
+    },
+    {
+      "id": "eval-29",
+      "shape": "known-name",
+      "transcriptTail": "Both grandchildren are coming over this afternoon. We are going to the park with",
+      "stalledAfter": "with",
+      "n": 3,
+      "intendedWord": "Maya",
+      "acceptable": [
+        "Maya",
+        "Nilo"
+      ],
+      "inBank": true
+    },
+    {
+      "id": "eval-30",
+      "shape": "known-name",
+      "transcriptTail": "I will be out all morning, so we can meet at",
+      "stalledAfter": "meet at",
+      "n": 3,
+      "intendedWord": "Sunrise Clinic",
+      "acceptable": [
+        "Sunrise Clinic",
+        "Maple Hall"
+      ],
+      "inBank": true
+    },
+    {
+      "id": "eval-31",
+      "shape": "clean-stall",
+      "transcriptTail": "This morning I woke up late, rushed through breakfast without eating, grabbed my coat from the hook by the door, checked that every window upstairs and down was shut, and then patted my pockets for my wallet and my",
+      "stalledAfter": "my",
+      "n": 3,
+      "intendedWord": "keys",
+      "acceptable": [
+        "keys",
+        "car keys"
+      ],
+      "inBank": true
     }
   ]
 }

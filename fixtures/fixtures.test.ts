@@ -218,14 +218,14 @@ describe('conversations', () => {
 })
 
 describe('predictor evaluation', () => {
-  it('validates 25 requests with balanced shapes and five out-of-bank targets', () => {
+  it('validates 31 requests with balanced shapes and five out-of-bank targets', () => {
     const data = load('./predictor-eval.json')
     object(data)
     expect(data.version).toBe(1)
     assert(Array.isArray(data.cases))
     const cases = data.cases.map(value => { evalCase(value); return value })
-    expect(cases).toHaveLength(25)
-    expect(new Set(cases.map(value => value.id)).size).toBe(25)
+    expect(cases).toHaveLength(31)
+    expect(new Set(cases.map(value => value.id)).size).toBe(31)
     for (const shape of shapes.slice(0, 6)) {
       expect(cases.filter(value => value.shape === shape).length).toBeGreaterThanOrEqual(3)
     }
