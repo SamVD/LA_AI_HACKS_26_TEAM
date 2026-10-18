@@ -17,19 +17,11 @@
         -webkit-text-size-adjust: 100%;
         overscroll-behavior: none;
       }
-      #app {
-        display: flex;
-        height: 100%;
-        align-items: center;
-        justify-content: center;
-        padding: 24px;
-        box-sizing: border-box;
-        text-align: center;
-      }
     </style>
   </head>
   <body>
-    <div id="app">Companion app is running. Check the glasses display.</div>
+    <!-- The phone companion (src/phone, mountCompanion) mounts here. -->
+    <div id="app"></div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

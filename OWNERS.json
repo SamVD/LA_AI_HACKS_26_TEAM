@@ -75,7 +75,8 @@
   },
   "branchGrants": {
     "glass/renderer": [
-      "src/main.ts"
+      "src/main.ts",
+      "src/mocks/startup.test.ts"
     ],
     "glass/scaffold": [
       "package.json",
