@@ -1,5 +1,6 @@
 /// <reference types="vite/client" />
 import type { GreyImage, ImageSource, WordEntry } from '../core/types'
+import { mouthKeyFor as resolveMouthKey } from './phonetics'
 import words from './words.json'
 
 const svgFiles = import.meta.glob<string>('./assets/**/*.svg', { query: '?raw', import: 'default' })
@@ -13,32 +14,9 @@ export function builtinBank(): WordEntry[] {
   return structuredClone(words as WordEntry[])
 }
 
-/** Initial-letter heuristic; firstSound overrides names and exceptions. */
+/** Mouth cue for a word; firstSound overrides names and exceptions. */
 export function mouthKeyFor(entry: WordEntry): string | undefined {
-  const sound = (entry.firstSound ?? entry.word).normalize('NFKD')
-    .replace(/\p{M}/gu, '').toLowerCase().trim().replace(/^\/|\/$/g, '')
-  let shape: string | undefined
-  if (/^th/.test(sound)) shape = 'tongue-teeth'
-  else if (/^(sh|ch|zh)/.test(sound)) shape = 'pucker'
-  else if (/^ph/.test(sound)) shape = 'lip-teeth'
-  else if (/^(wh|wr|oo)/.test(sound)) shape = 'rounded'
-  else if (/^(kn|gn)/.test(sound)) shape = 'tongue-up'
-  else if (/^ps/.test(sound)) shape = 'teeth-together'
-  else if (/^ng/.test(sound)) shape = 'back'
-  else if (/^ee/.test(sound)) shape = 'wide'
-  else if (/^ah/.test(sound)) shape = 'open'
-  else if (/^c[eiy]/.test(sound)) shape = 'teeth-together'
-  else if (/^g[eiy]/.test(sound)) shape = 'pucker'
-  else if (/^[pbm]/.test(sound)) shape = 'lips-closed'
-  else if (/^[fv]/.test(sound)) shape = 'lip-teeth'
-  else if (/^[wor]/.test(sound)) shape = 'rounded'
-  else if (/^[ahu]/.test(sound)) shape = 'open'
-  else if (/^[eiy]/.test(sound)) shape = 'wide'
-  else if (/^[sz]/.test(sound)) shape = 'teeth-together'
-  else if (/^[tdnl]/.test(sound)) shape = 'tongue-up'
-  else if (/^[kgcq]/.test(sound)) shape = 'back'
-  else if (/^j/.test(sound)) shape = 'pucker'
-  return shape ? `mouth:${shape}` : undefined
+  return resolveMouthKey(entry.word, entry.firstSound)
 }
 
 export function resolveAssets(entry: WordEntry): { imageKey?: string; mouthKey?: string } {

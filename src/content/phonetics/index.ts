@@ -11,9 +11,13 @@ const prefixShape: ReadonlyArray<readonly [RegExp, MouthShape]> = [
   [/^(?:sh|ch|zh|j)/, 'pucker'],
   [/^(?:ph|f|v)/, 'lip-teeth'],
   [/^(?:wh|wr|w|oo|u|o|r)/, 'rounded'],
+  // ng (as a firstSound label) sits in the back of the mouth, ahead of plain n.
+  [/^ng/, 'back'],
   [/^(?:kn|gn|t|d|n|l)/, 'tongue-up'],
   [/^(?:ps|c(?=[eiy])|s|z)/, 'teeth-together'],
-  [/^(?:ng|k|g|c|q)/, 'back'],
+  // Soft g (giraffe, gem) reads like a j; hard-g exceptions collapse below.
+  [/^g(?=[eiy])/, 'pucker'],
+  [/^(?:k|g|c|q)/, 'back'],
   [/^(?:ee|e|i|y)/, 'wide'],
   [/^(?:ah|a|h)/, 'open'],
   [/^(?:p|b|m)/, 'lips-closed'],
@@ -33,7 +37,9 @@ export function mouthKeyFor(word: string, firstSound?: string): string | undefin
   const sound = /^(?:kn|gn|wr|ps)/.test(raw) ? raw :
     /^(?:hour|honest|honor|heir|herb)/.test(raw) ? raw.slice(/^(?:hour|honest|honor|heir|herb)/.exec(raw)![0].length) || 'ah' :
     /^one(?:\b|$)/.test(raw) || /^once(?:\b|$)/.test(raw) ? 'w' :
-    /^(?:use|user|usual|unicorn|university|unit|Europe|eulogy)/i.test(raw) ? 'y' : raw
+    /^(?:use|user|usual|unicorn|university|unit|Europe|eulogy)/i.test(raw) ? 'y' :
+    // Hard g before e/i keeps the back sound (gift, girl, get, gear).
+    /^g(?:et|ift|irl|iv|ig|ill|ild|ir[dt]|ingham|izmo|iddy|ibbon|ear|eek|ecko|eese|eezer)/.test(raw) ? 'g' : raw
 
   for (const [pattern, shape] of prefixShape) {
     if (pattern.test(sound)) return `mouth:${shape}`
