@@ -18,6 +18,10 @@ describe('classifyEnding', () => {
     ['I take my, um', 'filler'],
     ['It is the, uh', 'filler'],
     ['I would like', 'filler'],
+    ["I'd like", 'filler'],
+    ['It looks like', 'filler'],
+    ['It is sort of like', 'filler'],
+    ['Can you give me the thing', 'filler'],
     ['Can you hand me the, you know', 'filler'],
     ['Pass me the,', 'trailing-comma'],
   ])('stall: %s', (text, reason) => {
@@ -44,6 +48,10 @@ describe('classifyEnding', () => {
     'Thanks, no worries',
     'See you then',
     'I need the door', // a real stall in clean-stall, but identical to a complete sentence without punctuation
+    'One more thing', // ORCH watch item (#75): "thing" and "like" end complete sentences too
+    'That is a good thing',
+    'The one I like',
+    'Do what you like',
   ])('not a stall: %s', text => {
     expect(classifyEnding(text).stall).toBe(false)
   })

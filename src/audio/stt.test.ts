@@ -102,6 +102,20 @@ describe('ElevenLabsStt.transcribeUtterance', () => {
     expect(f.scribeCalls()).toHaveLength(0)
   })
 
+  it('logs the room floor and peak when nothing counted as speech (G2 triage)', async () => {
+    const { stt, mic, log } = setup()
+    const p = stt.transcribeUtterance({ maxMs: 3000, endSilenceMs: 1200 })
+    // A very quiet room (-60 dBFS) and a voice at -55: above the floor, but under floor + 12 dB and under -50 dBFS.
+    await mic.play(synth([{ ms: 1000, db: -60 }, word(400, -55), { ms: 1700, db: -60 }]))
+    await p
+    const entry = log.find(([e]) => e === 'stt.no-speech')?.[1] as { floorDb: number; peakDb: number; end: string }
+    expect(entry.end).toBe('max')
+    expect(entry.floorDb).toBeGreaterThanOrEqual(-63)
+    expect(entry.floorDb).toBeLessThanOrEqual(-58)
+    expect(entry.peakDb).toBeGreaterThanOrEqual(-57)
+    expect(entry.peakDb).toBeLessThanOrEqual(-53)
+  })
+
   it('sends what it has when maxMs cuts off ongoing speech', async () => {
     const { stt, mic, f } = setup()
     const p = stt.transcribeUtterance({ maxMs: 2000, endSilenceMs: 1200 })

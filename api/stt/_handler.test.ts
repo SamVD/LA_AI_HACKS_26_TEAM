@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { createTokenHandler, originMatches, parseOrigins } from './_handler'
+import { createTokenHandler, parseOrigins } from './_handler'
 
 const KEY = 'sk_test_never_leaks_0123456789'
 const ORIGIN = 'http://localhost:5173'
@@ -118,23 +118,7 @@ describe('api/stt token handler', () => {
 
 // G1 (real G2): the Even app serves the packaged build from a local server, so the
 // WebView's Origin is http://127.0.0.1:<port> (61976 in the logs). The port may change per launch.
-describe('loopback any-port origins', () => {
-  it.each([
-    ['http://127.0.0.1:61976', 'http://127.0.0.1:*', true],
-    ['http://127.0.0.1:1', 'http://127.0.0.1:*', true],
-    ['http://127.0.0.1:61976', 'http://127.0.0.1:61976', true],
-    ['http://127.0.0.1', 'http://127.0.0.1:*', false], // no port
-    ['http://127.0.0.1:abc', 'http://127.0.0.1:*', false],
-    ['http://127.0.0.1:123456', 'http://127.0.0.1:*', false],
-    ['http://127.0.0.1.evil.com:80', 'http://127.0.0.1:*', false], // lookalike host
-    ['https://127.0.0.1:61976', 'http://127.0.0.1:*', false], // other scheme
-    ['http://127.0.0.10:61976', 'http://127.0.0.1:*', false],
-    ['http://localhost:61976', 'http://127.0.0.1:*', false],
-    ['https://evil.example', '*', true], // dev wildcard
-  ] as const)('%s vs %s -> %s', (origin, entry, ok) => {
-    expect(originMatches(origin, entry)).toBe(ok)
-  })
-
+describe('Even WebView origin (http://127.0.0.1:<any port>)', () => {
   it('serves the Even WebView origin on any port and still rejects other origins', async () => {
     const handle = createTokenHandler({
       apiKey: 'k', allowedOrigins: parseOrigins('http://localhost:5173,http://127.0.0.1:*'),

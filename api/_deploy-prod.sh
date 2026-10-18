@@ -34,7 +34,7 @@ if [ -n "$BAD" ]; then echo "refusing: secret-looking files in the export: $BAD"
 
 check() { # name, expected status, curl args...
   local name=$1 want=$2; shift 2
-  local got; got=$(curl -s -o /dev/null -w '%{http_code}' "$@")
+  local got; got=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "$@" || true) # 000 = no answer; keep going under set -e
   if [ "$got" = "$want" ]; then echo "  ok   $name ($got)"; else echo "  FAIL $name (got $got, want $want)"; FAILED=1; fi
 }
 FAILED=0

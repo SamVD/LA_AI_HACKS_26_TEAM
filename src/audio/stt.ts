@@ -140,7 +140,12 @@ export class ElevenLabsStt implements SttService {
       return fail('unknown', tCall, tEnd)
     }
     const vad = u.vad
-    if (!vad?.heardSpeech) return fail('no-speech', tCall, tEnd)
+    if (!vad?.heardSpeech) {
+      // For G2 triage ("the prompt sits, then moves up a cue"): was the room loud, or the voice quiet?
+      // Speech must be marginDb (12) over the floor and above minSpeechDb (-50 dBFS).
+      if (vad) this.log('stt.no-speech', { floorDb: Math.round(vad.noiseFloorDb), peakDb: Math.round(vad.peakDb), audioMs: vad.elapsedMs, end: reason })
+      return fail('no-speech', tCall, tEnd)
+    }
 
     // Trim to the speech plus a little context; less to upload, same transcript.
     const all = concatBytes(u.chunks)
