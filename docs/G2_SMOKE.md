@@ -29,7 +29,7 @@ Sections A and B are required at every gate. Run C, D and E for the steps the ga
 | A1 | Install and launch from Me → Beta tester | App opens on the glasses without a crash; the phone page renders |
 | A2 | **5-minute phone lock** while a mode is running (mic on for Step 2/3) | After unlock: same screen, same state (`onBackgroundRestore` worked), intents still work, mic resumes |
 | A3 | Background the Even app for 1 minute, then return | Same as A2 |
-| A4 | **Permission denial**: deny the mic permission, then start Step 1 | A `status` Screen explains the mic is off; no crash, no hang; double-tap still exits |
+| A4 | **Mic unavailable / denied.** The glasses mic (D7) comes over BLE and is **not** governed by the phone's OS mic permission, and the Even app has no per-app switch for `g2-microphone`, so denial can't be triggered on a stock device (G1 finding, D16). Run instead: (a) the unit tests `src/audio/stt.test.ts` (`audioControl` → false gives `mic-denied`) and `src/modes/step1/practice.test.ts` ("Microphone is off…" status) pass in CI; (b) on the device, turn the glasses **off or out of range** mid-Step 1 | (a) is green. (b) Step 1 shows a status message ("Could not hear you" / "Microphone is off"), with no crash and no hang; double-tap still leaves |
 | A5 | Network down (airplane mode) during Step 1 and Step 2 | `status` message for STT; Step 2 shows bank-only suggestions within ~1.5 s |
 | A6 | **Root-page double-tap** | System exit dialog appears. Cancel keeps the app working (still receives taps). Confirm exits cleanly; mic and IMU are off afterwards |
 | A7 | Relaunch after exit | Starts clean; word bank and session history are still there |

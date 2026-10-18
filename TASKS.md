@@ -1,6 +1,6 @@
 # Nudge Task Board
 
-_Last updated: Sat Oct 17, 2026 (about H11) by ORCH. **Current snapshot of every task, PR, decision and blocker: `docs/ORCH_STATE.md`.** Decisions D1-D14: `PLAN.md` Section 13. Contracts: CONTRACT_VERSION 2 (`src/core/types.ts`, `docs/CONTRACTS.md`). Phase 1 builder prompts: `docs/prompts/phase1-builder-prompts.md`._
+_Last updated: Sat Oct 17, 2026 (about H11:15) by ORCH. **G1 PASSED: `main` = `v0.1-step1` = `4b13180`.** **Current snapshot of every task, PR, decision and blocker: `docs/ORCH_STATE.md`.** Decisions D1-D16: `PLAN.md` Section 13. Contracts: CONTRACT_VERSION 2 (`src/core/types.ts`, `docs/CONTRACTS.md`). Phase 1 builder prompts: `docs/prompts/phase1-builder-prompts.md`._
 
 Single source of truth for who is doing what. Read `PLAN.md` first for architecture, contracts, ownership, and git rules.
 
@@ -11,10 +11,10 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 **Device testing (all lanes):** QR prototype mode is broken on Even's side, so the glasses only run **packaged Beta builds** (pack → upload at hub.evenrealities.com → Me → Beta tester; a few minutes per cycle). Iterate in the simulator and batch device checks. The workflow, including how to pack a spike page on its own, is in `README.md` → "Run on the real G2". Gate flags are set at pack time with `VITE_STEP2=1` / `VITE_STEP3=1` (`docs/G2_SMOKE.md`).
 
 **Queue by lane (now):**
-- GLASS: T-204 and T-202 are merged. Next: **G1 now**: production passes the curl check (`integration` @ `4b13180`). Then **G2** (T-207 runbook) with a second person.
+- GLASS: **G1 passed** (#68). Next: **G2** (T-207 runbook) with a second person; include A3/A5/A7. Bump `app.json` above 0.3.0 for the G2 upload (ORCH does it on request).
 - AI: G1 origin fixed: the Even WebView origin is `http://127.0.0.1:<port>` (#61 adds `:*` matching). **Next: tighten production `STT_ALLOWED_ORIGINS` to exactly `http://localhost:5173,http://127.0.0.1:*`** (at H11 production also accepted `null`/`file://`) and redeploy with `api/_deploy-prod.sh`. Then T-301 stall detector.
-- LOGIC (Devin): T-201, T-205 (#62) and T-303 are merged. Next: the T-205 `hourglass` nit (silent-h rule) and the eval-04 fixture fix; then help T-302 if AI is busy. Board changes go in your task PR description; ORCH applies them (the `orch/` prefix is ORCH-only).
-- UI (Cursor): T-206 and T-401 part 1 are merged. Next (lower priority than Step 2): T-401 part 2, the Demo entry inside `mountCompanion` so judges can reach it in the packaged app, with a cancellable replay.
+- LOGIC (Devin): T-205 follow-ups and the eval fixes are merged (#70, #65). Next: **T-108 Step 1 auto-escalate** (issue #73, from the G1 run), then help T-302 if AI is busy.
+- UI (Cursor): #69 (preview captions) has changes requested: the caption leaks the word at L1/L2. Fix, then the final T-403 polish pass before H18.
 
 **Global rules for every task (also repeated in the builder prompt):**
 - Read anything. Edit only the files listed on your card. If you need a change elsewhere, stop and say so in your reply.
@@ -243,7 +243,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ### T-107 Gate G1: audit, integrate, smoke, tag
 - **Owner:** ORCH (with GLASS holding the device)
-- **Status:** **IN PROGRESS (Sarah + Sam), origin blocker fixed.** The packaged WebView origin is `http://127.0.0.1:<port>` (61976 observed); added on Vercel and `:*` matching merged (#61). Sarah is re-testing on the device.
+- **Status:** **PASSED (H11, PR #68).** Real G2, v0.3.0, `integration` @ `4b13180`: 10 prompts with real speech graded √/×, cue ladder, phone lock, root exit, B5, B6. A4 accepted via unit tests (D16). `main` fast-forwarded to `4b13180`, tagged **`v0.1-step1`**. A3/A5/A7 move to the G2 run.
 - **Depends on:** T-101 to T-106
 - **Spec:** audit every PR against the checklist; verify no contract drift; merge order T-101, T-104, T-103, T-102, T-106, T-105; run `docs/G2_SMOKE.md` on the real G2 with the Beta build; fast-forward `main`, tag `v0.1-step1`, upload the `.ehpk`.
 - **Acceptance criteria (gate):** Step 1 runs 10 prompts on the real G2, with check/X feedback and the cue ladder; survives a 5-minute lock/resume; mic-denied path shows a message; root double-tap exits cleanly.
@@ -260,6 +260,15 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 ## Phase 2 Step 2 (H10 to H14:30) → Gate G2
 
 **Goal:** a user asks for help mid-conversation and gets suggestions, pictures, and a cue ladder. Detailed specs are refined by ORCH at G1 using what the spikes and Step 1 taught us; the ownership and shape are fixed now.
+
+### T-108 Step 1: auto-escalate the cue after a wrong answer (G1 UX finding)
+- **Owner:** LOGIC (Devin)
+- **Status:** READY (issue #73)
+- **Branch:** `logic/step1-auto-escalate`
+- **Depends on:** T-102
+- **Files it may EDIT:** `src/modes/step1/**`
+- **Spec:** after the wrong-answer feedback, escalate one cue level automatically before re-showing and listening (L0 → L1 picture, skipped without a picture → L2 `c_p` → L3 word); keep the 3-wrong-at-L3 → unsolved rule; silence behaviour unchanged; `solvedAtCue` records the level of the eventual correct answer.
+- **Acceptance criteria:** tests for wrong at L0 → L1 (or L2), wrong at L2 → L3, 3 wrong at L3 → unsolved and next item, correct after auto-escalation records that level. Re-checked on the device during the G2 run (Step 1 regression).
 
 ### T-201 Predictor implementation
 - **Owner:** LOGIC (Codex)
@@ -331,7 +340,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ### T-207 Gate G2: audit, integrate, smoke, tag
 - **Owner:** ORCH
-- **Status:** READY after G1 passes. All Step 2 code is merged (T-201, T-202, T-203, T-204) and wired in `src/main.ts`; production `api/` is live.
+- **Status:** **READY NOW** (G1 passed). All Step 2 code is merged and wired; production `api/` is live. Include G2_SMOKE A3, A5 and A7 (not reported at G1).
 - **Spec:** audit, merge in dependency order, run `docs/G2_SMOKE.md` plus a live two-person conversation test, fast-forward `main`, tag `v0.2-step2`, upload Beta. **Decision:** enable `step2Enabled` by default.
 - **Acceptance criteria (gate):** in a 5-minute live conversation, the user can ask for help and get at least one correct or acceptable suggestion within about 1.5 s on most attempts; Step 1 still passes its smoke test (regression).
 - **G2 runbook (GLASS runs it with a second person, ORCH records it):**
@@ -448,6 +457,7 @@ No new features after H18. Only fixes, packaging, polish, and the story.
 - H7: T-004 fixtures merged (PR #9). Follow-up filed as T-007.
 - H7: T-006 design tokens and glasses layouts merged (PR #7, after one round of changes).
 - H7: T-002 device checks done (PR #13, `docs/BETA_RESULTS.md`). QR prototype mode is broken on Even's side, so device testing uses packaged Beta builds; README and `docs/G2_SMOKE.md` updated.
+- H11:15: **G1 PASSED** (PR #68): `main` fast-forwarded to `4b13180`, tagged `v0.1-step1`. A4 accepted via unit tests (D16, `G2_SMOKE.md` A4 reworded). Merged #70 (hourglass fix), #65 (eval fixtures). #69 changes requested (caption leaks the word). T-108 auto-escalate filed (issue #73). **G2 is ready to run.**
 - H11: **G1 'No connection' root cause:** the Even app serves packaged builds from a local server, so the WebView origin is `http://127.0.0.1:<port>` (61976); every token preflight got 403. Sam added it on Vercel; #61 adds `scheme://host:*` origin matching. Merged #62 (T-205) and #64 (T-403 assets). #63 closed (`orch/` prefix is ORCH-only; the grant wasn't needed). LOGIC tool is now Devin. Production origins to tighten to `localhost:5173` + `127.0.0.1:*`.
 - H10:45: Production `api/` redeployed from `integration` @ `4b13180`; `api/stt` and `api/predict` are live and curl-checked. Incident 05:07-05:16 UTC: `vercel --prod` run from a checkout on an unmerged branch put pre-#50 code live, and `api/stt` returned 500 for ~9 min. No secrets were uploaded. Rule: deploy only with `bash api/_deploy-prod.sh` (#57, issue #56; PLAN D15). `docs/ORCH_STATE.md` added (#58).
 - H10:30: T-201 part 2 (#51) and T-203 `api/predict` (#53) merged. ORCH wired the real predictor in `src/main.ts` (1.5 s timeout, D14; `VITE_PREDICT_URL` in `.env.production`). **All Step 2 code is in.** G2 runbook added to T-207. Production `api/` still needs Sam's redeploy.

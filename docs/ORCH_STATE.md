@@ -2,27 +2,27 @@
 
 The orchestrator's single snapshot of where Nudge stands. **ORCH updates this after every gate (G1, G2, G3, final) and after any merge that changes a gate's readiness.** Detailed task cards live in `TASKS.md`, decisions in `PLAN.md` §13, contracts in `docs/CONTRACTS.md`.
 
-_Last updated: **Sat Oct 17, 2026, 11:00 PM PT (hackathon hour ~H11 of 24)** by ORCH (aaravj9)._
+_Last updated: **Sat Oct 17, 2026, 11:15 PM PT (hackathon hour ~H11:15 of 24)** by ORCH (aaravj9). **G1 PASSED.**_
 
 ## Snapshot
 
 | Item | Value |
 |---|---|
-| `integration` | after PRs #61, #62, #64 (+ this update). CI green: typecheck, 626 tests, build, ownership |
-| `main` | `278ad9b` (PR #2). **Not fast-forwarded yet**: moves at G1 |
-| Tags | none yet (`v0.1-step1` at G1, `v0.2-step2` at G2, `v0.3-step3` at G3) |
-| `app.json` version | **0.3.0** (not uploaded yet). Last Beta upload: 0.2.0 (T-101 gallery build). Bump for every upload (D10) |
+| `integration` | after PRs #68, #70, #65 (+ this update). CI green: typecheck, 630 tests, build, ownership |
+| `main` | **`4b13180`** (fast-forwarded at G1; the build Sarah tested) |
+| Tags | **`v0.1-step1` → `4b13180`** (G1). Next: `v0.2-step2` at G2, `v0.3-step3` at G3 |
+| `app.json` version | **0.3.0, uploaded and installed for G1.** Bump above 0.3.0 for the G2 upload (D10) |
 | Contracts | `CONTRACT_VERSION 2` |
 | Production `api/` | `https://nudge-seven-psi.vercel.app`, redeployed by Sam with the WebView origin. At 10:54 PM: `127.0.0.1:<any port>` preflight 204, **but `null` and `file://` also 204, so it's looser than intended**; tighten after #61 (see blockers) |
-| Open PRs | none |
-| Open issues | none (#56 closed: Sam's handoff items done in #55, #58 and this update) |
+| Open PRs | #69 (UI preview captions): changes requested (leaks the word at L1/L2) |
+| Open issues | #73: T-108 Step 1 auto-escalate after a wrong answer (juannli) |
 
 ## Gates
 
 | Gate | What it proves | Status | Blocker / next action |
 |---|---|---|---|
-| **G1: Step 1 on the real G2** | Practice: 10 prompts, cue ladder, √/× feedback, lock/resume, mic denial, exit | **IN PROGRESS: origin blocker fixed.** Root cause of "No connection": the WebView origin is `http://127.0.0.1:<port>` (local server in the Even app), and every preflight got 403. Fixed on Vercel + #61; Sarah re-testing | **Sarah runs the T-107 runbook now.** Ping Sam within 1 h of the first STT attempt (the WebView origin probably needs adding to `STT_ALLOWED_ORIGINS`) |
-| **G2: Step 2 in a live conversation** | Help tap → good suggestion in ≤ ~1.5 s on most attempts; Step 1 regression | **Code complete** (T-201, T-202, T-203, T-204 merged and wired) | After G1. Sarah + a second person run the T-207 runbook (`VITE_STEP2=1 npm run pack`). Risk: `wss://` whitelist → batch fallback |
+| **G1: Step 1 on the real G2** | Practice: 10 prompts, cue ladder, √/× feedback, lock/resume, mic denial, exit | ✅ **PASSED (H11:15, #68)**: real speech graded on the G2; lock, exit, B5, B6 pass; A4 accepted via unit tests (D16). Tagged `v0.1-step1` | Done. A3/A5/A7 carried to G2 |
+| **G2: Step 2 in a live conversation** | Help tap → good suggestion in ≤ ~1.5 s on most attempts; Step 1 regression | **READY TO RUN.** Code complete and wired; production live | Sarah + a second person run T-207 (`VITE_STEP2=1 npm run pack`, version above 0.3.0); include A3/A5/A7. Risk: `wss://` whitelist → batch fallback |
 | **G3: Step 3 ambient hints** | Auto-hints after a stall, no false-hint spam in a 10-minute soak | **Not started** (T-301 and T-302 TODO; T-303 merged) | After G2. Ships flag-off unless it passes (PLAN §2) |
 | **Final** | Beta `.ehpk` + Devpost by **H22 (10 AM Sunday)** | Not started (T-402, T-404, T-405) | Demo assets (T-401) are done |
 
@@ -38,24 +38,25 @@ Legend: ✅ merged · 🟡 in progress / review · ⬜ todo · 🚦 gate.
 | T-004 | Word bank + fixtures | LOGIC | ✅ | #9 |
 | T-005 | Predictor prompt (now v2) | ORCH | ✅ | #4, #30 |
 | T-006 | Design tokens + glasses layouts | UI (juannli) | ✅ | #7, #15 |
-| T-007 | Fixture realism | LOGIC | ✅ (eval-04 "Sunrise Clinic" fix still open) | #23 |
+| T-007 | Fixture realism | LOGIC | ✅ | #23, #65, #70 |
 | S-1 | ElevenLabs STT spike | AI (Sam/juannli) | ✅ | #17 |
 | S-2 | Gemini predictor spike | AI (Sam) | ✅ | #26 |
 | S-3 | On-device audio/IMU spike | GLASS | ✅ (0.1.2 rerun items open, not blocking) | #20 |
 | T-101 | Glasses renderer, input, shell, lifecycle | GLASS | ✅ **passed on the real G2** | #29, #38 |
 | T-102 | Step 1 Practice mode | LOGIC | ✅ | #34 |
 | T-103 | Fuzzy matcher | LOGIC | ✅ | #21 |
+| T-108 | Step 1 auto-escalate after a wrong answer (G1 finding) | LOGIC (Devin) | ⬜ READY (issue #73) | — |
 | T-104 | Glasses mic, VAD, utterance STT, `api/stt` | AI (Sam) | ✅ wired, hosted; WebView origin support | #33, #37, #50, #61 |
 | T-105 | Phone companion v1 + preview | UI | ✅ | #11, #18 |
 | T-106 | Assets, content API, store | LOGIC | ✅ (40 PNGs verified in a browser) | #22, #28 |
-| T-107 | 🚦 Gate G1 | ORCH + GLASS | **READY TO RUN** | — |
+| T-107 | 🚦 Gate G1 | ORCH + GLASS | ✅ **PASSED**, tagged `v0.1-step1` | #68 |
 | T-201 | Predictor (fallback v2, throttle, 429) | LOGIC | ✅ wired, 1.5 s timeout | #31, #51, #55 |
 | T-202 | Rolling transcript (realtime) | GLASS (reassigned) | ✅ wired | #49, #54 |
 | T-203 | `api/predict` Gemini proxy | AI (Sam) | ✅ hosted | #53, #57 |
 | T-204 | Step 2 Assist mode | GLASS | ✅ | #43 |
-| T-205 | Mouth-shape resolver + 25 pictures | LOGIC (Devin) | ✅ (`hourglass` nit open) | #62 |
+| T-205 | Mouth-shape resolver + 25 pictures | LOGIC (Devin) | ✅ | #62, #70 |
 | T-206 | Companion v2 (personal words, debug) | UI | ✅ (Debug tab dev-only until the shell exposes transcripts) | #24, #36, #48 |
-| T-207 | 🚦 Gate G2 | ORCH + GLASS | after G1 | — |
+| T-207 | 🚦 Gate G2 | ORCH + GLASS | **READY TO RUN** | — |
 | T-301 | Stall detector | AI | ⬜ | — |
 | T-302 | Step 3 mode | AI | ⬜ | — |
 | T-303 | Keyword extractor | LOGIC | ✅ | #52 |
@@ -89,6 +90,7 @@ ORCH infrastructure PRs: #2, #5, #6, #10, #12, #14, #15, #16, #19, #25, #27, #30
 | D13 | `dropSamples` false for the hackathon (the demo needs the sample names and meds) |
 | D14 | Predictor timeout 1.5 s (measured p95 ~1.15 s through Vercel); real predictor wired |
 | D15 | Production `api/` only from merged `integration` or a gate tag, via `bash api/_deploy-prod.sh`; never `vercel --prod` from a checkout |
+| D16 | G1 passes; mic-denied (A4) accepted via unit tests, since the device can't trigger it; A4 reworded; A3/A5/A7 run at G2 |
 
 ## Blockers and risks
 
@@ -122,18 +124,16 @@ There are no console logs on the device. Use the phone companion's **Preview** t
 
 | Person | Now | Then |
 |---|---|---|
-| **Sarah (GLASS)** | **Run G1** (TASKS T-107): clean `integration` → `npm ci && npm test && npm run pack` → install 0.3.0 → G2_SMOKE A, B (incl. B5/B6), C → record in `docs/BETA_RESULTS.md` | G2 with a second person (T-207, `VITE_STEP2=1`); then T-305 only if time allows |
+| **Sarah (GLASS)** | **Run G2** (TASKS T-207) with a second person; include A3/A5/A7; ask ORCH for the version bump | T-305 only if time allows |
 | **Sam (AI)** | **Tighten `STT_ALLOWED_ORIGINS`** to `localhost:5173` + `127.0.0.1:*` and redeploy (`api/_deploy-prod.sh`); support Sarah's G1 re-test | **T-301** stall detector (tune on T-007 fixtures), then T-302 Step 3 mode |
-| **juannli (LOGIC via Devin + UI)** | T-205 `hourglass` nit; eval-04 fixture fix; board changes go in task PRs (not `orch/` branches) | T-304 (Step 3 settings and log) after T-301; T-403 final polish pass |
-| **Aarav (ORCH)** | Record G1; on a pass: fast-forward `main`, tag `v0.1-step1` | Run G2 the same way; make `step2Enabled` the default on a G2 pass; start T-404 (Devpost, demo script) |
+| **juannli (LOGIC via Devin + UI)** | **T-108** auto-escalate (issue #73); fix #69's caption leak | T-304 after T-301; final T-403 polish |
+| **Aarav (ORCH)** | Bump `app.json` for the G2 build; record G2; on a pass make `step2Enabled` the default, fast-forward `main`, tag `v0.2-step2` | T-404 Devpost + demo script |
 
 ## Loose ends (non-blocking)
 
-- T-205 `hourglass` → `mouth:back` (silent-h rule keeps the remainder).
 - `check-ownership` can't tell who opened a branch, so the `orch/` prefix is honor-system (see closed #63). Real enforcement needs CODEOWNERS + branch protection (repo admin: Sam).
 - `ai/spike-stt` has a stray commit (`check-key.mjs`) never PR'd. Open a PR or drop it.
 - `spikes/stt/token-server.mjs` should bind `127.0.0.1` by default (S-1 review nit).
-- T-007 eval-04 should accept "Sunrise Clinic"; T-203 noted the eval-21 plural "stamp/stamps".
 - S-3 0.1.2 rerun: SDK storage timing, phone-mic retry, blank-screen darkness confirmation.
 - The companion Debug tab needs an `AppShell` transcript/suggestion feed (contract v3) to work in production.
 - `src/glasses/screenshots/*.png` could move to `docs/` later.
@@ -150,6 +150,7 @@ There are no console logs on the device. Use the phone companion's **Preview** t
 | When | Change |
 |---|---|
 | Sat 10:30 PM (H10:30) | First version. Step 1 and Step 2 code complete; production `api/` healthy; G1 ready to run |
+| Sat 11:15 PM (H11:15) | **G1 PASSED** (#68). `main` → `4b13180`, tag `v0.1-step1`. D16 (A4 via unit tests; G2_SMOKE A4 reworded). Merged #70, #65; #69 changes requested; T-108 filed (#73). G2 ready to run |
 | Sat 11:00 PM (H11) | G1 origin root cause confirmed from the Vercel log (`http://127.0.0.1:61976`), fixed on Vercel + #61. Merged #62 (T-205), #64 (T-403 assets). #63 closed. LOGIC tool → Devin. Open: tighten production origins |
 | Sat 10:50 PM (H10:50) | G1 symptom "No connection" traced to a CORS preflight 403 for the WebView origin (verified on production); troubleshooting table corrected |
 | Sat 10:45 PM (H10:45) | Applied Sam's TASKS corrections (production live, deploy script); D15 deploy rule; #56 closed. G1 in progress on the device (Sarah); T-205 about to be pushed (juannli) |
