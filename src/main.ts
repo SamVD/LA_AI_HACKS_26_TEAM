@@ -5,6 +5,9 @@ import {
   TextContainerUpgrade,
   OsEventTypeList,
 } from '@evenrealities/even_hub_sdk'
+import { readFlags, readInitialMode } from './config'
+import { createMockContext, ConsoleUI } from './mocks'
+import { getMode } from './modes'
 
 const bridge = await waitForEvenAppBridge()
 
@@ -30,6 +33,18 @@ const result = await bridge.createStartUpPageContainer(
 )
 
 console.log('Page created:', result === 0 ? 'success' : `failed (${result})`)
+
+// Real STT, prediction and persistence replace these mocks in later tasks.
+// ConsoleUI leaves the SDK hello screen available for the device smoke test.
+const context = createMockContext({ ui: new ConsoleUI(), flags: readFlags(), now: Date.now })
+const mode = getMode(readInitialMode())
+await mode.enter(context)
+
+const cleanup = () => {
+  void mode.exit()
+  void context.stt.stop()
+}
+window.addEventListener('beforeunload', cleanup, { once: true })
 
 // Reads the event type out of one envelope.
 //
@@ -75,6 +90,7 @@ const unsubscribe = bridge.onEvenHubEvent(event => {
   }
 
   if (sysType === OsEventTypeList.SYSTEM_EXIT_EVENT || sysType === OsEventTypeList.ABNORMAL_EXIT_EVENT) {
+    cleanup()
     unsubscribe()
   }
 })
