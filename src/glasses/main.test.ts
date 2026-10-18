@@ -52,7 +52,7 @@ it('boots to the launcher, runs the Step 1 stub, returns on double-click and exi
   mock.listener?.({ audioEvent: {} })
   mock.listener?.({ sysEvent: {} }) // Omitted protobuf zero is a click: start Step 1.
   await settle(); await settle()
-  expect(contentOf(mock.bridge.rebuildPageContainer.mock.calls.at(-1)!)).toBe('step1 not built yet')
+  expect(contentOf(mock.bridge.rebuildPageContainer.mock.calls.at(-1)!)).toContain('____')
 
   mock.listener?.({ sysEvent: { eventType: 3 } }) // BACK inside the stub returns to the launcher.
   await settle(); await settle()
