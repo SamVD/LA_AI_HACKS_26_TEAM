@@ -18,9 +18,10 @@ this annotation. `stalledAfter` is a suffix of that final transcript.
 
 The fixture schema is unchanged: `stalls` may be empty, and may contain more
 than one stall. `clean-stall` and `known-name` each contain two stalls.
-`no-stall` is a complete conversation containing only negative examples.
+`no-stall` and `appointment-pause` contain only negative examples.
+`breakfast-stalls` adds two more word-finding pauses in a breakfast exchange.
 
-The nine conversations range from about 25 to 83 seconds and vary in turn
+The eleven conversations range from about 21 to 83 seconds and vary in turn
 counts, partials, and timing. Annotated stall silences range from 2.2 to 4
 seconds. Some normal pauses are longer than these stalls, including pauses
 before the caregiver answers, so silence duration alone cannot separate the

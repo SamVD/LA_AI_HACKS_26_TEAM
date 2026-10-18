@@ -107,7 +107,8 @@ const conversationDir = new URL('./conversations/', import.meta.url)
 const filenames = readdirSync(conversationDir).filter(name => name.endsWith('.json')).sort()
 describe('conversations', () => {
   it('covers all eight required shapes', () => {
-    expect(filenames.map(name => name.replace(/\.json$/, '')).sort()).toEqual([...shapes, 'no-stall'].sort())
+    expect(filenames.length).toBeGreaterThanOrEqual(11)
+    for (const shape of [...shapes, 'no-stall']) expect(filenames).toContain(`${shape}.json`)
   })
   it.each(filenames)('%s has valid events, stalls and negative pauses', filename => {
     const fixture = load(`./conversations/${filename}`)
@@ -201,6 +202,16 @@ describe('conversations', () => {
     expect(noStall).toBeGreaterThanOrEqual(1)
     expect(new Set(stallPauses).size).toBeGreaterThanOrEqual(5)
     expect(Math.max(...normalPauses)).toBeGreaterThan(Math.min(...stallPauses))
+    // Exhaust every threshold boundary, in either direction. Duration alone
+    // must never classify every stall and every ordinary pause correctly.
+    const durationsToCheck = [...normalPauses, ...stallPauses]
+    const thresholds = [0, ...durationsToCheck, ...durationsToCheck.map(ms => ms + 0.5), Infinity]
+    for (const threshold of thresholds) {
+      for (const predictStall of [(ms: number) => ms >= threshold, (ms: number) => ms < threshold]) {
+        const errors = normalPauses.filter(predictStall).length + stallPauses.filter(ms => !predictStall(ms)).length
+        expect(errors).toBeGreaterThan(0)
+      }
+    }
     expect(Math.min(...durations)).toBeLessThanOrEqual(30000)
     expect(Math.max(...durations)).toBeGreaterThanOrEqual(80000)
   })

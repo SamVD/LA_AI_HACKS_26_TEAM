@@ -1,0 +1,72 @@
+{
+  "id": "appointment-pause",
+  "description": "Synthetic conversation with no word-finding stall. Caregiver speaks 0-5s, user responds 12-16s, caregiver replies 17-21s. The 6.9-second complete-sentence pause is a negative example, not a request for a hint.",
+  "events": [
+    {
+      "tMs": 0,
+      "type": "speech",
+      "speaking": true
+    },
+    {
+      "tMs": 1800,
+      "type": "transcript",
+      "text": "We have plenty of",
+      "isFinal": false,
+      "tStartMs": 0
+    },
+    {
+      "tMs": 5000,
+      "type": "transcript",
+      "text": "We have plenty of time before your appointment.",
+      "isFinal": true,
+      "tStartMs": 0
+    },
+    {
+      "tMs": 5100,
+      "type": "speech",
+      "speaking": false
+    },
+    {
+      "tMs": 12000,
+      "type": "speech",
+      "speaking": true
+    },
+    {
+      "tMs": 13700,
+      "type": "transcript",
+      "text": "Good. I will finish",
+      "isFinal": false,
+      "tStartMs": 12000
+    },
+    {
+      "tMs": 16000,
+      "type": "transcript",
+      "text": "Good. I will finish my water before we leave.",
+      "isFinal": true,
+      "tStartMs": 12000
+    },
+    {
+      "tMs": 16100,
+      "type": "speech",
+      "speaking": false
+    },
+    {
+      "tMs": 17000,
+      "type": "speech",
+      "speaking": true
+    },
+    {
+      "tMs": 21000,
+      "type": "transcript",
+      "text": "I will wait by the door when you are ready.",
+      "isFinal": true,
+      "tStartMs": 17000
+    },
+    {
+      "tMs": 21100,
+      "type": "speech",
+      "speaking": false
+    }
+  ],
+  "stalls": []
+}
