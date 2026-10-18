@@ -166,7 +166,7 @@ TypeScript, Vite, Even Hub SDK (`@evenrealities/even_hub_sdk`, SDK 0.0.12), Even
 
 - **Repo:** https://github.com/SamVD/LA_AI_HACKS_26_TEAM (confirm this is public before submitting)
 - **Beta build:** Even Hub Beta group **[FILL: group name / how a judge installs]**, `nudge.ehpk` version **[FILL: final version, 0.4.4 or later]**
-- **Judge demo without glasses:** there is no hosted URL. Run it locally with Node 22+:
+- **Judge demo without glasses:** there is no hosted URL. Run it locally (Node 20 or newer):
   ```
   git clone https://github.com/SamVD/LA_AI_HACKS_26_TEAM && cd LA_AI_HACKS_26_TEAM
   npm ci && npm run dev
