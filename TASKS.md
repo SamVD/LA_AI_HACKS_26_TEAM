@@ -1,6 +1,6 @@
 # Nudge Task Board
 
-_Last updated: Sat Oct 17, 2026 (about H10:30) by ORCH. **Current snapshot of every task, PR, decision and blocker: `docs/ORCH_STATE.md`.** Decisions D1-D14: `PLAN.md` Section 13. Contracts: CONTRACT_VERSION 2 (`src/core/types.ts`, `docs/CONTRACTS.md`). Phase 1 builder prompts: `docs/prompts/phase1-builder-prompts.md`._
+_Last updated: Sat Oct 17, 2026 (about H10:45) by ORCH. **Current snapshot of every task, PR, decision and blocker: `docs/ORCH_STATE.md`.** Decisions D1-D14: `PLAN.md` Section 13. Contracts: CONTRACT_VERSION 2 (`src/core/types.ts`, `docs/CONTRACTS.md`). Phase 1 builder prompts: `docs/prompts/phase1-builder-prompts.md`._
 
 Single source of truth for who is doing what. Read `PLAN.md` first for architecture, contracts, ownership, and git rules.
 
@@ -11,8 +11,8 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 **Device testing (all lanes):** QR prototype mode is broken on Even's side, so the glasses only run **packaged Beta builds** (pack → upload at hub.evenrealities.com → Me → Beta tester; a few minutes per cycle). Iterate in the simulator and batch device checks. The workflow, including how to pack a spike page on its own, is in `README.md` → "Run on the real G2". Gate flags are set at pack time with `VITE_STEP2=1` / `VITE_STEP3=1` (`docs/G2_SMOKE.md`).
 
 **Queue by lane (now):**
-- GLASS: T-204 and T-202 are merged. Next: **G1** (T-107) as soon as production passes the curl check, then **G2** (T-207 runbook) with a second person.
-- AI: `api/stt` (#50) and `api/predict` (#53) are merged. Next: **redeploy production from `integration`** and curl-check both token types and `/api/predict`; stand by during G1/G2 to add the WebView origin. Then Phase 3: **T-301 stall detector** (tune against T-007 fixtures).
+- GLASS: T-204 and T-202 are merged. Next: **G1 now**: production passes the curl check (`integration` @ `4b13180`). Then **G2** (T-207 runbook) with a second person.
+- AI: Production redeployed from `integration` @ `4b13180`; `api/stt` (both token types) and `api/predict` are curl-checked. Deploys go through `bash api/_deploy-prod.sh` (#57). Standing by during G1/G2 to add the WebView origin. Next: **T-301 stall detector**.
 - LOGIC (Codex): T-201 (both parts) and T-303 are merged. Next: T-205 (mouth-shape resolver) and the eval-04 fixture fix; then help T-302 if AI is busy.
 - UI (Cursor): T-206 and T-401 part 1 are merged. Next (lower priority than Step 2): T-401 part 2, the Demo entry inside `mountCompanion` so judges can reach it in the packaged app, with a cancellable replay.
 
@@ -208,7 +208,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ### T-104 Audio capture, VAD, and utterance STT
 - **Owner:** AI
-- **Status:** MERGED (PR #33). ORCH wired it in `src/main.ts` (real STT unless `?svc=mock`) and added `g2-microphone` and `https://api.elevenlabs.io` to `app.json`. **Open: host `api/stt` on Vercel** (Aarav + Sam: `ELEVENLABS_API_KEY`, `STT_ALLOWED_ORIGINS`), then add its origin to the `app.json` whitelist and pack with `VITE_STT_TOKEN_URL`.
+- **Status:** MERGED (PR #33), wired in `src/main.ts` (now via `createRollingStt`), hosted (`api/stt`, #50), whitelisted in `app.json`, token URL in `.env.production`. Remaining: the packaged G2 round-trip (acceptance item 4), checked at G1.
 - **Branch:** `ai/audio-utterance`
 - **Depends on:** T-001, T-002, S-1, S-3
 - **Files it may EDIT:** `src/audio/**` (excluding `src/audio/rolling/`), `api/stt/**`. `app.json` permissions (`g2-microphone` or `phone-microphone`, `network` with the proxy URL whitelisted) are requested in the PR description; ORCH adds them.
@@ -248,7 +248,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 - **Spec:** audit every PR against the checklist; verify no contract drift; merge order T-101, T-104, T-103, T-102, T-106, T-105; run `docs/G2_SMOKE.md` on the real G2 with the Beta build; fast-forward `main`, tag `v0.1-step1`, upload the `.ehpk`.
 - **Acceptance criteria (gate):** Step 1 runs 10 prompts on the real G2, with check/X feedback and the cue ladder; survives a 5-minute lock/resume; mic-denied path shows a message; root double-tap exits cleanly.
 - **G1 runbook (GLASS runs it, ORCH records it):**
-  1. Hosting is up: `curl -s -X POST https://nudge-seven-psi.vercel.app/api/stt/token -H 'origin: http://localhost:5173' -H 'content-type: application/json' -d '{"type":"batch_scribe"}'` returns `{"token":"sutkn_..."}` (and the same for `realtime_scribe`). If it returns 500, Sam redeploys production from `integration`.
+  1. Hosting is up: `curl -s -X POST https://nudge-seven-psi.vercel.app/api/stt/token -H 'origin: http://localhost:5173' -H 'content-type: application/json' -d '{"type":"batch_scribe"}'` returns `{"token":"sutkn_..."}` (and the same for `realtime_scribe`). If it returns 500, run `bash api/_deploy-prod.sh` (it redeploys `integration` and reruns these checks).
   2. Already done: `app.json` whitelists `https://nudge-seven-psi.vercel.app`, `https://api.elevenlabs.io` and `wss://api.elevenlabs.io`; the version is 0.3.0 (bump for any re-upload, per D10); `.env.production` sets `VITE_STT_TOKEN_URL`, so no env var is needed when packing.
   3. On a clean checkout of `integration`: `npm ci && npm run typecheck && npm test && npm run pack`.
   4. Upload `nudge.ehpk`, then install from Me → Beta tester and check the version is 0.3.0.
@@ -331,11 +331,11 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ### T-207 Gate G2: audit, integrate, smoke, tag
 - **Owner:** ORCH
-- **Status:** READY after G1 passes and production `api/` is redeployed. All Step 2 code is merged (T-201, T-202, T-203, T-204) and wired in `src/main.ts`.
+- **Status:** READY after G1 passes. All Step 2 code is merged (T-201, T-202, T-203, T-204) and wired in `src/main.ts`; production `api/` is live.
 - **Spec:** audit, merge in dependency order, run `docs/G2_SMOKE.md` plus a live two-person conversation test, fast-forward `main`, tag `v0.2-step2`, upload Beta. **Decision:** enable `step2Enabled` by default.
 - **Acceptance criteria (gate):** in a 5-minute live conversation, the user can ask for help and get at least one correct or acceptable suggestion within about 1.5 s on most attempts; Step 1 still passes its smoke test (regression).
 - **G2 runbook (GLASS runs it with a second person, ORCH records it):**
-  1. Production check: `curl` `POST https://nudge-seven-psi.vercel.app/api/stt/token` for **both** `batch_scribe` and `realtime_scribe` (200 + `sutkn_…`), and `POST /api/predict` with a small `PredictRequest` (200 + a JSON array), all with an allowed `origin`. Any 500 → Sam redeploys from `integration`.
+  1. Production check: `curl` `POST https://nudge-seven-psi.vercel.app/api/stt/token` for **both** `batch_scribe` and `realtime_scribe` (200 + `sutkn_…`), and `POST /api/predict` with a small `PredictRequest` (200 + a JSON array), all with an allowed `origin`. Any 500 → `bash api/_deploy-prod.sh`.
   2. Bump `app.json` above the last upload (D10). On a clean `integration`: `npm ci && npm run typecheck && npm test`, then **`VITE_STEP2=1 npm run pack`** (both URLs come from `.env.production`).
   3. Install from Me → Beta tester. Run `docs/G2_SMOKE.md` A, B (B5/B6) and C again (Step 1 regression), then **D with a real two-person conversation for ~5 minutes**: count help taps, correct or acceptable suggestions, and rough tap-to-candidates time.
   4. Watch for: realtime transcript actually arriving (if Step 2 never suggests anything relevant, `wss://` may be blocked by the Even whitelist → re-pack with `VITE_ROLLING_STT=batch`, PLAN §9); a rejected WebView origin in the Vercel log (ping Sam within the hour); `rate-limited` fallbacks (free tier 15/min, D11).
@@ -448,6 +448,7 @@ No new features after H18. Only fixes, packaging, polish, and the story.
 - H7: T-004 fixtures merged (PR #9). Follow-up filed as T-007.
 - H7: T-006 design tokens and glasses layouts merged (PR #7, after one round of changes).
 - H7: T-002 device checks done (PR #13, `docs/BETA_RESULTS.md`). QR prototype mode is broken on Even's side, so device testing uses packaged Beta builds; README and `docs/G2_SMOKE.md` updated.
+- H10:45: Production `api/` redeployed from `integration` @ `4b13180`; `api/stt` and `api/predict` are live and curl-checked. Incident 05:07-05:16 UTC: `vercel --prod` run from a checkout on an unmerged branch put pre-#50 code live, and `api/stt` returned 500 for ~9 min. No secrets were uploaded. Rule: deploy only with `bash api/_deploy-prod.sh` (#57, issue #56; PLAN D15). `docs/ORCH_STATE.md` added (#58).
 - H10:30: T-201 part 2 (#51) and T-203 `api/predict` (#53) merged. ORCH wired the real predictor in `src/main.ts` (1.5 s timeout, D14; `VITE_PREDICT_URL` in `.env.production`). **All Step 2 code is in.** G2 runbook added to T-207. Production `api/` still needs Sam's redeploy.
 - H10:15: `api/stt` hosted on Vercel (#50: ESM `.js` import fix; Sam deploys via CLI because Hobby blocks Git deploys from non-members). T-202 rolling STT (#49), T-303 keywords (#52) and dev Step 2 (#48) merged. ORCH: rolling STT wired in `main.ts`, `app.json` whitelist + `wss://`, `.env.production` with the token URL, `.vercel` ignored, grant for #51. **Production `api/stt` needs a redeploy** (500 at 10:10).
 - H10: T-401 part 2 + T-403 polish merged (PR #44); #41 closed (superseded). T-204 (PR #43) approved, pending the foundation-test update. The reference-throttle `[]` re-prefetch bug is recorded on T-201 part 2.
