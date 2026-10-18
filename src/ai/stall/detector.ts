@@ -1,3 +1,4 @@
+import type { Speaker } from '../../core/types'
 import { classifyEnding, lastWords, type StallReason } from './ending'
 
 // T-301: decides when Step 3 should show a hint without being asked.
@@ -41,7 +42,7 @@ export const DEFAULT_STALL_CONFIG: StallConfig = {
 
 export type StallEvent =
   | { type: 'speech'; speaking: boolean; tMs: number }
-  | { type: 'transcript'; text: string; isFinal: boolean; tMs: number }
+  | { type: 'transcript'; text: string; isFinal: boolean; tMs: number; speaker?: Speaker }
   | { type: 'tick'; tMs: number }
 
 export interface StallSignal {
@@ -76,6 +77,7 @@ export function createStallDetector(overrides: Partial<StallConfig> = {}): Stall
   let speaking = false
   let silenceStart: number | null = null
   let burstHasFinal = false // a final transcript arrived for the latest burst of speech
+  let lastFinalSpeaker: Speaker | undefined // tag on the most recent final (T-314); undefined = untagged
   let decided = false // this silence has a verdict (may be revised by a late final, unless fired)
   let fired = false // this silence produced, or was rate-limited out of, a hint: final
   let hints: number[] = []
@@ -86,6 +88,7 @@ export function createStallDetector(overrides: Partial<StallConfig> = {}): Stall
     speaking = false
     silenceStart = null
     burstHasFinal = false
+    lastFinalSpeaker = undefined
     decided = false
     fired = false
     hints = []
@@ -103,7 +106,12 @@ export function createStallDetector(overrides: Partial<StallConfig> = {}): Stall
 
     let utterance: string
     let usedPartial = false
-    if (burstHasFinal && finals.length) utterance = finals[finals.length - 1]
+    if (burstHasFinal && finals.length) {
+      // T-314: the partner spoke last, so the wearer isn't stuck. Their words still
+      // sit in `finals` for the predictor's tail; they just can't produce a stall.
+      if (lastFinalSpeaker === 'other') { decided = true; return null }
+      utterance = finals[finals.length - 1]
+    }
     else if (partial && silenceMs >= c.minSilenceMs + c.finalWaitMs) { utterance = partial; usedPartial = true }
     else return null // nothing heard yet for this burst; keep waiting
 
@@ -152,7 +160,9 @@ export function createStallDetector(overrides: Partial<StallConfig> = {}): Stall
           if (finals.length > 30) finals = finals.slice(-30)
           partial = null
           burstHasFinal = true
-          if (!fired) decided = false // a late final can revise a 'complete' verdict, never a hint
+          lastFinalSpeaker = e.speaker
+          if (e.speaker === 'other') decided = true // T-314: partner final cancels a pending stall
+          else if (!fired) decided = false // a late final can revise a 'complete' verdict, never a hint
         } else {
           partial = text
         }
