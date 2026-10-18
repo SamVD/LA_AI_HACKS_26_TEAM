@@ -55,6 +55,8 @@ export class ElevenLabsStt implements SttService {
   private rolling = false
   private rollingVad: EnergyVad | null = null
   private active: Utterance | null = null
+  /** Level of the last transcribed utterance (T-316 data), for RollingStt's junk filter; null after a failed call. */
+  lastLevel: { speechDb: number; speechMs: number } | null = null
 
   constructor(private readonly o: ElevenLabsSttOptions) {
     this.now = o.now ?? Date.now
@@ -119,6 +121,7 @@ export class ElevenLabsStt implements SttService {
   }
 
   async transcribeUtterance(opts: UtteranceOptions): Promise<Transcript> {
+    this.lastLevel = null
     // opts.targetHint is accepted but never sent as a keyterm (D1): biasing turns
     // near-misses ("cuh", "cop") into the target and gives false "correct" results.
     const tCall = this.now()
@@ -183,6 +186,7 @@ export class ElevenLabsStt implements SttService {
     this.log('stt.utterance', { sttMs, audioMs: Math.round(pcm.byteLength / BYTES_PER_MS), end: reason, chars: r.text.length })
     // T-316: per-utterance loudness for the wearer/partner gap (decides T-314). Log-only; `text` lets
     // the tester label who spoke. In-memory eventLog export only — no audio leaves the device.
+    this.lastLevel = { speechDb: vad.speechDb, speechMs: tEndMs - tStartMs }
     this.log('stt.level', { speechDb: vad.speechDb, peakDb: Math.round(vad.peakDb), floorDb: Math.round(vad.noiseFloorDb), speechMs: tEndMs - tStartMs, end: reason, text: r.text })
     return { text: r.text, isFinal: true, tStartMs, tEndMs }
   }

@@ -445,7 +445,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ### T-306 Gate G3: audit, soak, decide, tag
 - **Owner:** ORCH
-- **Status:** **HELD (D19).** Run 1 (#100, 0.4.3): Step 3 works, but hints take ~3-4 s; no tally. **Re-run after T-311/T-312/T-313 (+T-314 if ready), on one 0.4.4 upload, with the tally and a T-315 log export.**
+- **Status:** **NOT PASSED (D20).** Re-run 0.4.4 (#120) was cut short by Gemini's daily quota. Ships Practice + Assist; Conversation stays in the code as experimental.
 - **Spec:** audit; 10-minute live soak; count false hints per minute; decide whether `step3Enabled` ships default ON; tag `v0.3-step3` (or keep `v0.2` as the ship candidate); upload Beta.
 - **G3 runbook (GLASS with a second person, ORCH records it; one 0.4.3 upload covers all of it):**
   1. Clean `integration`: `npm ci && npm run typecheck && npm test`, then **`VITE_STEP3=1 npm run pack`**. `.env.production` already sets batch STT and Step 2 (D17). Verified: it packs, and the bundle has `VITE_STEP3:"1"`. Upload; install 0.4.3 from Me → Beta tester.

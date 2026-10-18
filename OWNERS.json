@@ -78,6 +78,15 @@
     }
   },
   "branchGrants": {
+    "orch/quick-fixes": [
+      "src/ai/predictor/fallback.ts",
+      "src/ai/predictor/validate.ts",
+      "src/ai/predictor/predictor.test.ts",
+      "src/audio/stt.ts",
+      "src/audio/rolling/index.ts",
+      "src/audio/rolling/flush.test.ts",
+      "src/audio/rolling/junk.test.ts"
+    ],
     "ui/devpost-finish": [
       "docs/DEVPOST.md",
       "docs/DEMO_SCRIPT.md",

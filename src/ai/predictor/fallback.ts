@@ -35,7 +35,8 @@ export function scoreEntry(
     if (e.category === 'person') score += 0.5
     else if (justSaid) score -= 1
   }
-  if (ctx.recent(e.word) && !justSaid) score += 0.5
+  // G3 re-run (#120): no boost for words shown recently. It made one wrong fallback word
+  // ("phone", "lisinopril") win every later stall. Every remaining score is a context cue.
   if (word && ctx.recentTokens.some(t => t.length >= 3 && !STOP.has(t) && t !== word && word.startsWith(t))) score += 1
   if (e.category === 'medication' && MEDICATION.test(ctx.recentTail)) score += 0.5
   if (e.category === 'person' && (FAMILY.test(ctx.recentTail) || CALL.test(ctx.recentTail))) score += 0.5

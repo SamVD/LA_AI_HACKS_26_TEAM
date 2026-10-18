@@ -104,6 +104,18 @@ describe('client validation (Section 6)', () => {
     expect(v([{ word: 'Cuh', confidence: 0.9 }, { word: 'cup', confidence: 0.5 }], { stalledAfter: 'no, a cuh' }).items.map(s => s.word)).toEqual(['cup'])
   })
 
+  it('drops pronouns, function words and phrases containing them unless they are bank words (G3, #120)', () => {
+    const out = v([
+      { word: 'me', confidence: 0.9 },
+      { word: 'Did you', confidence: 0.8 },
+      { word: 'then', confidence: 0.7 },
+      { word: 'ice cream', confidence: 0.6 },
+      { word: 'help', confidence: 0.5 },
+    ], { n: 5 })
+    expect(out.items.map(s => s.word)).toEqual(['ice cream', 'help'])
+    expect(out.dropped).toBe(3)
+  })
+
   it('clamps confidence, dedupes case and simple plurals keeping the higher one, sorts and takes n', () => {
     const r = v([
       { word: 'cups', confidence: 0.4 },
@@ -138,10 +150,10 @@ describe('bank-only fallback (Section 7)', () => {
     expect(rankFallback(request({ transcriptTail: 'I should call', stalledAfter: 'I should call' }))[0].word).toBe('Maya')
   })
 
-  it('adds recency for words suggested in the last 5 minutes only', () => {
+  it('does not boost words just because they were suggested recently (G3 re-run, #120)', () => {
     const history = new Map([['spoon', 1_000]])
     const r = request({ transcriptTail: 'nothing related at all', stalledAfter: 'all' })
-    expect(rankFallback(r, history, 1_000 + 4 * 60_000)[0]).toMatchObject({ word: 'spoon', confidence: 0.075 })
+    expect(rankFallback(r, history, 1_000 + 4 * 60_000)).toEqual([])
     expect(rankFallback(r, history, 1_000 + 6 * 60_000)).toEqual([])
   })
 

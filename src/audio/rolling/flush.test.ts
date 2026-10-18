@@ -63,6 +63,15 @@ describe('RollingStt.flush (T-208)', () => {
     await stt.stop()
   })
 
+  it('drops a segment Scribe returns in a non-Latin script (G3 re-run, #120)', async () => {
+    const { stt, mic, finals } = setup({ scribe: () => Response.json({ text: 'OK啊你好' }) })
+    await stt.start()
+    await mic.play(synth([quiet(300), word(700), quiet(1000)])) // pause ends the segment
+    await vi.advanceTimersByTimeAsync(100)
+    expect(finals).toEqual([])
+    await stt.stop()
+  })
+
   it('resolves at once when nothing with speech is buffered', async () => {
     const { stt, mic, scribeCalls } = setup()
     await stt.start()
