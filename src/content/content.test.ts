@@ -25,7 +25,7 @@ describe('cue content', () => {
     expect(builtinBank()[1].tags).not.toContain('changed')
   })
   it('contains safe self-contained vectors with visible white strokes', () => {
-    expect(Object.keys(sources)).toHaveLength(40)
+    expect(Object.keys(sources)).toHaveLength(65)
     expect(Object.keys(sources).filter(path => path.includes('/mouth/'))).toHaveLength(10)
     for (const svg of Object.values(sources)) {
       expect(svg).toMatch(/^<svg\b[^>]*viewBox="0 0 (24 24|48 32)"/)
@@ -52,7 +52,7 @@ describe('cue content', () => {
     ['park', 'lips-closed'], ['van', 'lip-teeth'], ['whale', 'rounded'], ['write', 'rounded'],
     ['psychology', 'teeth-together'], ['gnome', 'tongue-up'], ['teeth', 'tongue-up'],
     ['door', 'tongue-up'], ['name', 'tongue-up'], ['zebra', 'teeth-together'],
-    ['jelly', 'pucker'], ['ice', 'wide'], ['umbrella', 'open'], ['home', 'open'],
+    ['jelly', 'pucker'], ['ice', 'wide'], ['umbrella', 'rounded'], ['home', 'open'],
   ])('resolves the initial sound of %s', (word, shape) => {
     expect(mouthKeyFor(entry(word))).toBe(`mouth:${shape}`)
   })
@@ -64,6 +64,20 @@ describe('cue content', () => {
     expect(mouthKeyFor(entry('unusual', 'ee'))).toBe('mouth:wide')
     expect(mouthKeyFor(entry('thing', 'ng'))).toBe('mouth:back')
     expect(mouthKeyFor(entry('cup', '?'))).toBeUndefined()
+  })
+  it('resolves pictures for common non-bank predictor words', () => {
+    // Words the predictor commonly returns outside the builtin bank (T-205 expansion);
+    // ad-hoc entries get ids by slugging the word, like predictor adHocEntry does.
+    for (const word of [
+      'mug', 'glass', 'teacup', 'hospital', 'clinic', 'chair', 'armchair', 'umbrella',
+      'raincoat', 'stamp', 'telephone', 'novel', 'bookshop', 'bookmobile', 'cloth',
+      'ladle', 'soupspoon', 'slicer', 'mechanic', 'technician', 'spectacles', 'chemist',
+      'car keys', 'bread knife', 'postage stamp',
+    ]) {
+      const slug = word.replace(' ', '-')
+      expect(resolveAssets({ ...entry(word), id: slug }).imageKey).toBe(slug)
+      expect(sources[`./assets/pictures/${slug}.svg`]).toBeDefined()
+    }
   })
   it('returns null in Node for known pictures, mouths, and unknown keys', async () => {
     expect(await getImage('cup', 200, 120)).toBeNull()

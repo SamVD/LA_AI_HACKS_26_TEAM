@@ -1,6 +1,7 @@
 # Nudge cue artwork
 
-All SVGs in `pictures/` (30 files, named for the non-sample word-bank ids) and
+All SVGs in `pictures/` (55 files, named for the non-sample word-bank ids and
+common non-bank predictor words) and
 `mouth/` (10 files, named for their first-sound groups) are original line
 art drawn for Nudge in this task. Source: the SVG path data in this directory.
 No third-party art, font, image, external reference, or traced reference was used.
