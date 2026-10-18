@@ -281,20 +281,23 @@ class Practice {
       if (await this.showCurrent(token)) this.run(() => this.listen(token))
       return
     }
-    // T-313: short background noise and speech tagged as the partner's don't
-    // count as attempts — they kept auto-escalating the cue at G3. Absent
-    // `speaker` means the wearer (contract v4).
-    const utteranceMs = transcript.tEndMs - transcript.tStartMs
-    const ignoredReason = transcript.speaker === 'other'
-      ? 'other-speaker'
-      : utteranceMs < 300 ? 'too-short' : null
-    if (ignoredReason) {
-      this.ctx.log('step1 ignored', { reason: ignoredReason, ms: utteranceMs })
-      if (await this.showCurrent(token)) this.run(() => this.listen(token))
-      return
+    // T-313: match first — a correct answer always counts, even a crisp
+    // ~200 ms one-syllable reply. Only non-matching speech is filtered:
+    // partner speech ('other'; absent = wearer, contract v4) and background
+    // fragments under 250 ms, which auto-escalated the cue at G3.
+    const match = matchWord(transcript.text, this.current.entry.word, 1)
+    if (!match.ok) {
+      const utteranceMs = transcript.tEndMs - transcript.tStartMs
+      const ignoredReason = transcript.speaker === 'other'
+        ? 'other-speaker'
+        : utteranceMs < 250 ? 'too-short' : null
+      if (ignoredReason) {
+        this.ctx.log('step1 ignored', { reason: ignoredReason, ms: utteranceMs })
+        if (await this.showCurrent(token)) this.run(() => this.listen(token))
+        return
+      }
     }
     this.result!.attempts++
-    const match = matchWord(transcript.text, this.current.entry.word, 1)
     this.phase = 'feedback'
     if (match.ok) {
       this.result!.solvedAtCue = this.cue
