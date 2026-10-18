@@ -579,7 +579,7 @@ No new features after H18. Only fixes, packaging, polish, and the story.
 
 ### T-406 Finish the Devpost writeup (everything not waiting on G3)
 - **Owner:** UI (juannli, with Claude). Takes over the non-G3 part of T-404 from ORCH
-- **Status:** READY NOW. Target: PR by **8:15 AM**
+- **Status:** MERGED (PR #121). Left for ORCH: Devpost handles and the G3/final-build `[FILL]`s.
 - **Branch:** `ui/devpost-finish` (OWNERS grant: `docs/DEVPOST.md`, `docs/DEMO_SCRIPT.md`, `src/glasses/screenshots/**`; `docs/design/**` is already UI)
 - **Depends on:** T-404 drafts (#113, #114, merged)
 - **Do:**
@@ -601,7 +601,7 @@ No new features after H18. Only fixes, packaging, polish, and the story.
 
 ### T-317 StepFun predictor spike, Phase A (local test only)
 - **Owner:** AI (Sam)
-- **Status:** READY. **Results deadline 8:45 AM PT; if not done by then, stop** and report what you have.
+- **Status:** DONE, **FAIL** (PR #129): step-5-preview p50 6.6 s, p95 9.4 s, 0/62 calls within the 1.2 s budget (a reasoning model); accurate when it answers.
 - **Branch:** `ai/spike-stepfun`
 - **Files it may EDIT:** `spikes/stepfun/**` only (AI lane). **Don't touch** `src/`, `api/`, `app.json`, `fixtures/`, `docs/` or anything else.
 - **Goal:** find out whether StepFun's **`step-5-preview`** can replace or back up Gemini for word prediction (StepFun prize). No app or server changes in Phase A.
@@ -643,7 +643,7 @@ No new features after H18. Only fixes, packaging, polish, and the story.
 
 ### T-318 StepFun in `api/predict` behind a server setting, Phase B (DON'T START until T-317 passes)
 - **Owner:** AI (Sam)
-- **Status:** **BLOCKED on T-317 PASS.** **Cut-off 9:30 AM PT:** if it isn't merged, deployed and live-checked by then, it's dropped and Gemini stays the only provider.
+- **Status:** CANCELLED (T-317 failed). Gemini stays the only provider.
 - **Branch:** `ai/predict-stepfun`
 - **Files it may EDIT:** `api/predict/**` only (AI lane). No `src/`, no `app.json`, no client change: the response shape stays the same JSON array.
 - **Spec:**
