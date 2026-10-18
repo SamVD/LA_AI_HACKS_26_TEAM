@@ -156,7 +156,7 @@ describe('app shell', () => {
 
   it('hides Step 2 from the launcher when Step 3 is enabled (T-312)', async () => {
     const { fake, shell, tap } = await boot(undefined, { step2Enabled: true, step3Enabled: true })
-    expect(shell.lastScreen()?.items).toEqual(['step1', 'step3'])
+    expect(shell.lastScreen()).toMatchObject({ kind: 'menu', items: ['step1', 'step3'] })
     await tap(DOWN)
     expect(fake.texts()).toEqual(['Nudge\n  step1\n> step3'])
   })
