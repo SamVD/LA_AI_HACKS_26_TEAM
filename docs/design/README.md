@@ -1,17 +1,24 @@
 # Nudge design (phone + G2)
 
-Design artifacts for the **phone companion** (large type, high contrast, calm) and **G2 layouts** (576×288 green monochrome).
-
 | Asset | Purpose |
 | --- | --- |
-| [`PAPER.md`](./PAPER.md) | Paper sponsor challenge notes for T-403 polish |
-| [`GLASSES_LAYOUTS.md`](./GLASSES_LAYOUTS.md) | Container budgets per `Screen` kind (T-101 implements) |
-| [`sketches/`](./sketches/) | Static SVG wireframes for all seven `Screen` kinds |
-| `src/phone/theme/` | Tokens, CSS, `mountTokenDemo()` gallery (T-006) |
+| [`PAPER.md`](./PAPER.md) | Paper sponsor challenge notes |
+| [`GLASSES_LAYOUTS.md`](./GLASSES_LAYOUTS.md) | Container specs + event capture (T-101) |
+| [`screens/`](./screens/) | 576×288 SVG wireframes |
+| `src/phone/theme/` | Tokens, CSS, demos |
 
-**Preview locally (after T-105 wires the companion, or temporarily from dev console):**
+**Preview (dev)**
 
-```ts
-import { mountTokenDemo } from './phone/theme'
-mountTokenDemo(document.body)
+- Slim launcher: http://localhost:5173/src/phone/theme/demo.html (375px-wide shell)
+- Full gallery: import `mountTokenDemo` from `src/phone/theme`
+
+**Regenerate SVGs**
+
+```bash
+npx tsx -e "
+import { writeFileSync, mkdirSync } from 'fs'
+import { LAYOUT_SKETCH_IDS, renderLayoutSketch } from './src/phone/theme/renderGlassesSketch.ts'
+mkdirSync('docs/design/screens', { recursive: true })
+for (const id of LAYOUT_SKETCH_IDS) writeFileSync(\`docs/design/screens/\${id}.svg\`, renderLayoutSketch(id))
+"
 ```

@@ -1,5 +1,19 @@
-export { applyPhoneTheme } from './applyTheme'
+export { applyPhoneTheme, watchThemePreference } from './applyTheme'
 export { mountTokenDemo } from './TokenDemo'
-export { renderGlassesSketch } from './renderGlassesSketch'
+export {
+  LAYOUT_SKETCH_IDS,
+  renderGlassesSketch,
+  renderLayoutSketch,
+  type LayoutSketchId,
+} from './renderGlassesSketch'
 export { sketchScreens } from './sketchSamples'
-export { glassesCanvas, phoneTheme, cssVarNames } from './tokens'
+export {
+  glassesCanvas,
+  phoneTheme,
+  phoneThemeDark,
+  phoneThemeLight,
+  getThemeCssVariables,
+  cssVarNames,
+  type PhoneTheme,
+  type ThemeMode,
+} from './tokens'

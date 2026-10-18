@@ -1,4 +1,4 @@
-/* Phone companion base styles. Import after applyPhoneTheme() or set vars manually. */
+/* Phone companion base styles — colors come from applyPhoneTheme() or demo shell. */
 
 .nudge-phone {
   font-family: var(--nudge-font);
@@ -7,6 +7,15 @@
   color: var(--nudge-text);
   background: var(--nudge-bg);
   -webkit-font-smoothing: antialiased;
+}
+
+.nudge-demo-shell {
+  box-sizing: border-box;
+  max-width: 375px;
+  margin: 0 auto;
+  min-height: 100vh;
+  padding: var(--nudge-space-4);
+  overflow-x: hidden;
 }
 
 .nudge-phone h1,
@@ -37,7 +46,7 @@
   justify-content: center;
   min-height: var(--nudge-touch-min);
   min-width: var(--nudge-touch-min);
-  padding: 0.625rem 1.25rem;
+  padding: 0.75rem 1.25rem;
   font-size: var(--nudge-font-md);
   font-weight: 500;
   color: var(--nudge-on-accent);
@@ -45,7 +54,13 @@
   border: none;
   border-radius: var(--nudge-radius-md);
   cursor: pointer;
-  transition: background 160ms cubic-bezier(0.33, 1, 0.68, 1);
+  transition: background var(--nudge-motion-duration) var(--nudge-motion-easing);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nudge-btn {
+    transition: none;
+  }
 }
 
 .nudge-btn:hover {
@@ -65,6 +80,17 @@
 
 .nudge-btn--ghost:hover {
   background: var(--nudge-accent-soft);
+}
+
+.nudge-theme-toggle {
+  min-height: var(--nudge-touch-min);
+  padding: 0 var(--nudge-space-4);
+  font-size: var(--nudge-font-sm);
+  color: var(--nudge-text-muted);
+  background: transparent;
+  border: 1px solid var(--nudge-border);
+  border-radius: var(--nudge-radius-md);
+  cursor: pointer;
 }
 
 .nudge-glasses-frame {

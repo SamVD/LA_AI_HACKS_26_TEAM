@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 288" width="576" height="288">
+<rect width="576" height="288" fill="#000000"/>
+<text x="8" y="16" fill="#2a6b3f" font-family="monospace" font-size="14">candidates-3 · 27px lines · left-aligned</text>
+<rect x="8" y="99" width="560" height="108" fill="none" stroke="#5cff8a" stroke-width="1.5" stroke-dasharray="8 5"/>
+  <text x="14" y="117" fill="#2a6b3f" font-family="monospace" font-size="14">text word · evt</text>
+<text x="16" y="108" fill="#5cff8a" font-family="monospace" font-size="27" dominant-baseline="hanging">cup</text>
+<text x="16" y="135" fill="#5cff8a" font-family="monospace" font-size="27" dominant-baseline="hanging">3/3 · L3</text>
+</svg>

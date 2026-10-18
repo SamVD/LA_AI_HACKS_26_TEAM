@@ -1,26 +1,14 @@
 import './tokens.css'
-import { applyPhoneTheme } from './applyTheme'
-import { renderGlassesSketch } from './renderGlassesSketch'
-import { sketchScreens } from './sketchSamples'
-import type { ScreenKind } from '../../core/types'
-
-const SCREEN_ORDER: ScreenKind[] = [
-  'blank',
-  'prompt',
-  'cue',
-  'feedback',
-  'candidates',
-  'menu',
-  'status',
-]
+import { applyPhoneTheme, watchThemePreference } from './applyTheme'
+import { LAYOUT_SKETCH_IDS, renderLayoutSketch } from './renderGlassesSketch'
 
 /**
- * Mounts a self-contained phone + glasses sketch gallery for local dev.
- * T-105 will wire this from the companion page; T-006 only ships the module.
+ * Full token + layout gallery (optional; slim demo is demo.html).
  */
 export function mountTokenDemo(root: HTMLElement): () => void {
   applyPhoneTheme()
-  root.classList.add('nudge-phone')
+  const unwatch = watchThemePreference()
+  root.classList.add('nudge-phone', 'nudge-demo-shell')
   root.innerHTML = ''
 
   const header = document.createElement('header')
@@ -28,9 +16,8 @@ export function mountTokenDemo(root: HTMLElement): () => void {
   header.style.marginBottom = 'var(--nudge-space-6)'
   header.innerHTML = `
     <h1>Nudge design tokens</h1>
-    <p style="margin: 0.75rem 0 0; color: var(--nudge-text-muted); max-width: 42rem;">
-      Calm, large-type companion UI for caregivers. Glasses wireframes match 576×288 layout budgets in
-      <code>docs/DISPLAY_LIMITS.md</code>.
+    <p style="margin: 0.75rem 0 0; color: var(--nudge-text-muted);">
+      Phone tokens + G2 wireframes (27px lines, event-capture dashed).
     </p>
     <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 1rem;">
       <button type="button" class="nudge-btn" data-action="primary">Start Step 1</button>
@@ -42,14 +29,13 @@ export function mountTokenDemo(root: HTMLElement): () => void {
   grid.style.display = 'grid'
   grid.style.gap = '1.25rem'
 
-  for (const kind of SCREEN_ORDER) {
-    const screen = sketchScreens[kind]
+  for (const id of LAYOUT_SKETCH_IDS) {
     const card = document.createElement('article')
     card.className = 'nudge-card'
-    card.innerHTML = `<h2 style="margin-bottom: 0.5rem;">Screen: ${kind}</h2>`
+    card.innerHTML = `<h2 style="margin-bottom: 0.5rem;">${id}</h2>`
     const frame = document.createElement('div')
     frame.className = 'nudge-glasses-frame'
-    frame.innerHTML = renderGlassesSketch(screen)
+    frame.innerHTML = renderLayoutSketch(id)
     card.appendChild(frame)
     grid.appendChild(card)
   }
@@ -69,7 +55,8 @@ export function mountTokenDemo(root: HTMLElement): () => void {
 
   return () => {
     root.removeEventListener('click', onClick)
+    unwatch()
     root.innerHTML = ''
-    root.classList.remove('nudge-phone')
+    root.classList.remove('nudge-phone', 'nudge-demo-shell')
   }
 }

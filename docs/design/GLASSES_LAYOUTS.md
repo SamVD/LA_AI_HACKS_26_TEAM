@@ -1,92 +1,151 @@
 # G2 layout sketches (576 × 288)
 
-Reference for **T-101** (`GlassesUI`). Numbers come from [`DISPLAY_LIMITS.md`](../DISPLAY_LIMITS.md).
+Reference for **T-101** (`GlassesUI`). Numbers come from [`DISPLAY_LIMITS.md`](../DISPLAY_LIMITS.md) and [`glasses-ui`](../vendor/even-skills/glasses-ui/SKILL.md).
 
-**Global rules**
+**Firmware text (all layouts)**
 
-- Exactly **one** event-capture container per page (`blank` uses a space character in a full-screen text container).
-- Max **12** containers, **8** text/list, **4** images. Images **20–288** wide, **20–144** tall.
-- Line height **27 px** (~10 lines max). Sentence prompts: budget **~60 characters** per line at full width.
-- Feedback: use **`√` / `×`** or words — not `✓` / `✗` (missing from firmware font).
-- Prefer **text** for fast cue updates; images for level-1 cues only.
+- One font size only — **27 px line height**, always **left-aligned** (no bold, no centering API).
+- Emphasis = spacing, borders, isolation in its own container, or letter spacing in content (`c _ p`).
+- Approximate horizontal position for “centered” copy: `x = containerX + (innerWidth - measuredTextWidth) / 2` (use `pretext` in T-101).
 
-SVG wireframes: [`sketches/`](./sketches/).
+**Global container rules**
+
+- **Exactly one** `isEventCapture: 1` per page (dashed outline in SVGs). **Image containers cannot capture events.**
+- Max **12** total, **8** text/list, **4** image. Images **20–288 × 20–144** px.
+- Feedback symbols: **`√` / `×`** or words — not `✓` / `✗`.
+
+SVG wireframes: [`screens/`](./screens/) (one file per row below).
+
+---
+
+## Summary table
+
+| Layout | Text | List | Image | **Total** | Event capture |
+| --- | ---: | ---: | ---: | ---: | --- |
+| `blank` | 1 | 0 | 0 | **1** | full-screen text (`content: ' '`) |
+| `prompt` | 1 | 0 | 0 | **1** | prompt text container |
+| `cue` L1 | 1–2 | 0 | 1 | **2–3** | primary text block (not image) |
+| `cue` L2 | 1 | 0 | 0 | **1** | masked-word text container |
+| `cue` L3 | 1 | 0 | 0 | **1** | full-word text container |
+| `feedback` | 1 | 0 | 0 | **1** | feedback text container |
+| `candidates` L1 | 1–2 | 0 | 1 | **2–3** | candidate text container |
+| `candidates` L3 | 1 | 0 | 0 | **1** | full-word text container |
+| `menu` | 0 | 1 | 0 | **1** | **list container** (not per-item text boxes) |
+| `status` | 1 | 0 | 0 | **1** | status text container |
 
 ---
 
 ## 1. `blank`
 
-| Element | x | y | w | h | Notes |
-| --- | ---: | ---: | ---: | ---: | --- |
-| Event text layer | 0 | 0 | 576 | 288 | `content: ' '`, `isEventCapture: 1` |
+| Container | x | y | w | h | evt | Notes |
+| --- | ---: | ---: | ---: | ---: | :---: | --- |
+| Text | 0 | 0 | 576 | 288 | **1** | `content: ' '` — invisible, captures touchpad |
 
-Nothing visible; touchpad/swipes still route to intents.
+**Counts:** 1 text · 0 list · 0 image · **1 total**
 
 ---
 
 ## 2. `prompt` (Step 1)
 
-| Element | x | y | w | h | Notes |
-| --- | ---: | ---: | ---: | ---: | --- |
-| Sentence | 8 | 96 | 560 | 96 | Single line typical; wrap if frame &gt; inner width |
+| Container | x | y | w | h | evt | Notes |
+| --- | ---: | ---: | ---: | ---: | :---: | --- |
+| Text | 8 | 99 | 560 | 81 | **1** | ~3 lines inner; one line typical (~60 chars) |
 
-Vertically center if one line; leave bottom clear for future hint text.
+Example: `You drink from a ____.`
+
+**Counts:** 1 · 0 · 0 · **1**
 
 ---
 
 ## 3. `cue` (Step 1 ladder)
 
-| Level | Layout |
-| --- | --- |
-| **1** | Image **200×120** (max 288×144) left; optional frame text top |
-| **2** | Large masked word (`c_p`) in text container, centered |
-| **3** | Full word, centered |
+Separate pages per level (rebuild page on level change).
 
-| Element | x | y | w | h | Notes |
-| --- | ---: | ---: | ---: | ---: | --- |
-| Picture (L1) | 16 | 72 | 200 | 120 | `imageKey` |
-| Text block | 240 | 72 | 320 | 144 | masked or full word |
-| Frame (optional) | 8 | 24 | 560 | 40 | `sentence` one line |
+### Level 1 — picture
+
+| Container | x | y | w | h | evt | Notes |
+| --- | ---: | ---: | ---: | ---: | :---: | --- |
+| Image | 16 | 54 | 200 | 120 | 0 | `imageKey`, ≤288×144 |
+| Text | 232 | 54 | 328 | 162 | **1** | label + word; optional frame in second text container |
+
+Optional frame text container: x=8, y=27, w=560, h=27 (not event capture).
+
+**Counts:** 1–2 text · 0 list · 1 image · **2–3 total**
+
+### Level 2 — masked letters
+
+| Container | x | y | w | h | evt | Notes |
+| --- | ---: | ---: | ---: | ---: | :---: | --- |
+| Text | 8 | 108 | 560 | 81 | **1** | e.g. `c _ p` on one 27 px line |
+
+**Counts:** 1 · 0 · 0 · **1**
+
+### Level 3 — full word
+
+| Container | x | y | w | h | evt | Notes |
+| --- | ---: | ---: | ---: | ---: | :---: | --- |
+| Text | 8 | 108 | 560 | 81 | **1** | e.g. `cup` |
+
+**Counts:** 1 · 0 · 0 · **1**
 
 ---
 
 ## 4. `feedback`
 
-| Element | x | y | w | h | Notes |
-| --- | ---: | ---: | ---: | ---: | --- |
-| Result | 8 | 80 | 560 | 128 | `√ cup` or `× cup` + short subtitle |
+| Container | x | y | w | h | evt | Notes |
+| --- | ---: | ---: | ---: | ---: | :---: | --- |
+| Text | 8 | 99 | 560 | 108 | **1** | Line 1: `√ cup` or `× cup`; line 2: `Yes` / `Try again` |
 
-Auto-advance after pause (mode logic); no extra images.
+**Counts:** 1 · 0 · 0 · **1**
 
 ---
 
 ## 5. `candidates` (Steps 2–3)
 
-| Element | x | y | w | h | Notes |
-| --- | ---: | ---: | ---: | ---: | --- |
-| Visual (L1) | 16 | 64 | 180 | 108 | mouth or picture |
-| Word + meta | 210 | 64 | 350 | 120 | word, level, index |
-| Hint line | 8 | 200 | 560 | 24 | swipe / tap legend (optional, short) |
+### Level 1 — picture / mouth
 
-**L2:** first letter large. **L3:** full word. `NEXT`/`PREV` change `index`; `SELECT` bumps `level`.
+| Container | x | y | w | h | evt | Notes |
+| --- | ---: | ---: | ---: | ---: | :---: | --- |
+| Image | 16 | 54 | 180 | 108 | 0 | mouth or picture |
+| Text | 208 | 54 | 360 | 135 | **1** | word, index, level on separate 27 px lines |
+
+Optional hint line in same text container (third line).
+
+**Counts:** 1–2 text · 0 · 1 image · **2–3 total**
+
+### Level 3 — full word
+
+| Container | x | y | w | h | evt | Notes |
+| --- | ---: | ---: | ---: | ---: | :---: | --- |
+| Text | 8 | 99 | 560 | 108 | **1** | full word + meta lines |
+
+**Counts:** 1 · 0 · 0 · **1**
+
+Level 2 (first letter only) uses one text container, same geometry as L3, content e.g. `c` + `· L2`.
 
 ---
 
 ## 6. `menu`
 
-| Element | x | y | w | h | Notes |
-| --- | ---: | ---: | ---: | ---: | --- |
-| Title | 8 | 40 | 560 | 40 | `title` |
-| Items | 8 | 88 + 44×i | 560 | 40 | list container or stacked text; highlight `index` |
+Use a **single list container** (not one text container per row).
 
-List item height **40 px** fixed per SDK; max **20** items.
+| Container | x | y | w | h | evt | Notes |
+| --- | ---: | ---: | ---: | ---: | :---: | --- |
+| List | 8 | 40 | 560 | 240 | **1** | 40 px items, 1–20 items, firmware scroll |
+
+**Visible rows:** 240 ÷ 40 = **6** items without scrolling. Title can be the first list item or a separate text container (+1 text, capture stays on list).
+
+Example items: `Step 1 — Say the word`, `Step 2 — Help`, `Word bank`.
+
+**Counts:** 0 text (title in list) · 1 list · 0 image · **1 total**  
+*(If title is separate text: 1 text + 1 list = 2 total; capture on list.)*
 
 ---
 
 ## 7. `status`
 
-| Element | x | y | w | h | Notes |
-| --- | ---: | ---: | ---: | ---: | --- |
-| Message | 8 | 72 | 560 | 144 | Wrap errors: mic, network, timeout |
+| Container | x | y | w | h | evt | Notes |
+| --- | ---: | ---: | ---: | ---: | :---: | --- |
+| Text | 8 | 54 | 560 | 189 | **1** | Wrap at ~60 chars/line; mic/network errors |
 
-Used for STT errors and short system messages; keep copy plain language.
+**Counts:** 1 · 0 · 0 · **1**

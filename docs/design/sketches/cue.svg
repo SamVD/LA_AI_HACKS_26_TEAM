@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 288" width="576" height="288">
-<rect width="576" height="288" fill="#000000"/>
-<rect x="16" y="72" width="200" height="120" fill="none" stroke="#2a6b3f" stroke-width="1"/>
-  <text x="24" y="94" fill="#5cff8a" font-family="monospace" font-size="14">image ≤288×144</text>
-<rect x="240" y="72" width="320" height="144" fill="none" stroke="#2a6b3f" stroke-width="1"/>
-  <text x="248" y="94" fill="#5cff8a" font-family="monospace" font-size="14">cue text</text>
-<text x="256" y="120" fill="#5cff8a" font-family="monospace" font-size="16">L2 · c_p</text>
-<text x="24" y="56" fill="#2a6b3f" font-family="monospace" font-size="14">You drink from a ____.</text>
-</svg>

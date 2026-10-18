@@ -14,7 +14,7 @@ _Source: [LA AI Hackathon 2026 Devpost](https://la-ai-hackathon-2026.devpost.com
 | --- | --- |
 | Product thinking | Built for **stroke survivors and caregivers** — quiet assist, not a chatty dashboard. |
 | Execution & polish | Companion UI uses shared tokens (`src/phone/theme/`); G2 layouts respect `docs/DISPLAY_LIMITS.md`. |
-| Ease of use | 48px touch targets, high contrast, minimal chrome, no decorative motion. |
+| Ease of use | 56px touch targets, high contrast, minimal chrome, `prefers-reduced-motion` honored. |
 | Personal craft | Consistent **green phosphor** metaphor on glasses preview; warm grey-green phone palette (not generic teal SaaS). |
 
 ## Deliverables for Paper (T-403)

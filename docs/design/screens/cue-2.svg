@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 288" width="576" height="288">
+<rect width="576" height="288" fill="#000000"/>
+<text x="8" y="16" fill="#2a6b3f" font-family="monospace" font-size="14">cue-2 · 27px lines · left-aligned</text>
+<rect x="8" y="108" width="560" height="81" fill="none" stroke="#5cff8a" stroke-width="1.5" stroke-dasharray="8 5"/>
+  <text x="14" y="126" fill="#2a6b3f" font-family="monospace" font-size="14">text masked · evt</text>
+<text x="16" y="117" fill="#5cff8a" font-family="monospace" font-size="27" dominant-baseline="hanging">c _ p</text>
+</svg>

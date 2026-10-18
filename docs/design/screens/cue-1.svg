@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 288" width="576" height="288">
+<rect width="576" height="288" fill="#000000"/>
+<text x="8" y="16" fill="#2a6b3f" font-family="monospace" font-size="14">cue-1 · 27px lines · left-aligned</text>
+<rect x="16" y="54" width="200" height="120" fill="none" stroke="#2a6b3f" stroke-width="1.5"/>
+  <text x="22" y="72" fill="#2a6b3f" font-family="monospace" font-size="14">image cup</text>
+<rect x="232" y="54" width="328" height="162" fill="none" stroke="#5cff8a" stroke-width="1.5" stroke-dasharray="8 5"/>
+  <text x="238" y="72" fill="#2a6b3f" font-family="monospace" font-size="14">text cues · evt</text>
+<text x="16" y="27" fill="#5cff8a" font-family="monospace" font-size="27" dominant-baseline="hanging">You drink from a ____.</text>
+<text x="240" y="72" fill="#5cff8a" font-family="monospace" font-size="27" dominant-baseline="hanging">(picture)</text>
+<text x="240" y="99" fill="#5cff8a" font-family="monospace" font-size="27" dominant-baseline="hanging">cup</text>
+</svg>
