@@ -1,6 +1,6 @@
 # Nudge: Master Plan (Even G2, UCLA AI Hackathon)
 
-_Last updated: Sat Oct 17, 2026, hackathon hour H5 of 24, by Claude (orchestrator draft)_
+_Last updated: Sat Oct 17, 2026, about H8, by ORCH. Decisions taken since the draft are in Section 13._
 
 Nudge is a quiet word-finding aid for people with aphasia, built as an Even Hub app for the Even G2 glasses. It runs as a web app (Vite + TypeScript) inside the Even phone app's WebView. Steps 1-3 are in scope for this hackathon. Steps 4-5 are backlog.
 
@@ -19,6 +19,8 @@ Everything here comes from the Even Hub docs, the LA Hacks Even starter pack, an
 | Touchpad: click, double-click, swipe up, swipe down, long-press. Long-press can collide with the OS contextual menu. | Core input = click / swipe / double-click. Do not depend on long-press. |
 | One container per page captures events. Root-page double-tap triggers the system exit confirmation. | We need an event-capturing container even when the screen looks blank. Design "Back" around the system exit. |
 | Network calls need manifest permissions AND the API server's CORS config. | Keys and CORS are best handled by a small server-side proxy (see Section 5, `api/`). |
+| QR prototype mode is broken on Even's side (confirmed at the booth, H7; `docs/BETA_RESULTS.md`). | The glasses only run **packaged Beta builds** (pack → upload → Me → Beta tester, minutes per cycle). Iterate in the simulator; gate flags are set at pack time. |
+| ElevenLabs Scribe (S-1, `spikes/stt/FINDINGS.md`): batch ~300 ms p50 per word; realtime WebSocket works from WebKit; CORS `*`; single-use tokens; autocorrects non-words into real words; keyterms bias strongly; auto language detection misfires on short clips. | `api/stt` mints tokens only. Step 1 = batch, Steps 2-3 = realtime. Never bias Step 1 grading toward the target. Always send `language_code=en`. See Section 13. |
 | Delivery = LA Hacks Devpost **and** an EvenHub Beta `.ehpk` upload. Beta test must survive a 5-minute phone lock, permission denial, and root-page double-tap exit. | Package early and often. Run the Beta checklist at every gate. |
 | Judging (Even): Made for G2, Originality, User Experience, Technical Execution. Theme: "Quiet Tech". | A display that stays blank until it is needed is the product thesis. Protect it. |
 | The Even sponsor table closes at 8 PM Saturday (H8) and reopens at 9 AM Sunday. Overnight help is Discord only. | Do every device-dependent unknown (Phase 0 spikes) before H8. |
@@ -66,7 +68,7 @@ Design rules that make parallel work safe:
 - **Modes are plug-ins that are pre-registered.** Phase 0 registers `step1`, `step2`, `step3` as stubs in `src/modes/index.ts`. After that, nobody edits the registry again.
 - **Cues are a ladder shared by all steps** (`src/glasses/` owns the component). Level 1 is visual (picture in Step 1, mouth shape in Steps 2-3). Level 2 is letters (partial word `c_p` in Step 1, first letter in Steps 2-3). Level 3 is the full word.
 - **Speculative prediction (Steps 2-3).** On every final transcript segment, refresh a cached candidate list in the background, so the help tap or auto-hint displays instantly instead of waiting on a model call.
-- **Step 1 uses utterance-level STT** (record until end-of-speech, one request). **Steps 2-3 use a rolling transcript** (streaming if the ElevenLabs spike says it works from the WebView, otherwise short chunks).
+- **Step 1 uses utterance-level STT**: record until end-of-speech, then one batch request (`scribe_v2`, raw PCM, `language_code=en`, **no target keyterm**). **Steps 2-3 use a rolling transcript** over the realtime WebSocket (`scribe_v2_realtime`, VAD commits, personal-bank keyterms). S-1 confirmed it works from a WebKit WebView. The chunked-batch fallback stays ready until a packaged build proves `wss://` passes the Even whitelist. Speech state (`onSpeechState`) comes from local VAD on the PCM, never from STT (it lags ~1 s).
 - **Privacy default:** audio is never stored. Transcripts live in memory only. The word bank stays on-device.
 
 ---
@@ -142,7 +144,7 @@ Lanes: **ORCH** (orchestrator, Claude Opus), **GLASS** (Claude Code #2), **AI** 
 | `src/audio/` (capture, VAD, STT adapters) | AI | |
 | `src/ai/predictor/`, `src/ai/stall/` | AI (stall) / LOGIC (predictor impl) | See `TASKS.md`; paths are disjoint. |
 | `src/modes/step3/` | AI | |
-| `api/` (serverless proxy: STT token / predict) | AI | Keeps keys out of the bundle and handles CORS. |
+| `api/` (serverless: `api/stt` = single-use token minter only, no audio; `api/predict` = Gemini proxy) | AI | Keeps keys out of the bundle. ElevenLabs allows CORS `*`, so audio goes from the WebView straight to ElevenLabs with a token. |
 | `src/matching/`, `src/store/`, `src/content/`, `src/modes/step1/`, `src/ai/keywords/` | LOGIC | Pure logic, data, assets, tests. |
 | `src/phone/` (companion UI, Screen preview) | UI | |
 | `fixtures/`, `scripts/` | LOGIC | `scripts/check-ownership.*` is LOGIC; `OWNERS.json` content is ORCH. |
@@ -207,10 +209,10 @@ Sleep: plan a rotation so the people who run the demo and the Beta packaging are
 | If this fails | Then |
 |---|---|
 | Step 3 unreliable | Ship `v0.2` (Steps 1-2). Step 3 stays flagged off. |
-| Streaming STT unusable from the WebView | Step 2 uses chunked utterance STT (same `SttService` interface). |
+| Streaming STT unusable from the WebView, or `wss://` blocked by the Even whitelist on the device | Steps 2-3 use VAD-segmented chunks sent to batch STT (~300 ms per segment, same `SttService` interface). |
 | Gemini slow or down | Predictor falls back to word-bank suggestions ranked by tag overlap and recency (built into `PredictorService`). |
 | ElevenLabs fails | Swap the adapter behind `SttService`. Last resort: manual-override tap so a helper confirms the word. |
-| STT mangles aphasic speech (autocorrects to a real word) | Fuzzy matcher strictness setting; pass the target word as a hint if the API supports it; "helper override" tap (Step 1). |
+| STT mangles aphasic speech (autocorrects to a real word: S-1 saw cop→Cough, medsin→Medicine) | Fuzzy matcher strictness setting; "helper override" tap (Step 1). **Do not** pass the target as a keyterm by default: it turns near-misses into the target (spun→Spoon), which gives false "correct" results (decision D1). |
 | Glasses unavailable or flaky | Simulator + Screen preview in the phone page for the demo. |
 | Head tilt unreliable | It is a stretch task behind `imuEnabled`. Touchpad stays primary. |
 | Venue network blocks the phone-to-laptop LAN link | Test with the packaged Beta build, which uses the hosted proxy rather than your laptop's IP. |
@@ -252,3 +254,17 @@ Not targeted: Sentry, Cognition, StepFun, and the rest. Adding any of them adds 
 7. **GitHub:** repo URL, and whether you can enable branch protection and CODEOWNERS enforcement (needs admin). Otherwise the CI ownership check plus discipline has to do it.
 8. **Names for H1-H4** and which person is orchestrator.
 9. **Step 3 thresholds** (silence length, hints per minute) are starting guesses. They are tuned against fixtures and live tests, not fixed here.
+
+---
+
+## 13. Decisions log
+
+| ID | When | Decision | Why / evidence |
+|---|---|---|---|
+| D1 | H8 (S-1) | **Step 1 does not send `targetHint` as an STT keyterm by default.** T-104 keeps the `targetHint` field in `UtteranceOptions` but ignores it unless a future lenient mode is switched on (not planned for this hackathon). | Keyterms turn near-misses and slurred attempts into the target (spun→Spoon, cuh→Cup, cop→Cup), giving false "correct" results in a practice tool. Without keyterms, batch got 12/12 clean words right. `spikes/stt/FINDINGS.md` Q6. |
+| D2 | H8 (S-1) | **Steps 2-3 send the personal bank (names, medications, places; ≤50 terms of ≤20 chars) as realtime keyterms, never the current candidates.** | Fixes names and drug names ("Maya", "Lisinopril"). Biasing toward on-screen candidates would make Step 2's "user said the word → clear the display" fire falsely. |
+| D3 | H8 (S-1) | **`api/stt` is a single-use token minter only** (`POST /api/stt/token {type}` → `{token}`), with an origin allow-list and a per-IP rate limit. No audio passes through our servers. | ElevenLabs serves CORS `*`, and its WebSocket accepts any origin with a token. Smaller, cheaper, and keeps "audio is never stored" trivially true. Reference: `spikes/stt/token-server.mjs`. |
+| D4 | H8 (S-1) | **`app.json` gets the `network` whitelist when T-104 lands**: `https://api.elevenlabs.io`, `wss://api.elevenlabs.io` (scheme matching to verify on the device), and the hosted `api/` origin, plus the mic permission S-3 picks. ORCH makes this edit. | Packaged builds enforce permissions. The whitelist does not bypass CORS (`docs/vendor/even-skills/build-and-deploy`). |
+| D5 | H8 (S-1) | **Always send `language_code=en`. Drop empty realtime commits. Speech state comes from local VAD.** | Auto-detect returned French, Portuguese, Javanese and Chinese on short English clips. VAD sends an empty commit about every 35 s of silence. STT lags about 1 s. |
+| D6 | H7 | **Device testing uses packaged Beta builds.** | QR prototype mode is broken on Even's side (`docs/BETA_RESULTS.md`). |
+

@@ -1,6 +1,6 @@
 # Nudge Task Board
 
-_Last updated: Sat Oct 17, 2026 (about H7:35) by ORCH. Contracts: CONTRACT_VERSION 2 (`src/core/types.ts`, `docs/CONTRACTS.md`). Phase 1 builder prompts: `docs/prompts/phase1-builder-prompts.md`._
+_Last updated: Sat Oct 17, 2026 (about H8) by ORCH. Decisions D1-D6: `PLAN.md` Section 13. Contracts: CONTRACT_VERSION 2 (`src/core/types.ts`, `docs/CONTRACTS.md`). Phase 1 builder prompts: `docs/prompts/phase1-builder-prompts.md`._
 
 Single source of truth for who is doing what. Read `PLAN.md` first for architecture, contracts, ownership, and git rules.
 
@@ -12,7 +12,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 **Queue by lane (now):**
 - GLASS: S-3 via a packaged spike build (**before H8**), the T-003 simulator boot check, then T-101.
-- AI: S-1, then S-2, then T-104 (needs S-1 + S-3).
+- AI: S-1 is merged. Next: S-2 (Gemini eval), then T-104 once S-3 reports (needs the mic source). T-203 can run alongside.
 - LOGIC (Codex): T-103, then T-106, then T-102, then T-007.
 - UI (Cursor): T-105 is merged. Next: the placeholder-label nit plus dev-page intent buttons (small), then T-206 once T-106 lands.
 
@@ -111,7 +111,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ### S-1 Spike: ElevenLabs Scribe from the WebView
 - **Owner:** AI (Claude Code)
-- **Status:** READY
+- **Status:** MERGED (PR #17). Findings: `spikes/stt/FINDINGS.md`. Decisions D1-D5 in `PLAN.md` Section 13. Follow-up nit: `token-server.mjs` should bind 127.0.0.1 by default.
 - **Branch:** `ai/spike-stt` (writes only `spikes/stt/**`)
 - **Depends on:** none
 - **Spec:** answer, with measured numbers and code: (1) batch vs realtime, which works from a browser WebView; (2) does it need a server-minted token (so we need `api/`)? (3) CORS behavior; (4) latency for a 1-3 second single-word clip; (5) behavior on slurred or partial words ("cop" for cup), including whether it autocorrects to a real word; (6) whether it accepts biasing toward a target word. Output `spikes/stt/FINDINGS.md` with a recommendation for Step 1 (utterance) and Steps 2-3 (rolling).
@@ -207,15 +207,20 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ### T-104 Audio capture, VAD, and utterance STT
 - **Owner:** AI
-- **Status:** TODO (waiting on S-1 and S-3)
+- **Status:** TODO (S-1 done; waiting on S-3 for the mic source)
 - **Branch:** `ai/audio-utterance`
 - **Depends on:** T-001, T-002, S-1, S-3
 - **Files it may EDIT:** `src/audio/**` (excluding `src/audio/rolling/`), `api/stt/**`. `app.json` permissions (`g2-microphone` or `phone-microphone`, `network` with the proxy URL whitelisted) are requested in the PR description; ORCH adds them.
-- **Spec:** implement `SttService` for real: capture PCM (source chosen per S-3), energy-based VAD producing `onSpeechState`, and `transcribeUtterance` (record until `endSilenceMs` of silence after speech or `maxMs`, wrap PCM, send to the ElevenLabs adapter via `api/` if S-1 says a proxy is needed). Honor `targetHint` if S-1 found biasing is supported. No audio written to disk or storage. Graceful errors: mic denied, network down, timeout (return an empty `Transcript` with a typed error the mode can show as `status`).
+- **Spec:** implement `SttService` for real: capture PCM (source chosen per S-3), energy-based VAD producing `onSpeechState`, and `transcribeUtterance` (record until `endSilenceMs` of silence after speech or `maxMs`, then send to ElevenLabs batch STT). No audio written to disk or storage.
+  - **Per S-1** (`spikes/stt/FINDINGS.md`, "Integration notes"): batch `POST /v1/speech-to-text`, `model_id=scribe_v2`, raw PCM as `file` with `file_format=pcm_s16le_16` (no WAV wrapper), **`language_code=en` always** (D5), and a single-use `batch_scribe` token in `?token=`, pre-minted while the prompt is on screen. Use an `AbortController` with a ~4 s timeout → `error: 'timeout'`; a thrown fetch → `'network'`; HTTP 401/403 → `'unknown'` (logged); empty text → `'no-speech'`.
+  - **`targetHint` is accepted but ignored (D1).** Never send it as a keyterm in Step 1.
+  - **`api/stt` = token minter only (D3)**: `POST /api/stt/token {type: 'batch_scribe'|'realtime_scribe'}` → `{token}`, key from the host's env, origin allow-list, per-IP rate limit, never logs the key or tokens. Port `spikes/stt/token-server.mjs`. Host it (Vercel per PLAN §12.2) so a packaged build can reach it.
+  - **`app.json` (D4):** list the exact `network` whitelist entries and the mic permission in the PR description; ORCH adds them when this merges. Graceful errors: mic denied, network down, timeout (return an empty `Transcript` with a typed error the mode can show as `status`).
 - **Acceptance criteria:**
   - [ ] Real utterance round-trip works from the simulator mic path and on the G2.
   - [ ] VAD emits speaking true/false transitions on a recorded test clip (clip not committed; test uses a synthetic PCM generator).
   - [ ] Keys are server-side only; bundle contains no API keys.
+  - [ ] A packaged build on the real G2 completes one utterance round-trip through the hosted `api/stt`. This is the first on-device check of the ElevenLabs path.
 
 ### T-105 Phone companion v1 and Screen preview
 - **Owner:** UI (Cursor)
@@ -264,6 +269,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 - **Depends on:** T-104, S-1
 - **Files it may EDIT:** `src/audio/rolling/**`
 - **Spec:** implement `onTranscript` for continuous use (streaming, or chunked utterances per the S-1 recommendation) and a `TranscriptBuffer` giving the last N seconds/words with timestamps. Reconnect on failure. Keep mic lifecycle consistent with `src/audio/`'s existing capture.
+  - **Per S-1** (D2, D5): realtime WebSocket `wss://api.elevenlabs.io/v1/speech-to-text/realtime`, `scribe_v2_realtime`, `audio_format=pcm_16000`, `commit_strategy=vad`, `vad_silence_threshold_secs=0.8`, `language_code=en`, `include_timestamps=true`, a single-use `realtime_scribe` token from `api/stt`. Keyterms = personal bank names, medications and places (≤50 terms, ≤20 chars), **never the current candidates**. Map partials to `isFinal:false` and committed transcripts to `isFinal:true`; **drop empty commits** (one arrives about every 35 s of silence). Reconnect with a fresh token and send `previous_text` on the first chunk. Keep the VAD-chunked batch fallback (PLAN §9) behind a flag until a packaged build proves `wss://` passes the Even whitelist.
 - **Acceptance criteria:** 5-minute continuous run without leak or crash against the mock path; reconnect test; buffer unit tests.
 
 ### T-203 Serverless proxy for prediction
@@ -273,6 +279,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 - **Depends on:** T-001
 - **Files it may EDIT:** `api/predict/**`
 - **Spec:** a minimal endpoint that holds the Gemini key, accepts a `PredictRequest`, enforces input size limits and an origin allow-list, and returns the model's raw JSON. CORS configured for the app origin. *(`api/stt/**` stays under T-104.)*
+  - Note (D3): `api/stt` (token minter) belongs to T-104. This task is `api/predict` only. Share the hosting setup (Vercel project and env vars) with T-104.
 - **Acceptance criteria:** works from the Beta build; key not present in the client bundle; oversized input rejected.
 
 ### T-204 Step 2 mode
@@ -282,6 +289,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 - **Depends on:** T-101, T-201 (mock first), T-202 (mock first)
 - **Files it may EDIT:** `src/modes/step2/**`
 - **Spec:** idle `blank` Screen (event-capturing). On each final transcript segment, refresh a candidate cache in the background (speculative). SELECT shows `candidates` at level 1 (picture/mouth shape of top candidate); SELECT again escalates to level 2 (first letter), then level 3 (full word); NEXT/PREV cycle among the top 3 and reset the ladder; BACK returns to `blank`. If STT hears the target word (via the matcher), clear the display automatically. Auto-dismiss after a configurable timeout. Works fully on mocks first (`?svc=mock`), then with the real services.
+  - Note (D2): the "STT hears the target → clear the display" check relies on candidates **not** being STT keyterms (T-202 only sends personal-bank keyterms). Don't add candidates to keyterms.
 - **Acceptance criteria:**
   - [ ] Mock run against all 8 fixtures: help tap shows candidates in under 300 ms (cache hit).
   - [ ] Ladder and swipe behavior covered by Vitest with `MockUI`.
@@ -416,6 +424,7 @@ No new features after H18. Only fixes, packaging, polish, and the story.
 - H7: T-004 fixtures merged (PR #9). Follow-up filed as T-007.
 - H7: T-006 design tokens and glasses layouts merged (PR #7, after one round of changes).
 - H7: T-002 device checks done (PR #13, `docs/BETA_RESULTS.md`). QR prototype mode is broken on Even's side, so device testing uses packaged Beta builds; README and `docs/G2_SMOKE.md` updated.
+- H8: S-1 ElevenLabs STT spike merged (PR #17). Decisions D1-D5 recorded in `PLAN.md` Section 13; T-104, T-202, T-203 and T-204 cards updated.
 - H7: T-105 phone companion merged (PR #11). Cue-ladder rule added to `GLASSES_LAYOUTS.md` (PR #15): the word stays hidden until level 3.
 - H7: CONTRACT_VERSION 2 (additive: `AppShell`, `ModeInfo`, `ModeContext.leave?()`, `GreyImage`, `ImageSource`, `KeyValueStore`). `@evenrealities/pretext@0.1.4` installed. Menu layout corrected to a text container. Phase 1 builder prompts added. **All lanes: rebase on `integration`.**
 
