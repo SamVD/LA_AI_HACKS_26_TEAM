@@ -1,6 +1,6 @@
 # Nudge Task Board
 
-_Last updated: Sun Oct 18, 2026 (about H13) by ORCH. **G2 PASSED (D18): `main` = `v0.2-step2` = `ae2294d`** (0.4.2, batch STT). CONTRACT_VERSION 3 (`SttService.flush?`, letters-first candidates). **Current snapshot of every task, PR, decision and blocker: `docs/ORCH_STATE.md`.** Decisions D1-D18: `PLAN.md` Section 13._
+_Last updated: Sun Oct 18, 2026 (about H14) by ORCH. **G1 and G2 PASSED; G3 HELD (D19).** `main` = `v0.2-step2` = `ae2294d`. CONTRACT_VERSION 4 (`speaker?`). **Code freeze 06:00 (H18).** Current snapshot: `docs/ORCH_STATE.md`. Decisions D1-D19: `PLAN.md` Section 13._
 
 Single source of truth for who is doing what. Read `PLAN.md` first for architecture, contracts, ownership, and git rules.
 
@@ -445,7 +445,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ### T-306 Gate G3: audit, soak, decide, tag
 - **Owner:** ORCH
-- **Status:** **READY TO RUN** from `integration` at or after `a34bc50` (T-208 + T-209 in; `app.json` 0.4.3).
+- **Status:** **HELD (D19).** Run 1 (#100, 0.4.3): Step 3 works, but hints take ~3-4 s; no tally. **Re-run after T-311/T-312/T-313 (+T-314 if ready), on one 0.4.4 upload, with the tally and a T-315 log export.**
 - **Spec:** audit; 10-minute live soak; count false hints per minute; decide whether `step3Enabled` ships default ON; tag `v0.3-step3` (or keep `v0.2` as the ship candidate); upload Beta.
 - **G3 runbook (GLASS with a second person, ORCH records it; one 0.4.3 upload covers all of it):**
   1. Clean `integration`: `npm ci && npm run typecheck && npm test`, then **`VITE_STEP3=1 npm run pack`**. `.env.production` already sets batch STT and Step 2 (D17). Verified: it packs, and the bundle has `VITE_STEP3:"1"`. Upload; install 0.4.3 from Me → Beta tester.
@@ -454,6 +454,75 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
   4. **G3 soak (Step 3):** a 10-minute natural two-person conversation with planted word-finding pauses ("pass me the, um…"). Count hints that **helped**, **false hints** (appeared when no word was needed) and **missed** stalls; note the phone Home card's sensitivity (default Balanced). Also check the swipe-on-blank pause toggle and the phone card's Pause.
   5. Step 1 quick regression (2-3 items).
   6. Record in `docs/BETA_RESULTS.md`. ORCH decides: Step 3 ships default ON only with about ≤ 1 false hint per 5 minutes and at least some helped hints; otherwise it ships flag-off (PLAN §2) and the demo uses Step 2.
+
+---
+
+## Phase 3b G3 refinements (H14 to H18, D19) → G3 re-run → freeze 06:00
+
+Order: **T-311 first**, then T-312 and T-313 in parallel, T-314 only if stable by **05:00**, T-315 alongside. Then the tallied G3 re-run (T-306) on one upload (0.4.4). **Code freeze 06:00 (H18).** `v0.2-step2` stays the fallback demo.
+
+### T-311 Early stall prediction (latency, free tier)
+- **Owner:** AI (Sam)
+- **Status:** READY (top priority)
+- **Branch:** `ai/stall-prefetch` (OWNERS grant: `src/ai/predictor/throttle.ts` + test, `src/modes/step2/index.ts` + test)
+- **Files it may EDIT:** `src/ai/stall/**`, `src/modes/step3/**`, plus the grant
+- **Why:** an auto-hint is the 1.5 s stall silence + ~1.0 s Gemini (measured) + render. Gemini only starts after the silence, because prefetch is spaced 5 s apart on the free tier (D11).
+- **Spec:**
+  - When a **final** transcript ends like a stall (`classifyEnding(...).stall`: function word, filler, trailing comma, self-repair), Step 2 asks the throttle for an **early prediction right away**, bypassing the 5 s `minGapMs` but **not** the 15/min window or the tap reserve.
+  - The help that follows (Step 3's virtual tap or a user tap) then hits the cache or shares the in-flight call (same request key).
+  - Log `step2 early-predict {ms}`.
+  - Stall-like endings are rare, so the quota holds. If the window is full, fall back to today's behavior.
+- **Acceptance criteria:**
+  - Tests: a stall-like final starts a call at once; a complete sentence doesn't; the window cap and tap reserve still hold; the help after it is a cache hit or a shared call (one Gemini call).
+  - Simulator: auto-hint from end of speech to candidates ≈ **1.5-2 s** (it was ~2.7-3.5 s).
+  - Device numbers come from the G3 re-run (T-315 export).
+
+### T-312 Launcher: Practice + Conversation
+- **Owners:** GLASS (Sarah) launcher label · AI (Sam) Step 3 title · UI (juannli) phone Home · ORCH flags
+- **Status:** READY
+- **Branches:** `glass/launcher-names`, `ai/conversation-title`, `ui/conversation-home`
+- **Spec:**
+  - Glasses launcher shows **"Practice"** and **"Conversation"**: `src/glasses/shell.ts` drops the `Step N` prefix and shows `ModeInfo.title`.
+  - Step 3's `title` becomes **"Conversation"** (`src/modes/step3`). Step 2 stays in the code (Step 3 runs on it and forces it on internally), hidden from both launchers.
+  - Phone Home: when Step 3 is in the build, hide the Step 2 card. The Conversation card copy reads "Hints appear on their own after a pause; tap anytime for help." Keep the Step 3 settings card.
+  - **ORCH**, once all three merge: `.env.production` → `VITE_STEP2=0`, `VITE_STEP3=1`.
+- **Acceptance criteria:** the launcher lists exactly Practice and Conversation; a tap in Conversation still gives help; the phone Home shows no Step 2 card; Step 1, Step 2 and Step 3 tests pass.
+
+### T-313 Step 1: ignore short or background speech
+- **Owner:** LOGIC (juannli / Devin)
+- **Status:** READY
+- **Branch:** `logic/step1-attempt-filter`
+- **Files it may EDIT:** `src/modes/step1/**`
+- **Why:** at G3, a wrong answer seemed to jump to the next item. Likely cause: short background utterances counted as wrong answers, and T-108's auto-escalate ran through the cues in seconds (#100 §4).
+- **Spec:**
+  - An utterance counts as an attempt only if it is non-empty and **≥ 300 ms** long (`tEndMs - tStartMs`).
+  - Once T-314 lands, it must also not be tagged `speaker: 'other'` (absent = wearer).
+  - Ignored utterances don't change the cue and don't count; Step 1 just listens again (log `step1 ignored {reason, ms}`).
+  - Keep the 3-wrong-at-L3 rule and T-108.
+- **Acceptance criteria:** tests: a 150 ms utterance is ignored and the cue is unchanged; a 400 ms wrong answer escalates as today; an `other` utterance is ignored; silence behavior is unchanged.
+
+### T-314 Speaker tagging by loudness (cut-off 05:00)
+- **Owner:** AI (Sam)
+- **Status:** READY after T-311
+- **Branch:** `ai/speaker-gate`
+- **Files it may EDIT:** `src/audio/**`, `src/ai/stall/**`, `src/modes/step3/**`
+- **Depends on:** CONTRACT_VERSION 4 (`speaker?` on `Transcript` and `SpeechState`)
+- **Spec:**
+  - Tag each speech burst and transcript `wearer` or `other` from its level on the glasses mic: the wearer is much louder than a partner about 1 m away. Use a margin over the running speech level and log `stt.speaker {db, speaker}`.
+  - The stall detector only treats silence after **wearer** speech as a stall. Other speech still goes into the transcript (useful context).
+  - **If it isn't stable on the device by 05:00, it ships off** (flag or default threshold that tags everything `wearer`).
+- **Acceptance criteria:** unit tests with synthetic levels; a G3 re-run where the partner's pauses don't trigger hints (T-315 log shows the `speaker` tags).
+
+### T-315 Lean pipeline log export
+- **Owners:** ORCH (done: `src/debug/eventLog.ts`, fed from `main.ts`'s `log`) · UI (juannli) export button
+- **Status:** ORCH part MERGED; UI part READY
+- **Branch:** `ui/log-export`
+- **Files it may EDIT:** `src/phone/**`
+- **Spec:**
+  - On the phone companion (Debug or Home footer), add an **"Export session log"** button that copies `eventLog.toJSON()` to the clipboard, with a download fallback, plus a live count of entries.
+  - Import `eventLog` from `src/debug/eventLog`. No audio is ever logged.
+  - Sarah runs it after the G3 re-run and pastes the JSON into the results PR.
+- **Acceptance criteria:** the button copies valid JSON, including `step2 help {ms}`, `step2 flush`, `step3 auto-hint` and `stt.*` events from a device session.
 
 ---
 

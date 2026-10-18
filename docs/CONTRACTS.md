@@ -1,6 +1,6 @@
 # Contracts
 
-The code is the source of truth: `src/core/types.ts`, **CONTRACT_VERSION 3**. This page explains the meaning behind the types and the rules that keep five lanes from breaking each other.
+The code is the source of truth: `src/core/types.ts`, **CONTRACT_VERSION 4**. This page explains the meaning behind the types and the rules that keep five lanes from breaking each other.
 
 ## Rules
 
@@ -33,6 +33,12 @@ The code is the source of truth: `src/core/types.ts`, **CONTRACT_VERSION 3**. Th
 |---|---|
 | `SttService.flush?()` | G2 latency (T-208): in batch mode (D17) the newest words were only transcribed after a ~0.8 s pause, so a help tap right after "um um" took 2-3 s. Step 2 calls `flush` on a tap so the request includes the words just spoken. Optional, so mocks and Step 1 harnesses stay valid. |
 | `CueLevel` meaning for `candidates` | The G2 tester's request, scoped (T-209): Steps 2-3 go letters-first: first letter + blanks, then half the word, then the full word. Pictures and mouth shapes stay in Step 1 only. Same type, new meaning, so it's listed here. |
+
+## Version 4 (additive, after G3; D19)
+
+| Addition | Why |
+|---|---|
+| `Speaker`, `Transcript.speaker?`, `SpeechState.speaker?` | G3: the glasses mic hears the conversation partner too, so their pauses can trigger Step 3 hints and their speech counts as Step 1 attempts. T-314 tags speech by loudness (`wearer` / `other`). Optional: absent means unknown and is treated as the wearer, so nothing changes until T-314 lands. |
 
 ## Semantics
 
