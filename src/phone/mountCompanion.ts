@@ -1,12 +1,13 @@
 import './theme/tokens.css'
 import './companion.css'
+import './demo/demo.css'
 import { builtinBank } from '../content'
 import type { AppShell, Screen, Suggestion, Transcript, Unsubscribe, WordCategory, WordEntry } from '../core/types'
 import { applyPhoneTheme, watchThemePreference } from './theme/applyTheme'
 import { buildPersonalEntry, isPersonalCategory, validatePracticeFrame } from './personalWord'
 import { ensurePreviewImages, renderPreviewOptions } from './preview/previewAssets'
 import { renderScreen } from './preview/renderScreen'
-import { judgeDemoHref } from './judgeDemoHref'
+import { bindJudgeDemo } from './demo/bindJudgeDemo'
 import { formatStep1ItemLine, summarizeStep1Session } from './sessionSummary'
 
 export type CompanionDebugState = {
@@ -25,7 +26,7 @@ export type CompanionMountOptions = {
   debug?: CompanionDebugSource
 }
 
-type TabId = 'home' | 'preview' | 'summary' | 'words' | 'debug'
+type TabId = 'home' | 'demo' | 'preview' | 'summary' | 'words' | 'debug'
 
 const builtinIds = new Set(builtinBank().map(entry => entry.id))
 
@@ -69,6 +70,9 @@ export function mountCompanion(
   panels.className = 'nudge-panels'
 
   const homePanel = document.createElement('section')
+  const demoPanel = document.createElement('section')
+  demoPanel.className = 'nudge-demo-inline'
+  const demoBinding = bindJudgeDemo(demoPanel, { compact: true })
   const previewPanel = document.createElement('section')
   const summaryPanel = document.createElement('section')
   const wordsPanel = document.createElement('section')
@@ -79,18 +83,6 @@ export function mountCompanion(
   previewHost.setAttribute('aria-live', 'polite')
   const previewKind = document.createElement('p')
   previewKind.className = 'nudge-preview-kind'
-
-  const judgeDemoCard = document.createElement('section')
-  judgeDemoCard.className = 'nudge-card nudge-home-demo'
-  judgeDemoCard.innerHTML = `
-    <h2>Judge demo</h2>
-    <p class="nudge-home-demo-lead">Scripted conversation stall for the booth — no second person required.</p>
-  `
-  const demoLink = document.createElement('a')
-  demoLink.className = 'nudge-btn nudge-btn--ghost'
-  demoLink.href = judgeDemoHref()
-  demoLink.textContent = 'Open judge demo'
-  judgeDemoCard.append(demoLink)
 
   const modeList = document.createElement('div')
   modeList.className = 'nudge-mode-list'
@@ -333,6 +325,7 @@ export function mountCompanion(
       btn.classList.toggle('nudge-tab--active', selected)
     }
     homePanel.hidden = id !== 'home'
+    demoPanel.hidden = id !== 'demo'
     previewPanel.hidden = id !== 'preview'
     summaryPanel.hidden = id !== 'summary'
     wordsPanel.hidden = id !== 'words'
@@ -345,6 +338,7 @@ export function mountCompanion(
 
   const tabs: Array<{ id: TabId; label: string }> = [
     { id: 'home', label: 'Home' },
+    { id: 'demo', label: 'Demo' },
     { id: 'preview', label: 'Preview' },
     { id: 'summary', label: 'Step 1' },
     { id: 'words', label: 'Words' },
@@ -362,7 +356,7 @@ export function mountCompanion(
     tabBar.append(btn)
   }
 
-  homePanel.append(judgeDemoCard, modeList)
+  homePanel.append(modeList)
   previewPanel.append(previewHost, previewKind)
   if (options.devPlaylist?.length) {
     const prev = document.createElement('button')
@@ -401,7 +395,7 @@ export function mountCompanion(
   wordsPanel.append(wordForm, wordBankBody)
   debugPanel.append(debugTranscript, debugSuggestions)
 
-  panels.append(homePanel, previewPanel, summaryPanel, wordsPanel, debugPanel)
+  panels.append(homePanel, demoPanel, previewPanel, summaryPanel, wordsPanel, debugPanel)
 
   const formHint = wordForm.querySelector<HTMLParagraphElement>('[data-form-hint]')!
   wordForm.addEventListener('submit', event => {
@@ -453,10 +447,7 @@ export function mountCompanion(
 
   const header = document.createElement('header')
   header.className = 'nudge-card'
-  header.innerHTML = `
-    <h1>Nudge</h1>
-    <p class="nudge-tagline">Quiet word-finding help on the glasses. This page stays calm.</p>
-  `
+  header.innerHTML = `<h1>Nudge</h1>`
   root.append(header, tabBar, panels)
 
   const unsubScreen = shell.onScreen(() => {
@@ -475,6 +466,7 @@ export function mountCompanion(
   refreshPreview()
   void refreshWords()
   return () => {
+    demoBinding.reset()
     unsubScreen()
     unsubDebug?.()
     unwatchTheme()

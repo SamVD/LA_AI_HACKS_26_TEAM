@@ -36,4 +36,22 @@ describe('judgeDemo', () => {
     expect(phases).toContain('help')
     expect(lastLabel).toContain('cup')
   })
+
+  it('stops when the run is aborted', async () => {
+    const ac = new AbortController()
+    const phases: string[] = []
+    ac.abort()
+    await runJudgeDemo(
+      judgeConversation,
+      {
+        onState(state) {
+          phases.push(state.phase)
+        },
+        onPreviewSvg() {},
+      },
+      { speed: 0, signal: ac.signal },
+    )
+    expect(phases).toContain('cancelled')
+    expect(phases).not.toContain('help')
+  })
 })
