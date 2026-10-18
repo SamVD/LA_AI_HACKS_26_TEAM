@@ -88,6 +88,7 @@
       "docs/DISPLAY_LIMITS.md"
     ],
     "logic/foundation": [
+      "src/main.ts",
       "src/config.ts",
       "src/modes/index.ts",
       "src/modes/step1/index.ts",
