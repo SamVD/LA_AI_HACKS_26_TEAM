@@ -7,6 +7,7 @@ import type { Intent, Mode, ModeContext, Suggestion, Transcript, Unsubscribe, Wo
 import { CueLadder } from '../../glasses/ladder'
 import { matchWord } from '../../matching'
 import { buildRequest, lettersOnly } from './request'
+import { classifyEnding } from '../../ai/stall/ending'
 import { createThrottledPredictor, type ThrottledPredictor } from '../../ai/predictor'
 
 export interface Step2Options {
@@ -137,7 +138,13 @@ export function createStep2(options: Step2Options = {}): Mode {
     if (t.isFinal && t.text.trim()) {
       finals = [...finals, t.text.trim()].slice(-MAX_FINALS)
       lastFinalAt = ctx.now()
-      throttle?.onFinal(buildRequest(finals, bank))
+      const c0 = ctx
+      // T-311: a final that ends like a stall may be followed by a help tap (or Step 3's
+      // virtual one) any moment, so start Gemini now instead of waiting out the 5 s spacing.
+      const early = classifyEnding(t.text).stall
+      const started = c0.now()
+      const call = throttle?.onFinal(buildRequest(finals, bank), early)
+      if (call) void call.then(() => ctx?.log('step2 early-predict', { ms: ctx.now() - started }), () => {})
     }
   }
 
