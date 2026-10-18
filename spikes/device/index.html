@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" />
+    <title>Nudge S-3 probe</title>
+    <style>
+      html, body { margin: 0; background: #232323; color: #E5E5E5; font: 15px/1.45 -apple-system, BlinkMacSystemFont, system-ui, sans-serif; touch-action: manipulation; -webkit-text-size-adjust: 100%; overscroll-behavior: none; }
+      main { padding: 16px; }
+      h1 { font-size: 22px; margin: 0 0 4px; color: #7CFC9A; }
+      h2 { font-size: 16px; margin: 20px 0 6px; }
+      #status { font-size: 17px; }
+      #clock { color: #9a9a9a; font-size: 13px; }
+      #buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+      button { font: inherit; padding: 12px; border-radius: 10px; border: 1px solid #555; background: #333; color: #E5E5E5; }
+      ul { padding-left: 18px; margin: 0; }
+      li { margin: 4px 0; word-break: break-word; }
+      audio { width: 100%; margin: 4px 0 10px; }
+      a { color: #7CFC9A; }
+      textarea, pre { width: 100%; box-sizing: border-box; min-height: 120px; background: #1a1a1a; color: #E5E5E5; border: 1px solid #444; border-radius: 8px; font: 12px/1.4 ui-monospace, monospace; white-space: pre-wrap; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>S-3 PHONE PAGE IS VISIBLE</h1>
+      <div id="clock"></div>
+      <p id="status">Starting...</p>
+      <div id="buttons"></div>
+      <h2>Results</h2>
+      <ul id="results"></ul>
+      <h2>Mic clips (play to compare)</h2>
+      <div id="clips"></div>
+      <h2>Event log</h2>
+      <ul id="log"></ul>
+      <p id="storage">SDK setLocalStorage: no writes yet</p>
+      <h2>Previous run log (from SDK storage)</h2>
+      <pre id="previous">none</pre>
+      <h2>IMU samples (CSV)</h2>
+      <textarea id="imu" readonly></textarea>
+      <h2>Copy everything</h2>
+      <button id="copy">Fill text box</button>
+      <textarea id="dump" readonly></textarea>
+    </main>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>
