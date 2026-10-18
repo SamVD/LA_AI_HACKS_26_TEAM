@@ -107,7 +107,8 @@ const conversationDir = new URL('./conversations/', import.meta.url)
 const filenames = readdirSync(conversationDir).filter(name => name.endsWith('.json')).sort()
 describe('conversations', () => {
   it('covers all eight required shapes', () => {
-    expect(filenames.map(name => name.replace(/\.json$/, '')).sort()).toEqual([...shapes].sort())
+    expect(filenames.length).toBeGreaterThanOrEqual(11)
+    for (const shape of [...shapes, 'no-stall']) expect(filenames).toContain(`${shape}.json`)
   })
   it.each(filenames)('%s has valid events, stalls and negative pauses', filename => {
     const fixture = load(`./conversations/${filename}`)
@@ -137,7 +138,7 @@ describe('conversations', () => {
     assert(lastTime >= 20000 && lastTime <= 90000)
     assert(events.some(event => event.type === 'transcript' && event.isFinal === false))
     assert(events.filter(event => event.type === 'transcript' && /[.!?]$/.test(String(event.text))).length >= 2)
-    assert(Array.isArray(fixture.stalls) && fixture.stalls.length > 0)
+    assert(Array.isArray(fixture.stalls))
     for (const stall of fixture.stalls) {
       object(stall)
       number(stall.tMs)
@@ -155,10 +156,64 @@ describe('conversations', () => {
       assert(nextSpeech)
       const silentMs = Number(nextSpeech.tMs) - Number(speech.tMs)
       assert(silentMs >= 2000 && silentMs <= 4000)
-      assert(Number(stall.tMs) - Number(final.tMs) >= 2000)
+      // Ground truth marks silence onset. The detector chooses its own delay.
+      assert.equal(stall.tMs, speech.tMs)
+      assert(Number(final.tMs) <= Number(stall.tMs))
       expect(stall.inBank).toBe(inBank(stall.intendedWord))
       assert(stall.expectedTop3.some(target => target.toLowerCase() === String(stall.intendedWord).toLowerCase()))
     }
+  })
+  it('varies timing and turn counts, with overlapping normal/stall pauses', () => {
+    const fixtures = filenames.map(filename => {
+      const fixture = load(`./conversations/${filename}`)
+      object(fixture)
+      return fixture
+    })
+    const durations = new Set<number>()
+    const counts = new Set<number>()
+    const timelines = new Set<string>()
+    const normalPauses: number[] = []
+    const stallPauses: number[] = []
+    let multiStall = 0
+    let noStall = 0
+    for (const fixture of fixtures) {
+      assert(Array.isArray(fixture.events) && Array.isArray(fixture.stalls))
+      const events = fixture.events as Array<Record<string, unknown>>
+      const stalls = fixture.stalls as Array<Record<string, unknown>>
+      const starts = new Set(stalls.map(stall => stall.tMs))
+      durations.add(Number(events.at(-1)?.tMs))
+      counts.add(events.length)
+      timelines.add(events.map(event => event.tMs).join(','))
+      if (stalls.length > 1) multiStall++
+      if (stalls.length === 0) noStall++
+      for (const [i, event] of events.entries()) {
+        if (event.type !== 'speech' || event.speaking !== false) continue
+        const nextSpeech = events.slice(i + 1).find(next => next.type === 'speech' && next.speaking)
+        if (!nextSpeech) continue
+        const pause = Number(nextSpeech.tMs) - Number(event.tMs)
+        const pauses = starts.has(event.tMs) ? stallPauses : normalPauses
+        pauses.push(pause)
+      }
+    }
+    expect(durations.size).toBeGreaterThanOrEqual(8)
+    expect(counts.size).toBeGreaterThanOrEqual(4)
+    expect(timelines.size).toBe(filenames.length)
+    expect(multiStall).toBeGreaterThanOrEqual(2)
+    expect(noStall).toBeGreaterThanOrEqual(1)
+    expect(new Set(stallPauses).size).toBeGreaterThanOrEqual(5)
+    expect(Math.max(...normalPauses)).toBeGreaterThan(Math.min(...stallPauses))
+    // Exhaust every threshold boundary, in either direction. Duration alone
+    // must never classify every stall and every ordinary pause correctly.
+    const durationsToCheck = [...normalPauses, ...stallPauses]
+    const thresholds = [0, ...durationsToCheck, ...durationsToCheck.map(ms => ms + 0.5), Infinity]
+    for (const threshold of thresholds) {
+      for (const predictStall of [(ms: number) => ms >= threshold, (ms: number) => ms < threshold]) {
+        const errors = normalPauses.filter(predictStall).length + stallPauses.filter(ms => !predictStall(ms)).length
+        expect(errors).toBeGreaterThan(0)
+      }
+    }
+    expect(Math.min(...durations)).toBeLessThanOrEqual(30000)
+    expect(Math.max(...durations)).toBeGreaterThanOrEqual(80000)
   })
 })
 

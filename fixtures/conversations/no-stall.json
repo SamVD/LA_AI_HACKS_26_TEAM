@@ -1,0 +1,175 @@
+{
+  "id": "no-stall",
+  "description": "Synthetic conversation with fictional personal entries. Turns: caregiver 0-5s, user 11-16s, caregiver 18-22s, user 28-33s, caregiver 36-41s, user 45-49s, caregiver 52-56s. Long complete-sentence pauses are intentional negative examples.",
+  "events": [
+    {
+      "tMs": 0,
+      "type": "speech",
+      "speaking": true
+    },
+    {
+      "tMs": 2250,
+      "type": "transcript",
+      "text": "The weather looks pleasant",
+      "isFinal": false,
+      "tStartMs": 0
+    },
+    {
+      "tMs": 3750,
+      "type": "transcript",
+      "text": "The weather looks pleasant for a walk",
+      "isFinal": false,
+      "tStartMs": 0
+    },
+    {
+      "tMs": 5000,
+      "type": "transcript",
+      "text": "The weather looks pleasant for a walk today.",
+      "isFinal": true,
+      "tStartMs": 0
+    },
+    {
+      "tMs": 5100,
+      "type": "speech",
+      "speaking": false
+    },
+    {
+      "tMs": 11000,
+      "type": "speech",
+      "speaking": true
+    },
+    {
+      "tMs": 16000,
+      "type": "transcript",
+      "text": "Yes, I would like to go outside after lunch.",
+      "isFinal": true,
+      "tStartMs": 11000
+    },
+    {
+      "tMs": 16100,
+      "type": "speech",
+      "speaking": false
+    },
+    {
+      "tMs": 18000,
+      "type": "speech",
+      "speaking": true
+    },
+    {
+      "tMs": 19800,
+      "type": "transcript",
+      "text": "We could take the",
+      "isFinal": false,
+      "tStartMs": 18000
+    },
+    {
+      "tMs": 22000,
+      "type": "transcript",
+      "text": "We could take the path beside the garden.",
+      "isFinal": true,
+      "tStartMs": 18000
+    },
+    {
+      "tMs": 22100,
+      "type": "speech",
+      "speaking": false
+    },
+    {
+      "tMs": 28000,
+      "type": "speech",
+      "speaking": true
+    },
+    {
+      "tMs": 30250,
+      "type": "transcript",
+      "text": "That sounds good. The",
+      "isFinal": false,
+      "tStartMs": 28000
+    },
+    {
+      "tMs": 33000,
+      "type": "transcript",
+      "text": "That sounds good. The flowers were beautiful yesterday.",
+      "isFinal": true,
+      "tStartMs": 28000
+    },
+    {
+      "tMs": 33100,
+      "type": "speech",
+      "speaking": false
+    },
+    {
+      "tMs": 36000,
+      "type": "speech",
+      "speaking": true
+    },
+    {
+      "tMs": 39750,
+      "type": "transcript",
+      "text": "Would you like to bring a bottle of",
+      "isFinal": false,
+      "tStartMs": 36000
+    },
+    {
+      "tMs": 41000,
+      "type": "transcript",
+      "text": "Would you like to bring a bottle of water?",
+      "isFinal": true,
+      "tStartMs": 36000
+    },
+    {
+      "tMs": 41100,
+      "type": "speech",
+      "speaking": false
+    },
+    {
+      "tMs": 45000,
+      "type": "speech",
+      "speaking": true
+    },
+    {
+      "tMs": 46800,
+      "type": "transcript",
+      "text": "Yes, it is already",
+      "isFinal": false,
+      "tStartMs": 45000
+    },
+    {
+      "tMs": 49000,
+      "type": "transcript",
+      "text": "Yes, it is already packed in my bag.",
+      "isFinal": true,
+      "tStartMs": 45000
+    },
+    {
+      "tMs": 49100,
+      "type": "speech",
+      "speaking": false
+    },
+    {
+      "tMs": 52000,
+      "type": "speech",
+      "speaking": true
+    },
+    {
+      "tMs": 53800,
+      "type": "transcript",
+      "text": "Then we can leave",
+      "isFinal": false,
+      "tStartMs": 52000
+    },
+    {
+      "tMs": 56000,
+      "type": "transcript",
+      "text": "Then we can leave whenever you are ready.",
+      "isFinal": true,
+      "tStartMs": 52000
+    },
+    {
+      "tMs": 56100,
+      "type": "speech",
+      "speaking": false
+    }
+  ],
+  "stalls": []
+}

@@ -1,6 +1,6 @@
 {
   "id": "near-miss-sound",
-  "description": "Tea break, cop and cuh precede the target cup. Synthetic two-person talk: user 0-3s, caregiver 5-7s, user 9-18s, caregiver 21-23.5s, user 26-28s. Complete-sentence pauses and caregiver turns are negative examples.",
+  "description": "Synthetic conversation with fictional personal entries. Turns: user 0-5s, caregiver 7-10s, user 14-20s, user 23.3-27s, caregiver 33-37s, user 39-42s. Long complete-sentence pauses are intentional negative examples.",
   "events": [
     {
       "tMs": 0,
@@ -8,120 +8,148 @@
       "speaking": true
     },
     {
-      "tMs": 1200,
+      "tMs": 2250,
       "type": "transcript",
-      "text": "We can have a short",
+      "text": "I would enjoy a",
       "isFinal": false,
       "tStartMs": 0
     },
     {
-      "tMs": 3000,
+      "tMs": 3750,
       "type": "transcript",
-      "text": "We can have a short tea break before our walk.",
-      "isFinal": true,
+      "text": "I would enjoy a warm drink before our",
+      "isFinal": false,
       "tStartMs": 0
-    },
-    {
-      "tMs": 3100,
-      "type": "speech",
-      "speaking": false
     },
     {
       "tMs": 5000,
+      "type": "transcript",
+      "text": "I would enjoy a warm drink before our walk.",
+      "isFinal": true,
+      "tStartMs": 0
+    },
+    {
+      "tMs": 5100,
       "type": "speech",
-      "speaking": true
+      "speaking": false
     },
     {
       "tMs": 7000,
-      "type": "transcript",
-      "text": "What would you like for your tea?",
-      "isFinal": true,
-      "tStartMs": 5000
-    },
-    {
-      "tMs": 7100,
-      "type": "speech",
-      "speaking": false
-    },
-    {
-      "tMs": 9000,
       "type": "speech",
       "speaking": true
     },
     {
-      "tMs": 10500,
+      "tMs": 10000,
       "type": "transcript",
-      "text": "I would like a cop, no,",
+      "text": "There is some tea in the pot.",
+      "isFinal": true,
+      "tStartMs": 7000
+    },
+    {
+      "tMs": 10100,
+      "type": "speech",
+      "speaking": false
+    },
+    {
+      "tMs": 14000,
+      "type": "speech",
+      "speaking": true
+    },
+    {
+      "tMs": 16700,
+      "type": "transcript",
+      "text": "Please bring me a cop,",
       "isFinal": false,
-      "tStartMs": 9000
+      "tStartMs": 14000
     },
     {
-      "tMs": 12500,
+      "tMs": 20000,
       "type": "transcript",
-      "text": "I would like a cop, no, for tea, a cuh",
+      "text": "Please bring me a cop, no, for tea, a cuh",
       "isFinal": true,
-      "tStartMs": 9000
+      "tStartMs": 14000
     },
     {
-      "tMs": 12600,
+      "tMs": 20100,
       "type": "speech",
       "speaking": false
     },
     {
-      "tMs": 16000,
+      "tMs": 23300,
       "type": "speech",
       "speaking": true
     },
     {
-      "tMs": 18000,
+      "tMs": 24965,
       "type": "transcript",
-      "text": "cup. That was the word I wanted.",
-      "isFinal": true,
-      "tStartMs": 16000
+      "text": "Cup. The one beside",
+      "isFinal": false,
+      "tStartMs": 23300
     },
     {
-      "tMs": 18100,
+      "tMs": 27000,
+      "type": "transcript",
+      "text": "Cup. The one beside the sink will do.",
+      "isFinal": true,
+      "tStartMs": 23300
+    },
+    {
+      "tMs": 27100,
       "type": "speech",
       "speaking": false
     },
     {
-      "tMs": 21000,
+      "tMs": 33000,
       "type": "speech",
       "speaking": true
     },
     {
-      "tMs": 23500,
+      "tMs": 36000,
       "type": "transcript",
-      "text": "Of course. I understand what you mean now.",
-      "isFinal": true,
-      "tStartMs": 21000
+      "text": "Here you are. Shall we sit down for a",
+      "isFinal": false,
+      "tStartMs": 33000
     },
     {
-      "tMs": 23600,
+      "tMs": 37000,
+      "type": "transcript",
+      "text": "Here you are. Shall we sit down for a minute?",
+      "isFinal": true,
+      "tStartMs": 33000
+    },
+    {
+      "tMs": 37100,
       "type": "speech",
       "speaking": false
     },
     {
-      "tMs": 26000,
+      "tMs": 39000,
       "type": "speech",
       "speaking": true
     },
     {
-      "tMs": 28000,
+      "tMs": 40350,
       "type": "transcript",
-      "text": "Thank you. We can carry on with our day.",
-      "isFinal": true,
-      "tStartMs": 26000
+      "text": "Yes, I will put",
+      "isFinal": false,
+      "tStartMs": 39000
     },
     {
-      "tMs": 28100,
+      "tMs": 42000,
+      "type": "transcript",
+      "text": "Yes, I will put my shoes on afterwards.",
+      "isFinal": true,
+      "tStartMs": 39000
+    },
+    {
+      "tMs": 42100,
       "type": "speech",
       "speaking": false
     }
   ],
   "stalls": [
     {
-      "tMs": 15000,
+      "tMs": 20100,
       "stalledAfter": "for tea, a cuh",
       "intendedWord": "cup",
       "expectedTop3": [

@@ -48,7 +48,7 @@
     },
     {
       "id": "eval-04",
-      "shape": "clean-stall",
+      "shape": "circumlocution",
       "transcriptTail": "My appointment is in the big building with wards and nurses. Please drive me to the",
       "stalledAfter": "drive me to the",
       "n": 3,
@@ -62,7 +62,7 @@
     {
       "id": "eval-05",
       "shape": "filler-stall",
-      "transcriptTail": "After breakfast I read the sample bottle label starting with lisi. I am looking for my, um, my",
+      "transcriptTail": "We finished breakfast and cleared the dishes. Now I need my morning tablet, um, my",
       "stalledAfter": "um, my",
       "n": 3,
       "intendedWord": "lisinopril",
@@ -228,7 +228,7 @@
     {
       "id": "eval-17",
       "shape": "known-name",
-      "transcriptTail": "The fictional doctor is expecting us at Sunrise Clinic tomorrow morning. My appointment is with",
+      "transcriptTail": "The doctor is expecting us at Sunrise Clinic tomorrow morning. My appointment is with",
       "stalledAfter": "appointment is with",
       "n": 3,
       "intendedWord": "Dr. Velrin",
@@ -240,7 +240,7 @@
     {
       "id": "eval-18",
       "shape": "known-name",
-      "transcriptTail": "The neighbor from our sample story came over to help with the garden. His name is",
+      "transcriptTail": "Our neighbor came over yesterday to help with the garden. His name is",
       "stalledAfter": "His name is",
       "n": 3,
       "intendedWord": "Nilo",
