@@ -72,7 +72,9 @@ async function rasterize(key: string, width: number, height: number): Promise<Gr
   const svg = await sources.get(key)!()
   const box = svg.match(/viewBox="([\d. -]+)"/)?.[1].trim().split(/\s+/).map(Number)
   if (!box || box.length !== 4 || !(box[2] > 0 && box[3] > 0)) return null
-  const image = await loadImage(svg)
+  // Explicit intrinsic dimensions prevent SVG default sizing from distorting
+  // the viewBox when the image is drawn into a differently shaped container.
+  const image = await loadImage(svg.replace('<svg ', `<svg width="${box[2]}" height="${box[3]}" `))
   if (!image) return null
   const canvas = typeof OffscreenCanvas !== 'undefined' ? new OffscreenCanvas(width, height) :
     Object.assign(document.createElement('canvas'), { width, height })
