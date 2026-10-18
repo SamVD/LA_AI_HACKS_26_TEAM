@@ -1,13 +1,23 @@
 # G2 Smoke Test
 
-Run at every gate (G1, G2, G3) and before final submission, on the **real G2** with the **Beta build** installed from the phone app (Me → Beta tester), not the LAN QR dev build. Record results in the table at the bottom and paste it into the gate PR.
+Run at every gate (G1, G2, G3) and before final submission, on the **real G2** with the **Beta build** installed from the phone app (Me → Beta tester). QR prototype mode does not work right now (Even-side issue, `docs/BETA_RESULTS.md`), so the Beta build is the only way onto the glasses. Record results in the table at the bottom and paste it into the gate PR.
 
 Sections A and B are required at every gate. Run C, D and E for the steps the gate covers, plus every earlier step as a regression check.
 
+## Build and install (each cycle takes a few minutes; batch your checks)
+
+1. Check out the gate candidate (`integration` at the commit being tagged) with a clean tree. `npm ci`, then `npm run typecheck`, `npm test`, `npm run build`.
+2. Set this gate's flags **at pack time**. A packaged build has no URL to add `?step2=1` to, so flags come from the `VITE_*` env variables read by `src/config.ts`:
+   - G1: `npm run pack`
+   - G2: `VITE_STEP2=1 npm run pack`
+   - G3: `VITE_STEP2=1 VITE_STEP3=1 npm run pack` (or per the G3 decision)
+3. Upload `nudge.ehpk` at [hub.evenrealities.com](https://hub.evenrealities.com) → **My projects**. If the portal rejects a re-upload with the same version, bump `version` in `app.json` (ORCH) and repack.
+4. Phone: Even Realities app → **Me → Beta tester** → install or update Nudge. Confirm the version shown matches `app.json`.
+5. Record the commit, the flags and the version in the Results table.
+
 ## Setup
 
-- [ ] `main` (or the gate candidate on `integration`) passes `npm run typecheck`, `npm run test`, `npm run build`.
-- [ ] `npm run pack` produces `nudge.ehpk`; it is uploaded to the Beta group and the version number shown in the phone app matches `app.json`.
+- [ ] Steps 1-5 above done; the installed version matches `app.json`.
 - [ ] Phone on venue Wi-Fi **and** tested once on cellular (the proxy must not depend on the laptop).
 - [ ] Glasses charged above 30%, worn, and connected.
 - [ ] Flags for this gate set as intended (G1: Step 2/3 off; G2: `step2Enabled` on; G3: per the G3 decision).
@@ -72,8 +82,8 @@ Two people, a natural conversation on any topic, about 5 minutes.
 
 ## Results
 
-| Gate | Date / time | Build version | Tester | A | B | C | D | E | Notes |
-|---|---|---|---|---|---|---|---|---|---|
-| | | | | | | | | | |
+| Gate | Date / time | Commit | Flags | Build version | Tester | A | B | C | D | E | Notes |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| | | | | | | | | | | | |
 
 Mark each column `pass`, `fail (#)`, or `n/a`. Any fail in A or B blocks the gate.
