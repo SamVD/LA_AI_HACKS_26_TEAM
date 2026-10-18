@@ -13,8 +13,12 @@
     },
     {
       "name": "network",
-      "desc": "Sends your spoken word to the speech-to-text service to check it.",
-      "whitelist": ["https://api.elevenlabs.io"]
+      "desc": "Sends your speech to the speech-to-text service and gets a short-lived access token from Nudge's server. Audio is never stored.",
+      "whitelist": [
+        "https://api.elevenlabs.io",
+        "wss://api.elevenlabs.io",
+        "https://nudge-seven-psi.vercel.app"
+      ]
     }
   ],
   "supported_languages": ["en"]
