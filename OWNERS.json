@@ -50,7 +50,8 @@
         "src/modes/step3/**",
         "api/**",
         "spikes/stt/**",
-        "spikes/predictor/**"
+        "spikes/predictor/**",
+        "spikes/stepfun/**"
       ]
     },
     "ui": {
