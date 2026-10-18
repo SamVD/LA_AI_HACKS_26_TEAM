@@ -52,6 +52,9 @@ export class EnergyVad {
   private speaking = false
   private firstSpeechFrame = -1
   private lastSpeechFrame = -1
+  private runLevels: number[] = [] // levels in the current speech run, until the burst is confirmed
+  private speechPower = 0 // Σ linear power of frames inside confirmed speech (T-316)
+  private speechFrames = 0
 
   constructor(private readonly t0Ms: number, private readonly emit: (s: SpeechState) => void = () => {}, o: VadOptions = {}) {
     this.marginDb = o.marginDb ?? 12
@@ -86,14 +89,22 @@ export class EnergyVad {
       this.run++
       this.quiet = 0
       this.lastSpeechFrame = idx
-      if (!this.speaking && this.run >= this.onsetFrames) {
-        this.speaking = true
-        const start = idx - this.run + 1
-        if (this.firstSpeechFrame < 0) this.firstSpeechFrame = start
-        this.emit({ speaking: true, tMs: this.frameTime(start) })
+      if (this.speaking) {
+        this.addSpeechLevel(db)
+      } else {
+        this.runLevels.push(db)
+        if (this.run >= this.onsetFrames) {
+          this.speaking = true
+          const start = idx - this.run + 1
+          if (this.firstSpeechFrame < 0) this.firstSpeechFrame = start
+          for (const l of this.runLevels) this.addSpeechLevel(l)
+          this.runLevels = []
+          this.emit({ speaking: true, tMs: this.frameTime(start) })
+        }
       }
     } else {
       this.run = 0
+      this.runLevels = []
       if (this.speaking && ++this.quiet >= this.hangFrames) {
         this.speaking = false
         this.emit({ speaking: false, tMs: this.frameTime(this.lastSpeechFrame + 1) })
@@ -118,6 +129,16 @@ export class EnergyVad {
   /** Current noise floor and loudest frame, in dBFS: what to report when nothing counted as speech. */
   get noiseFloorDb(): number { return this.floorDb ?? -120 }
   get peakDb(): number { return this.peak }
+  /** Power-averaged level (dBFS) of the frames inside confirmed speech (T-316), rounded; -120 when there was none. */
+  get speechDb(): number {
+    if (!this.speechFrames) return -120
+    return Math.round(10 * Math.log10(this.speechPower / this.speechFrames))
+  }
+
+  private addSpeechLevel(db: number): void {
+    this.speechPower += 10 ** (db / 10)
+    this.speechFrames++
+  }
 
   private get floorDb(): number | null {
     if (!this.history.length) return null

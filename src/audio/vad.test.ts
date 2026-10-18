@@ -79,4 +79,24 @@ describe('EnergyVad', () => {
     const { events } = run(synth([word(150), quiet(1500)]))
     expect(events).toEqual([])
   })
+
+  it('reports speechDb near the burst level (T-316)', () => {
+    const { vad } = run(synth([quiet(500), word(500, -15), quiet(1000)]))
+    expect(vad.speechDb).toBeGreaterThanOrEqual(-16)
+    expect(vad.speechDb).toBeLessThanOrEqual(-14)
+  })
+
+  it('power-averages speechDb across frames: a mixed-level burst lands under its peak', () => {
+    // 250 ms at -10 dB + 250 ms at -20 dB → power mean ≈ -12.6, peak ≈ -10
+    const { vad } = run(synth([quiet(500), word(250, -10), word(250, -20), quiet(1000)]))
+    expect(vad.speechDb).toBeGreaterThanOrEqual(-15)
+    expect(vad.speechDb).toBeLessThanOrEqual(-12)
+    expect(vad.speechDb).toBeLessThan(vad.peakDb)
+  })
+
+  it('keeps speechDb at -120 when nothing was confirmed as speech', () => {
+    expect(run(synth([quiet(3000)])).vad.speechDb).toBe(-120)
+    // a click under the onset time is never confirmed, so it never counts
+    expect(run(synth([quiet(500), word(40), quiet(800)])).vad.speechDb).toBe(-120)
+  })
 })
