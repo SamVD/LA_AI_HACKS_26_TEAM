@@ -187,7 +187,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ### T-102 Step 1 engine and mode
 - **Owner:** LOGIC (Codex)
-- **Status:** READY (T-103 and T-106 merged). Builder prompt: `docs/prompts/phase1-builder-prompts.md` #5.
+- **Status:** APPROVED (PR #34). Waiting on: update the 3 stub tests (`src/mocks/foundation.test.ts`, plus `src/glasses/main.test.ts` and `src/phone/dev/devShell.test.ts` under a new branch grant), and stop STT only on finish, leave, error and exit (not per item), then mark the PR ready.
 - **Branch:** `logic/step1-mode`
 - **Depends on:** T-001, T-003, T-004, T-103 (`matchWord`), T-106 (`resolveAssets`). Start after T-103 and T-106 merge.
 - **Files it may EDIT:** `src/modes/step1/**`
@@ -208,7 +208,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ### T-104 Audio capture, VAD, and utterance STT
 - **Owner:** AI
-- **Status:** READY (S-1 and S-3 done). Use the glasses mic only (D7).
+- **Status:** MERGED (PR #33). ORCH wired it in `src/main.ts` (real STT unless `?svc=mock`) and added `g2-microphone` and `https://api.elevenlabs.io` to `app.json`. **Open: host `api/stt` on Vercel** (Aarav + Sam: `ELEVENLABS_API_KEY`, `STT_ALLOWED_ORIGINS`), then add its origin to the `app.json` whitelist and pack with `VITE_STT_TOKEN_URL`.
 - **Branch:** `ai/audio-utterance`
 - **Depends on:** T-001, T-002, S-1, S-3
 - **Files it may EDIT:** `src/audio/**` (excluding `src/audio/rolling/`), `api/stt/**`. `app.json` permissions (`g2-microphone` or `phone-microphone`, `network` with the proxy URL whitelisted) are requested in the PR description; ORCH adds them.
@@ -432,6 +432,7 @@ No new features after H18. Only fixes, packaging, polish, and the story.
 - H7: T-004 fixtures merged (PR #9). Follow-up filed as T-007.
 - H7: T-006 design tokens and glasses layouts merged (PR #7, after one round of changes).
 - H7: T-002 device checks done (PR #13, `docs/BETA_RESULTS.md`). QR prototype mode is broken on Even's side, so device testing uses packaged Beta builds; README and `docs/G2_SMOKE.md` updated.
+- H9: **T-104 mic + STT merged (PR #33)** and wired in `src/main.ts`; `app.json` gets `g2-microphone` + ElevenLabs. T-102 (PR #34) approved, pending stub-test updates (grant added). Step 1 now needs: T-102 merged, `api/stt` hosted, then a packaged G1 run on the real G2.
 - H9: **T-101 glasses renderer and shell merged (PR #29)**: the glasses half of Step 1 is in. Step 1 still needs T-102 (mode) and T-104 (mic and STT).
 - H9: T-106 store recovery (PR #28), T-206 companion v2 (PR #24) and T-201 part 1 (PR #31) merged. T-101 (PR #29) approved, waiting on the startup-test deletion (grant added) to go green. `index.html` `#app` placeholder removed. D13 (`dropSamples` false).
 - H9: S-2 Gemini spike merged (PR #26). `PREDICTOR_PROMPT.md` is now **v2**; D11 (model, few-shot, free-tier throttle) and D12 (fallback v2). T-201 READY; T-203 and T-204 updated.
