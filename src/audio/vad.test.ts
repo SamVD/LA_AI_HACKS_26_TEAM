@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { SpeechState } from '../core/types'
-import { chunks, quiet, synth, word } from './test-signals'
+import { chunks, quiet, synth, word, zeros } from './test-signals'
 import { EnergyVad } from './vad'
 
 function run(bytes: Uint8Array, chunkMs = 50) {
@@ -54,5 +54,29 @@ describe('EnergyVad', () => {
   it('adapts to a louder room instead of calling it speech', () => {
     const { events } = run(synth([{ ms: 3000, db: -32 }, word(500, -10), { ms: 800, db: -32 }]))
     expect(events.map(e => e.speaking)).toEqual([true, false])
+  })
+  // Regression: the simulator's first frame after audioControl(true) is digital silence, then
+  // room tone. A floor seeded from that frame made the room tone look like speech, and the
+  // floor froze while "speaking", so utterances only ended at maxMs.
+  it('is not fooled by a digital-silence first frame before room tone', () => {
+    const { events } = run(synth([zeros(20), { ms: 2000, db: -48 }, word(500), { ms: 1500, db: -48 }]))
+    expect(events.map(e => e.speaking)).toEqual([true, false])
+    expect(events[0].tMs).toBeGreaterThanOrEqual(1000 + 2000)
+  })
+
+  it('is not fooled on the G2 floor either (-40 dBFS after a silent first frame)', () => {
+    const { events } = run(synth([zeros(20), quiet(1500), word(500), quiet(1500)]))
+    expect(events.map(e => e.speaking)).toEqual([true, false])
+  })
+
+  it('recovers from a false onset: steady noise stops counting as speech within the floor window', () => {
+    const { events } = run(synth([quiet(500), { ms: 4000, db: -20 }, quiet(500)]))
+    expect(events.map(e => e.speaking)).toEqual([true, false])
+    expect(events[1].tMs - events[0].tMs).toBeLessThan(3600) // floorWindowMs 3000 + hang 300
+  })
+
+  it('never reports speech during the warm-up frames', () => {
+    const { events } = run(synth([word(150), quiet(1500)]))
+    expect(events).toEqual([])
   })
 })

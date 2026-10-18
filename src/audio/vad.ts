@@ -3,6 +3,13 @@ import { SAMPLE_RATE, levelDb, toSamples } from './pcm'
 
 // Energy VAD over 20 ms frames with an adaptive noise floor.
 //
+// The floor is the minimum frame level over the last `floorWindowMs`, tracked at
+// all times (minimum statistics). Two failure modes this avoids, both seen in the
+// simulator: (1) the first frame after audioControl(true) is digital silence, so a
+// floor seeded from it sits at -120 dB and room tone looks like speech; (2) a floor
+// frozen while "speaking" can never recover from a false onset. Digital-silence
+// frames never feed the floor, and the first `warmupMs` never count as speech.
+//
 // Time comes from the sample count, not from when chunks arrive, so BLE jitter
 // (S-3: ~50 ms chunks, gaps up to ~95 ms) does not move speech boundaries.
 // Starting thresholds come from S-3 (glasses mic floor -38 to -42 dBFS, speech
@@ -17,7 +24,14 @@ export interface VadOptions {
   onsetMs?: number
   /** Non-speech this long before `speaking` turns false. */
   hangMs?: number
+  /** Noise floor = quietest frame in this trailing window. Also bounds how long a false onset can last. */
+  floorWindowMs?: number
+  /** Frames at the start that only seed the floor. */
+  warmupMs?: number
 }
+
+/** Below this a frame is digital silence (a stream artifact), not room tone. */
+const DIGITAL_SILENCE_DB = -100
 
 const FRAME = SAMPLE_RATE / 50 // 20 ms
 const FRAME_MS = 20
@@ -29,7 +43,9 @@ export class EnergyVad {
   private readonly hangFrames: number
   private carry = new Int16Array(0)
   private frames = 0
-  private floorDb: number | null = null
+  private readonly floorFrames: number
+  private readonly warmupFrames: number
+  private readonly history: number[] = [] // recent non-digital-silence frame levels
   private run = 0 // consecutive speech frames
   private quiet = 0 // consecutive non-speech frames while speaking
   private speaking = false
@@ -41,6 +57,8 @@ export class EnergyVad {
     this.minSpeechDb = o.minSpeechDb ?? -50
     this.onsetFrames = Math.max(1, Math.round((o.onsetMs ?? 100) / FRAME_MS))
     this.hangFrames = Math.max(1, Math.round((o.hangMs ?? 300) / FRAME_MS))
+    this.floorFrames = Math.max(1, Math.round((o.floorWindowMs ?? 3000) / FRAME_MS))
+    this.warmupFrames = Math.round((o.warmupMs ?? 200) / FRAME_MS)
   }
 
   push(bytes: Uint8Array): void {
@@ -55,8 +73,12 @@ export class EnergyVad {
 
   private frame(db: number): void {
     const idx = this.frames++
-    if (this.floorDb === null) this.floorDb = db
-    const isSpeech = db > Math.max(this.floorDb + this.marginDb, this.minSpeechDb)
+    if (db > DIGITAL_SILENCE_DB) {
+      this.history.push(db)
+      if (this.history.length > this.floorFrames) this.history.shift()
+    }
+    const floor = this.floorDb
+    const isSpeech = idx >= this.warmupFrames && floor !== null && db > Math.max(floor + this.marginDb, this.minSpeechDb)
 
     if (isSpeech) {
       this.run++
@@ -70,8 +92,6 @@ export class EnergyVad {
       }
     } else {
       this.run = 0
-      // Track the floor only outside speech: drop fast, rise slowly.
-      if (!this.speaking) this.floorDb += (db - this.floorDb) * (db < this.floorDb ? 0.5 : 0.02)
       if (this.speaking && ++this.quiet >= this.hangFrames) {
         this.speaking = false
         this.emit({ speaking: false, tMs: this.frameTime(this.lastSpeechFrame + 1) })
@@ -95,4 +115,11 @@ export class EnergyVad {
   /** Audio silence since the last speech frame (0 while speech is ongoing). */
   get silenceMs(): number { return this.lastSpeechFrame < 0 ? this.elapsedMs : this.elapsedMs - this.speechEndMs }
   get noiseFloorDb(): number { return this.floorDb ?? -120 }
+
+  private get floorDb(): number | null {
+    if (!this.history.length) return null
+    let m = Infinity
+    for (const v of this.history) if (v < m) m = v
+    return m
+  }
 }

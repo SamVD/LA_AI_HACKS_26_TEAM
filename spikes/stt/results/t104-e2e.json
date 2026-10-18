@@ -1,5 +1,5 @@
 {
-  "at": "2026-10-18T04:17:44.026Z",
+  "at": "2026-10-18T04:24:05.164Z",
   "rows": [
     {
       "clip": "cup",
@@ -7,9 +7,9 @@
       "text": "Cup",
       "error": "",
       "pass": true,
-      "totalMs": 2909,
-      "speechEndToTextMs": 1254,
-      "sttMs": 351
+      "totalMs": 2731,
+      "speechEndToTextMs": 1228,
+      "sttMs": 326
     },
     {
       "clip": "spoon",
@@ -17,9 +17,9 @@
       "text": "Spoon",
       "error": "",
       "pass": true,
-      "totalMs": 2947,
-      "speechEndToTextMs": 1245,
-      "sttMs": 340
+      "totalMs": 2846,
+      "speechEndToTextMs": 1193,
+      "sttMs": 289
     },
     {
       "clip": "toothbrush",
@@ -27,9 +27,9 @@
       "text": "Toothbrush",
       "error": "",
       "pass": true,
-      "totalMs": 3160,
-      "speechEndToTextMs": 1256,
-      "sttMs": 352
+      "totalMs": 3124,
+      "speechEndToTextMs": 1219,
+      "sttMs": 316
     },
     {
       "clip": "umbrella",
@@ -37,9 +37,9 @@
       "text": "Umbrella",
       "error": "",
       "pass": true,
-      "totalMs": 3252,
-      "speechEndToTextMs": 1498,
-      "sttMs": 596
+      "totalMs": 2950,
+      "speechEndToTextMs": 1197,
+      "sttMs": 295
     },
     {
       "clip": "cop",
@@ -47,9 +47,9 @@
       "text": "Cop",
       "error": "",
       "pass": true,
-      "totalMs": 2916,
-      "speechEndToTextMs": 1209,
-      "sttMs": 304
+      "totalMs": 2834,
+      "speechEndToTextMs": 1281,
+      "sttMs": 379
     },
     {
       "clip": "phrase",
@@ -57,9 +57,9 @@
       "text": "It is a cup",
       "error": "",
       "pass": true,
-      "totalMs": 3147,
-      "speechEndToTextMs": 1194,
-      "sttMs": 290
+      "totalMs": 3041,
+      "speechEndToTextMs": 1189,
+      "sttMs": 286
     },
     {
       "clip": "silence",

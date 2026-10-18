@@ -36,3 +36,5 @@ export const FLOOR = -40
 export const SPEECH = -15
 export const quiet = (ms: number): Segment => ({ ms, db: FLOOR })
 export const word = (ms: number, db = SPEECH): Segment => ({ ms, db, hz: 220 })
+/** Digital zeros, as the simulator sends in the first frame after the mic opens. */
+export const zeros = (ms: number): Segment => ({ ms, db: -400 })
