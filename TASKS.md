@@ -367,7 +367,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ### T-302 Step 3 mode
 - **Owner:** AI
-- **Status:** IN_REVIEW (draft PR #78). ORCH added the `ai/step3-mode` grant for `src/mocks/foundation.test.ts`; Sam pushes the one-line test change, then marks it ready. Not for the G2 build.
+- **Status:** APPROVED (PR #78). Waiting for Sam to mark it ready, then ORCH merges and wires the companion settings (#82) into the mode.
 - **Branch:** `ai/step3-mode`
 - **Depends on:** T-301, T-204
 - **Files it may EDIT:** `src/modes/step3/**`
@@ -385,7 +385,7 @@ Single source of truth for who is doing what. Read `PLAN.md` first for architect
 
 ### T-304 Companion v3: Step 3 settings and session log
 - **Owner:** UI (Cursor)
-- **Status:** TODO
+- **Status:** MERGED (PRs #82, #83). The card's Pause and Sensitivity buttons reach the glasses only after ORCH wires them (after #78).
 - **Branch:** `ui/companion-v3`
 - **Depends on:** T-206
 - **Files it may EDIT:** `src/phone/**`

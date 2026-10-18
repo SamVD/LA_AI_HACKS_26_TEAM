@@ -2,19 +2,19 @@
 
 The orchestrator's single snapshot of where Nudge stands. **ORCH updates this after every gate (G1, G2, G3, final) and after any merge that changes a gate's readiness.** Detailed task cards live in `TASKS.md`, decisions in `PLAN.md` §13, contracts in `docs/CONTRACTS.md`.
 
-_Last updated: **Sat Oct 17, 2026, 11:45 PM PT (hackathon hour ~H11:45 of 24)** by ORCH (aaravj9). **G1 PASSED. G2 running on 0.4.2 (batch rolling STT).** Vercel deploy quota exhausted (blocker #7)._
+_Last updated: **Sat Oct 17, 2026, 11:55 PM PT (hackathon hour ~H11:55 of 24)** by ORCH (aaravj9). **G1 PASSED. G2 running on 0.4.2 (batch rolling STT).** Vercel deploy quota exhausted (blocker #7)._
 
 ## Snapshot
 
 | Item | Value |
 |---|---|
-| `integration` | **`82e487d`** after #76, #69, #71, #75 (+ this update). Audited as one scratch merge: typecheck, **701 tests**, build; none touch Step 2 or shared runtime code. **Sarah packs G2 from here** |
+| `integration` | **`804568c`** after #84 (`vercel.json`), #82 (T-304), #83 (Step 3 demo). typecheck, build and all tests pass. The G2 gate tag will point at the tested build's lineage (`a0052a5` + 0.4.2 + D17), not this tip |
 | `main` | **`4b13180`** (fast-forwarded at G1; the build Sarah tested) |
 | Tags | **`v0.1-step1` → `4b13180`** (G1). Next: `v0.2-step2` at G2, `v0.3-step3` at G3 |
 | `app.json` version | **0.4.2** = the G2 build on the device (`a0052a5`, `VITE_STEP2=1 VITE_ROLLING_STT=batch`). The portal rejected re-uploading 0.4.0. **Next upload must be 0.4.3 or higher** (D10) |
 | Contracts | `CONTRACT_VERSION 2` |
 | Production `api/` | `https://nudge-seven-psi.vercel.app`, redeployed by Sam with the WebView origin. At 10:54 PM: `127.0.0.1:<any port>` preflight 204, **but `null` and `file://` also 204, so it's looser than intended**; tighten after #61 (see blockers) |
-| Open PRs | #78 (T-302 Step 3, Sam): **draft**, CI red until Sam pushes the one-line test change the new `ai/step3-mode` grant allows. Not in the G2 build |
+| Open PRs | #78 (T-302, Sam): **approved**, CI green; waiting for Sam to mark it ready, then ORCH merges. #80 (T-403 polish, juannli): content OK, **needs a rebase** after #82 |
 | Open issues | none (#73 closed by #76) |
 
 ## Gates
@@ -23,7 +23,7 @@ _Last updated: **Sat Oct 17, 2026, 11:45 PM PT (hackathon hour ~H11:45 of 24)** 
 |---|---|---|---|
 | **G1: Step 1 on the real G2** | Practice: 10 prompts, cue ladder, √/× feedback, lock/resume, mic denial, exit | ✅ **PASSED (H11:15, #68)**: real speech graded on the G2; lock, exit, B5, B6 pass; A4 accepted via unit tests (D16). Tagged `v0.1-step1` | Done. A3/A5/A7 carried to G2 |
 | **G2: Step 2 in a live conversation** | Help tap → good suggestion in ≤ ~1.5 s on most attempts; Step 1 regression | **RUNNING on 0.4.2 (batch rolling STT).** With the default realtime STT, Step 2 got no transcript on the G2 (bank-only suggestions): blocker #2, `wss://` likely blocked | Sarah + a second person run T-207 (`VITE_STEP2=1 npm run pack`); include A3/A5/A7 and the T-108 Step 1 check. Risk: `wss://` whitelist → batch fallback |
-| **G3: Step 3 ambient hints** | Auto-hints after a stall, no false-hint spam in a 10-minute soak | **In progress**: T-301 merged (#75), T-302 in draft review (#78), T-303 merged | After G2. Ships flag-off unless it passes (PLAN §2) |
+| **G3: Step 3 ambient hints** | Auto-hints after a stall, no false-hint spam in a 10-minute soak | **In progress**: T-301 (#75), T-303, T-304 (#82) merged; T-302 (#78) approved, waiting for Sam to mark it ready. Then ORCH wires the companion's Step 3 settings into the mode | After G2. Ships flag-off unless it passes (PLAN §2) |
 | **Final** | Beta `.ehpk` + Devpost by **H22 (10 AM Sunday)** | Not started (T-402, T-404, T-405) | Demo assets (T-401) are done |
 
 ## Every task
@@ -58,14 +58,14 @@ Legend: ✅ merged · 🟡 in progress / review · ⬜ todo · 🚦 gate.
 | T-206 | Companion v2 (personal words, debug) | UI | ✅ (Debug tab dev-only until the shell exposes transcripts) | #24, #36, #48 |
 | T-207 | 🚦 Gate G2 | ORCH + GLASS | **READY TO RUN** from `82e487d` | — |
 | T-301 | Stall detector | AI (Sam) | ✅ 0 false hints on fixtures, recall 11/12 | #75 |
-| T-302 | Step 3 mode | AI (Sam) | 🟡 draft; grant added; 2 ORCH decisions proposed (pause gesture, key words) | #78 |
+| T-302 | Step 3 mode | AI (Sam) | 🟡 approved (BACK-after-empty fix in); ORCH decisions: swipe pause OK, key words log-only | #78 |
 | T-303 | Keyword extractor | LOGIC | ✅ | #52 |
-| T-304 | Companion v3 (Step 3 settings, log) | UI | ⬜ | — |
+| T-304 | Companion v3 (Step 3 settings, log) | UI | ✅ merged; the card's buttons don't reach the glasses until ORCH wires them after #78 (hide the card unless Step 3 is on) | #82, #83 |
 | T-305 | Stretch: head tilt (up/down only, D9) | GLASS | ⬜ only after G2 | — |
 | T-306 | 🚦 Gate G3 | ORCH | ⬜ | — |
 | T-401 | Judge demo (in-companion Demo tab) | UI | ✅ | #40, #44, #47 |
 | T-402 | Beta final + lifecycle tests | GLASS | ⬜ | — |
-| T-403 | Paper design polish | UI | 🟡 partly done (tagline, focus rings, contrast, Devpost asset index, Home copy, preview captions, Words asset hint) | #41→#44, #47, #64, #69, #71 |
+| T-403 | Paper design polish | UI | 🟡 partly done (tagline, focus rings, contrast, Devpost asset index, Home copy, preview captions, Words asset hint, Step 3 demo); #80 needs a rebase | #41→#44, #47, #64, #69, #71, #83, #80 |
 | T-404 | Devpost + demo script | ORCH | ⬜ | — |
 | T-405 | Final audit + submission | ORCH | ⬜ | — |
 
@@ -126,9 +126,9 @@ There are no console logs on the device. Use the phone companion's **Preview** t
 | Person | Now | Then |
 |---|---|---|
 | **Sarah (GLASS)** | **Pack G2 from `integration` `82e487d`** (`VITE_STEP2=1 npm run pack`, 0.4.0) and run T-207 with a second person; include A3/A5/A7 and a Step 1 pass for T-108 | T-305 only if time allows |
-| **Sam (AI)** | Be on call for G2 (Vercel log: predict errors, 429s). Origins are tightened (done). **No `api/` redeploys** until the quota frees (blocker #7) | #78: push the `foundation.test.ts` line (grant is in), mark ready |
-| **juannli (LOGIC via Devin + UI)** | **T-304** companion v3 (T-301 is merged; the Step 3 log can show #78's key-word logs) | Final T-403 polish; #71 nit (stale hint after submit) |
-| **Aarav (ORCH)** | Record G2; on a pass make `step2Enabled` the default, fast-forward `main`, tag `v0.2-step2`; audit #78 when ready | T-404 Devpost + demo script |
+| **Sam (AI)** | Be on call for G2 (Vercel log: predict errors, 429s). **Disconnect Git in Vercel (Project → Settings → Git)** so branches without `vercel.json` stop using quota. Mark #78 ready. **No `api/` redeploys** until the quota frees (blocker #7) | #78: push the `foundation.test.ts` line (grant is in), mark ready |
+| **juannli (LOGIC via Devin + UI)** | **Rebase #80** on `integration`. Hide the Step 3 card unless Step 3 is enabled; drop `contentWordEndings` from `eager` (#82 review) | Final T-403 polish |
+| **Aarav (ORCH)** | Record G2. On a pass, merge the staged gate PR: D17 `.env.production` (`VITE_ROLLING_STT=batch`, `VITE_STEP2=1`; a plain pack = 0.4.2), fast-forward `main` and tag `v0.2-step2`. Merge #78 when ready, then wire the Step 3 settings | T-404 Devpost + demo script | T-404 Devpost + demo script |
 
 ## Loose ends (non-blocking)
 
@@ -150,6 +150,7 @@ There are no console logs on the device. Use the phone companion's **Preview** t
 
 | When | Change |
 |---|---|
+| Sat 11:55 PM (H11:55) | Merged #82 (T-304) and #83 (Step 3 demo); #80 needs a rebase; #78 approved (waiting on ready). D17 approved by aaravj9 for a G2 pass; gate PR staged |
 | Sat 11:45 PM (H11:45) | Found the Vercel Hobby quota exhausted (blocker #7). Added `vercel.json` to stop Git preview deploys; production unaffected. Blocker #1 resolved (origins tightened, checked live) |
 | Sat 11:40 PM (H11:40) | G2 on the device: the realtime build gave Step 2 no transcript (blocker #2). Sarah re-packed `a0052a5` as **0.4.2 with `VITE_ROLLING_STT=batch`**; `app.json` set to 0.4.2. Proposed D17 (batch default for packaged builds) pending the G2 result |
 | Sat 11:30 PM (H11:30) | Pre-G2 sweep of every open PR and branch. Merged #76 (T-108; juannli merged it), #69 (leak fixed), #71, #75 (T-301). #73 closed. #78 (T-302) reviewed as a draft; `ai/step3-mode` grant added. **`integration` `82e487d` ready for the G2 pack** |
